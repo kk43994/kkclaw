@@ -1,18 +1,21 @@
 {
-  "name": "desktop-pet",
-  "version": "1.0.0",
-  "description": "可爱的桌面宠物小助手",
+  "name": "claw-desktop-pet",
+  "version": "1.1.0",
+  "description": "🦞 可爱的桌面龙虾AI助手",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev"
   },
   "keywords": [
-    "desktop",
-    "pet",
-    "electron"
+    "desktop-pet",
+    "electron",
+    "ai",
+    "openclaw",
+    "edge-tts",
+    "lobster"
   ],
-  "author": "",
+  "author": "zhouk (kk43994)",
   "license": "MIT",
   "devDependencies": {
     "electron": "^28.3.3"

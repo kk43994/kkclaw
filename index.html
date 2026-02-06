@@ -449,9 +449,9 @@
         }
 
         function showBubble(text) {
-            bubble.textContent = text.substring(0, 100); // 增加到100字符
+            bubble.textContent = text.substring(0, 150); // 增加到150字符
             bubble.classList.add('show');
-            setTimeout(() => bubble.classList.remove('show'), 4000); // 延长到4秒
+            setTimeout(() => bubble.classList.remove('show'), 5000); // 延长到5秒
         }
 
         async function send() {
@@ -469,7 +469,7 @@
             if (reply) {
                 setMood('happy');
                 pet.classList.add('talking');
-                showBubble(reply.substring(0, 100));
+                showBubble(reply.substring(0, 150));
                 setTimeout(() => {
                     pet.classList.remove('talking');
                     setMood('normal');

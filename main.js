@@ -58,9 +58,11 @@ async function createWindow() {
       mainWindow.webContents.send('agent-response', {
         content: payload.content
       });
-      // 直接在这里触发语音,确保不会漏
+      // 直接在这里触发语音,完整播放(最多500字符)
       if (payload.content && voiceSystem) {
-        voiceSystem.speak(payload.content.substring(0, 150));
+        const maxLength = 500; // 增加到500字符,约1-2分钟
+        const voiceText = payload.content.substring(0, maxLength);
+        voiceSystem.speak(voiceText);
       }
       workLogger.log('message', `我回复: ${payload.content}`);
     }
