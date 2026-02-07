@@ -1,11 +1,13 @@
 {
   "name": "claw-desktop-pet",
-  "version": "1.1.0",
-  "description": "🦞 可爱的桌面龙虾AI助手",
+  "version": "1.3.0",
+  "description": "🦞 企业级7×24稳定运行的桌面龙虾智能助手",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "electron . --dev"
+    "dev": "electron . --dev",
+    "shortcut": "node create-shortcut.js",
+    "kill": "taskkill /IM electron.exe /F 2>nul || echo 没有运行中的实例"
   },
   "keywords": [
     "desktop-pet",
@@ -13,7 +15,11 @@
     "ai",
     "openclaw",
     "edge-tts",
-    "lobster"
+    "lobster",
+    "7x24",
+    "monitoring",
+    "auto-restart",
+    "smart-voice"
   ],
   "author": "zhouk (kk43994)",
   "license": "MIT",
