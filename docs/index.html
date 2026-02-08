@@ -119,69 +119,111 @@
             50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
         }
 
-        /* ===== Interactive Ball Demo ===== */
+        /* ===== Interactive Ball Demo (faithful to desktop pet) ===== */
         .demo-ball-container {
             position: relative;
-            width: 120px;
-            height: 140px;
+            width: 140px;
+            height: 160px;
             margin-bottom: 1.5rem;
-            cursor: grab;
             z-index: 10;
         }
-        .demo-ball-container:active { cursor: grabbing; }
 
-        .demo-ball {
+        .demo-pet-wrapper {
             width: 100px;
             height: 100px;
-            border-radius: 50%;
             position: absolute;
-            left: 10px;
+            left: 20px;
             top: 10px;
-            background: radial-gradient(circle at 35% 35%, #FF9A76, #FF6B4A 40%, #E8491D 80%);
-            box-shadow:
-                0 0 40px rgba(255,107,74,0.4),
-                0 0 80px rgba(255,107,74,0.15),
-                inset 0 -8px 20px rgba(0,0,0,0.2),
-                inset 0 8px 20px rgba(255,255,255,0.15);
-            animation: ballFloat 3s ease-in-out infinite;
-            transition: background 1.5s ease, box-shadow 1.5s ease;
+            cursor: grab;
+            will-change: transform;
         }
+        .demo-pet-wrapper:active { cursor: grabbing; }
 
-        @keyframes ballFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-6px); }
-        }
-
-        .demo-ball.squish {
-            animation: squishAnim 0.35s ease;
-        }
-        @keyframes squishAnim {
-            0% { transform: scale(1,1); }
-            30% { transform: scale(1.15,0.88); }
-            60% { transform: scale(0.92,1.08); }
-            100% { transform: scale(1,1); }
-        }
-
-        /* Eyes */
-        .demo-eyes {
+        /* Fluid interior */
+        .demo-inner-fluid {
             position: absolute;
-            top: 42px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
+            top: 3px; left: 3px; right: 3px; bottom: 3px;
+            border-radius: 50%;
+            overflow: hidden;
+            z-index: 1;
+            transition: background 1.5s ease;
+            background: linear-gradient(135deg, #ffb3b3, #fed6e3);
+        }
+        .demo-fluid-blob {
+            position: absolute;
+            width: 130%; height: 130%; top: -15%; left: -15%;
+            transition: background 1.5s ease;
+            background:
+                radial-gradient(circle at 30% 30%, rgba(235,87,87,0.85), transparent 40%),
+                radial-gradient(circle at 70% 65%, rgba(255,154,108,0.8), transparent 40%);
+            animation: demo-fluid-spin 8s linear infinite;
+        }
+        .demo-fluid-blob-2 {
+            position: absolute;
+            width: 110%; height: 110%; top: -5%; left: -5%;
+            transition: background 1.5s ease;
+            background:
+                radial-gradient(circle at 60% 30%, rgba(255,200,150,0.4), transparent 35%),
+                radial-gradient(circle at 35% 70%, rgba(220,60,60,0.3), transparent 35%);
+            animation: demo-fluid-spin-r 12s linear infinite;
+        }
+
+        /* Glass shell */
+        .demo-glass-shell {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            border-radius: 50%; z-index: 2;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.12), rgba(255,255,255,0.03));
+            box-shadow:
+                inset -2px -2px 8px rgba(255,255,255,0.08),
+                inset 2px 2px 8px rgba(255,255,255,0.35),
+                0px 2px 6px rgba(220,80,80,0.08);
+            border: 1px solid rgba(255,255,255,0.25);
+        }
+        .demo-glass-shell::before {
+            content: '';
+            position: absolute; top: 12%; left: 18%; width: 28%; height: 14%;
+            border-radius: 50%; background: rgba(255,255,255,0.55);
+            filter: blur(1px); transform: rotate(-40deg);
+        }
+
+        /* Capsule eyes */
+        .demo-eyes-container {
+            position: absolute; z-index: 3;
+            top: 16%; left: 10%; width: 80%; height: 50%;
+            display: flex; justify-content: center; align-items: center;
             gap: 16px;
-            z-index: 2;
             pointer-events: none;
         }
         .demo-eye {
-            width: 8px;
-            height: 14px;
+            width: 14px; height: 24px;
             background: white;
-            border-radius: 4px;
-            box-shadow: 0 0 6px rgba(255,255,255,0.6);
-            transition: all 0.15s ease;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.9), 0 0 20px rgba(255,255,255,0.4);
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform-origin: center center;
         }
-        .demo-eye.blink { height: 2px; border-radius: 2px; }
+
+        /* Blush */
+        .demo-blush {
+            position: absolute; z-index: 3;
+            width: 18px; height: 10px; border-radius: 50%;
+            background: rgba(255,130,130,0.25); filter: blur(3px);
+            pointer-events: none; opacity: 0.8;
+            transition: all 0.4s ease;
+        }
+        .demo-blush-l { top: 58%; left: 8%; }
+        .demo-blush-r { top: 58%; right: 8%; }
+
+        /* Bubbles */
+        .demo-bub {
+            position: absolute; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4), rgba(255,255,255,0.06));
+            border: 1px solid rgba(255,255,255,0.12);
+            z-index: 0; opacity: 0; pointer-events: none;
+        }
+        .demo-bub-1 { width: 6px; height: 6px; left: -6px; top: 60%; animation: demo-bub 5s ease-in infinite 0s; }
+        .demo-bub-2 { width: 4px; height: 4px; right: -5px; top: 40%; animation: demo-bub 6.5s ease-in infinite 2s; }
+        .demo-bub-3 { width: 3px; height: 3px; left: 10px; top: 10%; animation: demo-bub 7s ease-in infinite 3.5s; }
 
         /* Particles */
         .demo-particles {
@@ -190,25 +232,56 @@
             height: 100%;
             top: 0; left: 0;
             pointer-events: none;
-            z-index: 3;
+            z-index: 10;
         }
-        .demo-particle {
+
+        /* Glow ring */
+        .demo-glow {
             position: absolute;
-            width: 4px; height: 4px;
+            top: -15px; left: -15px; right: -15px; bottom: -15px;
             border-radius: 50%;
-            background: var(--primary);
-            opacity: 0;
+            box-shadow: 0 0 40px rgba(255,107,74,0.25), 0 0 80px rgba(255,107,74,0.1);
+            z-index: 0;
+            animation: demo-glow-pulse 3s ease-in-out infinite;
+            transition: box-shadow 1.5s ease;
         }
 
         .demo-label {
             position: absolute;
-            bottom: -4px;
+            bottom: 0;
             left: 50%;
             transform: translateX(-50%);
             font-size: 0.75rem;
             color: var(--text-dim);
             white-space: nowrap;
-            opacity: 0.7;
+            opacity: 0.6;
+        }
+
+        @keyframes demo-fluid-spin {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.08); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+        @keyframes demo-fluid-spin-r {
+            0% { transform: rotate(360deg) scale(1.05); }
+            50% { transform: rotate(180deg) scale(0.95); }
+            100% { transform: rotate(0deg) scale(1.05); }
+        }
+        @keyframes demo-bub {
+            0% { opacity: 0; transform: translateY(0) scale(0.3); }
+            15% { opacity: 0.5; }
+            100% { opacity: 0; transform: translateY(-35px) translateX(5px) scale(1); }
+        }
+        @keyframes demo-squish {
+            0% { transform: scale(1, 1); }
+            25% { transform: scale(1.15, 0.85); }
+            50% { transform: scale(0.9, 1.1); }
+            75% { transform: scale(1.05, 0.95); }
+            100% { transform: scale(1, 1); }
+        }
+        @keyframes demo-glow-pulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
         }
 
         .hero h1 {
@@ -582,15 +655,26 @@
 
     <!-- Hero -->
     <div class="hero">
-        <!-- Interactive Ball Demo -->
+        <!-- Interactive Ball Demo (faithful replica) -->
         <div class="demo-ball-container" id="demoBall">
-            <div class="demo-ball" id="ball">
-                <div class="demo-eyes">
-                    <div class="demo-eye" id="eyeL"></div>
-                    <div class="demo-eye" id="eyeR"></div>
+            <div class="demo-pet-wrapper" id="demoPet">
+                <div class="demo-glow" id="demoGlow"></div>
+                <div class="demo-inner-fluid" id="demoFluid">
+                    <div class="demo-fluid-blob" id="demoBlob1"></div>
+                    <div class="demo-fluid-blob-2" id="demoBlob2"></div>
                 </div>
+                <div class="demo-glass-shell"></div>
+                <div class="demo-eyes-container">
+                    <div class="demo-eye" id="demoEyeL"></div>
+                    <div class="demo-eye" id="demoEyeR"></div>
+                </div>
+                <div class="demo-blush demo-blush-l" id="demoBlushL"></div>
+                <div class="demo-blush demo-blush-r" id="demoBlushR"></div>
+                <div class="demo-bub demo-bub-1"></div>
+                <div class="demo-bub demo-bub-2"></div>
+                <div class="demo-bub demo-bub-3"></div>
+                <div class="demo-particles" id="demoParticles"></div>
             </div>
-            <div class="demo-particles" id="particles"></div>
             <div class="demo-label">
                 <span class="en-inline">Click me!</span>
                 <span class="zh-inline">点我试试!</span>
@@ -750,31 +834,31 @@
             <span class="zh">点击情绪查看球体变化</span>
         </p>
         <div class="moods-row">
-            <div class="mood-item" onclick="setDemoMood('idle','#FF6B4A','#FF4500')">
+            <div class="mood-item" onclick="setDemoMood('idle')">
                 <div class="mood-orb" style="background:radial-gradient(circle,#FF6B4A,#FF4500)"></div>
                 <span class="mood-label">Idle</span>
             </div>
-            <div class="mood-item" onclick="setDemoMood('happy','#FFD700','#FFA500')">
+            <div class="mood-item" onclick="setDemoMood('happy')">
                 <div class="mood-orb" style="background:radial-gradient(circle,#FFD700,#FFA500)"></div>
                 <span class="mood-label">Happy</span>
             </div>
-            <div class="mood-item" onclick="setDemoMood('talking','#FF69B4','#FF1493')">
+            <div class="mood-item" onclick="setDemoMood('talking')">
                 <div class="mood-orb" style="background:radial-gradient(circle,#FF69B4,#FF1493)"></div>
                 <span class="mood-label">Talking</span>
             </div>
-            <div class="mood-item" onclick="setDemoMood('thinking','#7B68EE','#4B0082')">
+            <div class="mood-item" onclick="setDemoMood('thinking')">
                 <div class="mood-orb" style="background:radial-gradient(circle,#7B68EE,#4B0082)"></div>
                 <span class="mood-label">Thinking</span>
             </div>
-            <div class="mood-item" onclick="setDemoMood('sleepy','#DDA0DD','#C0C0C0')">
+            <div class="mood-item" onclick="setDemoMood('sleepy')">
                 <div class="mood-orb" style="background:radial-gradient(circle,#DDA0DD,#C0C0C0)"></div>
                 <span class="mood-label">Sleepy</span>
             </div>
-            <div class="mood-item" onclick="setDemoMood('surprised','#FFD700','#FF6347')">
+            <div class="mood-item" onclick="setDemoMood('surprised')">
                 <div class="mood-orb" style="background:radial-gradient(circle,#FFD700,#FF6347)"></div>
                 <span class="mood-label">Surprised</span>
             </div>
-            <div class="mood-item" onclick="setDemoMood('offline','#b0b0b0','#808080')">
+            <div class="mood-item" onclick="setDemoMood('offline')">
                 <div class="mood-orb" style="background:radial-gradient(circle,#b0b0b0,#808080)"></div>
                 <span class="mood-label">Offline</span>
             </div>
@@ -899,85 +983,181 @@
         }, { threshold: 0.1 });
         document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
-        // ===== Interactive Ball =====
-        const ball = document.getElementById('ball');
-        const eyeL = document.getElementById('eyeL');
-        const eyeR = document.getElementById('eyeR');
+        // ===== Interactive Ball (faithful to desktop pet) =====
+        const demoPet = document.getElementById('demoPet');
+        const demoEyeL = document.getElementById('demoEyeL');
+        const demoEyeR = document.getElementById('demoEyeR');
+        const demoFluid = document.getElementById('demoFluid');
+        const demoBlob1 = document.getElementById('demoBlob1');
+        const demoBlob2 = document.getElementById('demoBlob2');
+        const demoGlow = document.getElementById('demoGlow');
+        const demoBlushL = document.getElementById('demoBlushL');
+        const demoBlushR = document.getElementById('demoBlushR');
         const demoBall = document.getElementById('demoBall');
 
+        // 60fps animation loop - float + breathe
+        let t = 0;
+        let demoSquishing = false;
+        function demoLoop() {
+            t += 0.016;
+            if (!demoSquishing) {
+                const floatY = Math.sin(t * 1.3) * 5;
+                const floatR = Math.sin(t * 0.9) * 0.4;
+                const breathScale = 1 + Math.sin(t * 2) * 0.012;
+                demoPet.style.transform = `translateY(${floatY}px) rotate(${floatR}deg) scale(${breathScale})`;
+            }
+            requestAnimationFrame(demoLoop);
+        }
+        demoLoop();
+
+        // Eye expressions
+        function setDemoEyes(L, R) {
+            const d = { w:14, h:24, br:'8px', tx:0, ty:0, sx:1, sy:1, rot:0 };
+            const l = { ...d, ...L };
+            const r = R ? { ...d, ...R } : { ...l };
+            demoEyeL.style.width = l.w+'px'; demoEyeL.style.height = l.h+'px'; demoEyeL.style.borderRadius = l.br;
+            demoEyeL.style.transform = `translate(${l.tx}px,${l.ty}px) scale(${l.sx},${l.sy}) rotate(${l.rot}deg)`;
+            demoEyeR.style.width = r.w+'px'; demoEyeR.style.height = r.h+'px'; demoEyeR.style.borderRadius = r.br;
+            demoEyeR.style.transform = `translate(${r.tx}px,${r.ty}px) scale(${r.sx},${r.sy}) rotate(${r.rot}deg)`;
+        }
+
+        const DEMO_EXPR = {
+            normal:     () => setDemoEyes({ w:14, h:24, br:'8px' }),
+            blink:      () => setDemoEyes({ w:15, h:4, br:'4px' }),
+            halfBlink:  () => setDemoEyes({ w:14, h:13, br:'7px' }),
+            happy:      () => setDemoEyes({ w:16, h:9, br:'9px 9px 4px 4px', ty:1 }),
+            superHappy: () => setDemoEyes({ w:18, h:6, br:'10px 10px 4px 4px', ty:1, sx:1.1 }),
+            surprised:  () => setDemoEyes({ w:16, h:26, br:'9px' }),
+            sleepy:     () => setDemoEyes({ w:15, h:5, br:'5px', ty:2 }),
+            thinking:   () => setDemoEyes({ w:13, h:22, br:'7px', ty:-3 }),
+            wink:       () => setDemoEyes(
+                { w:16, h:9, br:'9px 9px 4px 4px', ty:1 },
+                { w:14, h:24, br:'8px' }
+            ),
+            curious:    () => setDemoEyes(
+                { w:12, h:20, br:'6px', ty:-1 },
+                { w:16, h:26, br:'9px', ty:-1 }
+            ),
+        };
+
         // Mouse tracking for eyes
+        let demoMouseTracking = true;
         document.addEventListener('mousemove', e => {
-            const rect = ball.getBoundingClientRect();
+            if (!demoMouseTracking) return;
+            const rect = demoPet.getBoundingClientRect();
             const cx = rect.left + rect.width / 2;
             const cy = rect.top + rect.height / 2;
-            const dx = (e.clientX - cx) / window.innerWidth * 3;
-            const dy = (e.clientY - cy) / window.innerHeight * 3;
-            eyeL.style.transform = `translate(${dx}px, ${dy}px)`;
-            eyeR.style.transform = `translate(${dx}px, ${dy}px)`;
+            const dx = Math.max(-3, Math.min(3, (e.clientX - cx) / window.innerWidth * 8));
+            const dy = Math.max(-3, Math.min(3, (e.clientY - cy) / window.innerHeight * 8));
+            demoEyeL.style.transform = `translate(${dx}px, ${dy}px)`;
+            demoEyeR.style.transform = `translate(${dx}px, ${dy}px)`;
         });
 
-        // Blink
-        function doBlink() {
-            eyeL.classList.add('blink');
-            eyeR.classList.add('blink');
+        // Blink cycle
+        function demoBlink() {
+            demoMouseTracking = false;
+            DEMO_EXPR.blink();
             setTimeout(() => {
-                eyeL.classList.remove('blink');
-                eyeR.classList.remove('blink');
-            }, 120);
-            setTimeout(doBlink, 2000 + Math.random() * 4000);
+                if (Math.random() < 0.15) {
+                    DEMO_EXPR.halfBlink();
+                    setTimeout(() => { DEMO_EXPR.blink(); setTimeout(() => { DEMO_EXPR.normal(); demoMouseTracking = true; }, 80); }, 120);
+                } else {
+                    DEMO_EXPR.normal();
+                    demoMouseTracking = true;
+                }
+            }, 70 + Math.random() * 40);
+            setTimeout(demoBlink, 2500 + Math.random() * 4000);
         }
-        setTimeout(doBlink, 2000);
+        setTimeout(demoBlink, 2000);
+
+        // Idle micro-expressions
+        setInterval(() => {
+            if (Math.random() < 0.3) {
+                const exprs = ['wink', 'curious', 'happy'];
+                const pick = exprs[Math.floor(Math.random() * exprs.length)];
+                demoMouseTracking = false;
+                DEMO_EXPR[pick]();
+                // Flash blush on happy
+                if (pick === 'happy' || pick === 'wink') {
+                    demoBlushL.style.background = 'rgba(255,130,130,0.45)';
+                    demoBlushR.style.background = 'rgba(255,130,130,0.45)';
+                    setTimeout(() => {
+                        demoBlushL.style.background = 'rgba(255,130,130,0.25)';
+                        demoBlushR.style.background = 'rgba(255,130,130,0.25)';
+                    }, 1500);
+                }
+                setTimeout(() => { DEMO_EXPR.normal(); demoMouseTracking = true; }, 1200 + Math.random() * 800);
+            }
+        }, 5000);
 
         // Click to squish + particles
         demoBall.addEventListener('click', () => {
-            ball.classList.remove('squish');
-            void ball.offsetWidth;
-            ball.classList.add('squish');
-            setTimeout(() => ball.classList.remove('squish'), 400);
-            spawnParticles();
+            demoSquishing = true;
+            demoPet.style.animation = 'demo-squish 0.35s ease';
+            setTimeout(() => { demoPet.style.animation = ''; demoSquishing = false; }, 380);
+            spawnDemoParticles();
+            // Random expression on click
+            const clickExprs = ['superHappy', 'surprised', 'wink'];
+            const pick = clickExprs[Math.floor(Math.random() * clickExprs.length)];
+            demoMouseTracking = false;
+            DEMO_EXPR[pick]();
+            demoBlushL.style.background = 'rgba(255,100,100,0.5)';
+            demoBlushR.style.background = 'rgba(255,100,100,0.5)';
+            setTimeout(() => {
+                DEMO_EXPR.normal();
+                demoMouseTracking = true;
+                demoBlushL.style.background = 'rgba(255,130,130,0.25)';
+                demoBlushR.style.background = 'rgba(255,130,130,0.25)';
+            }, 1200);
         });
 
-        function spawnParticles() {
-            const container = document.getElementById('particles');
-            for (let i = 0; i < 8; i++) {
+        function spawnDemoParticles() {
+            const container = document.getElementById('demoParticles');
+            for (let i = 0; i < 10; i++) {
                 const p = document.createElement('div');
-                p.className = 'demo-particle';
-                p.style.left = '55px';
-                p.style.top = '55px';
+                p.style.cssText = `position:absolute;width:${3+Math.random()*3}px;height:${3+Math.random()*3}px;border-radius:50%;left:50px;top:50px;pointer-events:none;`;
+                p.style.background = ['#FF6B4A','#FFD700','#FF69B4','#7B68EE','#fff'][Math.floor(Math.random()*5)];
+                container.appendChild(p);
                 const angle = Math.random() * Math.PI * 2;
-                const dist = 40 + Math.random() * 40;
+                const dist = 50 + Math.random() * 50;
                 const tx = Math.cos(angle) * dist;
                 const ty = Math.sin(angle) * dist;
-                p.style.background = ['#FF6B4A','#FFD700','#FF69B4','#7B68EE'][Math.floor(Math.random()*4)];
-                container.appendChild(p);
                 p.animate([
                     { transform: 'translate(0,0) scale(1)', opacity: 1 },
                     { transform: `translate(${tx}px,${ty}px) scale(0)`, opacity: 0 }
-                ], { duration: 600 + Math.random() * 300, easing: 'ease-out' });
+                ], { duration: 500 + Math.random() * 400, easing: 'ease-out' });
                 setTimeout(() => p.remove(), 1000);
             }
         }
 
-        // Mood switcher for demo ball
-        function setDemoMood(mood, c1, c2) {
-            ball.style.background = `radial-gradient(circle at 35% 35%, ${c1}, ${c2} 80%)`;
-            ball.style.boxShadow = `0 0 40px ${c1}66, 0 0 80px ${c1}22, inset 0 -8px 20px rgba(0,0,0,0.2), inset 0 8px 20px rgba(255,255,255,0.15)`;
-            ball.classList.remove('squish');
-            void ball.offsetWidth;
-            ball.classList.add('squish');
-            setTimeout(() => ball.classList.remove('squish'), 400);
+        // Mood color themes (matching desktop pet exactly)
+        const MOOD_COLORS = {
+            idle:      { fluid: 'linear-gradient(135deg, #ffb3b3, #fed6e3)', blob1: 'radial-gradient(circle at 30% 30%, rgba(235,87,87,0.85), transparent 40%), radial-gradient(circle at 70% 65%, rgba(255,154,108,0.8), transparent 40%)', blob2: 'radial-gradient(circle at 60% 30%, rgba(255,200,150,0.4), transparent 35%), radial-gradient(circle at 35% 70%, rgba(220,60,60,0.3), transparent 35%)', glow: '0 0 40px rgba(255,107,74,0.25), 0 0 80px rgba(255,107,74,0.1)' },
+            happy:     { fluid: 'linear-gradient(135deg, #ffe0b2, #fff3e0)', blob1: 'radial-gradient(circle at 30% 30%, rgba(255,193,7,0.85), transparent 40%), radial-gradient(circle at 70% 65%, rgba(255,152,0,0.8), transparent 40%)', blob2: 'radial-gradient(circle at 60% 30%, rgba(255,235,59,0.4), transparent 35%), radial-gradient(circle at 35% 70%, rgba(255,183,77,0.3), transparent 35%)', glow: '0 0 40px rgba(255,193,7,0.3), 0 0 80px rgba(255,152,0,0.15)' },
+            talking:   { fluid: 'linear-gradient(135deg, #f8bbd0, #fce4ec)', blob1: 'radial-gradient(circle at 30% 30%, rgba(233,30,99,0.85), transparent 40%), radial-gradient(circle at 70% 65%, rgba(255,105,180,0.8), transparent 40%)', blob2: 'radial-gradient(circle at 60% 30%, rgba(255,182,193,0.4), transparent 35%), radial-gradient(circle at 35% 70%, rgba(219,68,85,0.3), transparent 35%)', glow: '0 0 40px rgba(255,105,180,0.3), 0 0 80px rgba(233,30,99,0.15)' },
+            thinking:  { fluid: 'linear-gradient(135deg, #d1c4e9, #ede7f6)', blob1: 'radial-gradient(circle at 30% 30%, rgba(103,58,183,0.85), transparent 40%), radial-gradient(circle at 70% 65%, rgba(123,104,238,0.8), transparent 40%)', blob2: 'radial-gradient(circle at 60% 30%, rgba(179,157,219,0.4), transparent 35%), radial-gradient(circle at 35% 70%, rgba(94,53,177,0.3), transparent 35%)', glow: '0 0 40px rgba(123,104,238,0.3), 0 0 80px rgba(103,58,183,0.15)' },
+            sleepy:    { fluid: 'linear-gradient(135deg, #e8d5e0, #f0e6ef)', blob1: 'radial-gradient(circle at 30% 30%, rgba(186,147,170,0.85), transparent 40%), radial-gradient(circle at 70% 65%, rgba(200,170,190,0.8), transparent 40%)', blob2: 'radial-gradient(circle at 60% 30%, rgba(220,200,215,0.4), transparent 35%), radial-gradient(circle at 35% 70%, rgba(170,130,160,0.3), transparent 35%)', glow: '0 0 30px rgba(186,147,170,0.2), 0 0 60px rgba(186,147,170,0.08)' },
+            surprised: { fluid: 'linear-gradient(135deg, #fff9c4, #fff3e0)', blob1: 'radial-gradient(circle at 30% 30%, rgba(255,215,0,0.85), transparent 40%), radial-gradient(circle at 70% 65%, rgba(255,165,0,0.8), transparent 40%)', blob2: 'radial-gradient(circle at 60% 30%, rgba(255,235,59,0.4), transparent 35%), radial-gradient(circle at 35% 70%, rgba(255,87,34,0.3), transparent 35%)', glow: '0 0 50px rgba(255,215,0,0.35), 0 0 100px rgba(255,165,0,0.15)' },
+            offline:   { fluid: 'linear-gradient(135deg, #ccc, #ddd)', blob1: 'radial-gradient(circle at 30% 30%, rgba(160,160,160,0.85), transparent 40%), radial-gradient(circle at 70% 65%, rgba(180,180,180,0.8), transparent 40%)', blob2: 'radial-gradient(circle at 60% 30%, rgba(200,200,200,0.4), transparent 35%), radial-gradient(circle at 35% 70%, rgba(140,140,140,0.3), transparent 35%)', glow: '0 0 20px rgba(160,160,160,0.15), 0 0 40px rgba(160,160,160,0.05)' },
+        };
 
-            if (mood === 'sleepy') {
-                eyeL.style.height = '4px';
-                eyeR.style.height = '4px';
-            } else if (mood === 'surprised') {
-                eyeL.style.height = '18px'; eyeL.style.width = '10px';
-                eyeR.style.height = '18px'; eyeR.style.width = '10px';
-                setTimeout(() => { eyeL.style.height = '14px'; eyeL.style.width = '8px'; eyeR.style.height = '14px'; eyeR.style.width = '8px'; }, 800);
-            } else {
-                eyeL.style.height = '14px'; eyeL.style.width = '8px';
-                eyeR.style.height = '14px'; eyeR.style.width = '8px';
-            }
+        function setDemoMood(mood) {
+            const c = MOOD_COLORS[mood] || MOOD_COLORS.idle;
+            demoFluid.style.background = c.fluid;
+            demoBlob1.style.background = c.blob1;
+            demoBlob2.style.background = c.blob2;
+            demoGlow.style.boxShadow = c.glow;
+            // Expression
+            if (mood === 'sleepy') DEMO_EXPR.sleepy();
+            else if (mood === 'surprised') { DEMO_EXPR.surprised(); setTimeout(() => DEMO_EXPR.normal(), 1000); }
+            else if (mood === 'happy') { DEMO_EXPR.happy(); setTimeout(() => DEMO_EXPR.normal(), 1200); }
+            else if (mood === 'thinking') { DEMO_EXPR.thinking(); setTimeout(() => DEMO_EXPR.normal(), 1200); }
+            else if (mood === 'offline') DEMO_EXPR.sleepy();
+            else DEMO_EXPR.normal();
+            // Squish
+            demoSquishing = true;
+            demoPet.style.animation = 'demo-squish 0.35s ease';
+            setTimeout(() => { demoPet.style.animation = ''; demoSquishing = false; }, 380);
         }
 
         // ===== Voice Playback =====
