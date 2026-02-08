@@ -690,12 +690,32 @@ async function createWindow() {
   });
 }
 
-// 拖动 — 精灵+歌词窗口同步
-ipcMain.on('drag-pet', (event, { x, y }) => {
+// 屏幕边界约束 — 防止球体跑到屏幕外
+function clampToScreen(x, y, winWidth = 200, winHeight = 260) {
+  const displays = screen.getAllDisplays();
+  // 获取所有显示器的总边界
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const display of displays) {
+    const { x: dx, y: dy, width: dw, height: dh } = display.workArea;
+    minX = Math.min(minX, dx);
+    minY = Math.min(minY, dy);
+    maxX = Math.max(maxX, dx + dw);
+    maxY = Math.max(maxY, dy + dh);
+  }
+  // 留出至少30px在屏幕内，这样用户总能拖回来
+  const margin = 30;
+  const clampedX = Math.max(minX - winWidth + margin, Math.min(x, maxX - margin));
+  const clampedY = Math.max(minY, Math.min(y, maxY - margin));
+  return { x: clampedX, y: clampedY };
+}
+
+// 拖动 — 精灵+歌词窗口同步（带屏幕围栏）
+ipcMain.on('drag-pet', (event, { x, y, offsetX, offsetY }) => {
   if (!mainWindow) return;
-  // 设置精灵窗口位置（以鼠标位置为中心）
-  const newX = x - 100;
-  const newY = y - 80;
+  // 用鼠标的相对偏移精确定位，避免跳跃
+  const rawX = x - (offsetX || 100);
+  const rawY = y - (offsetY || 80);
+  const { x: newX, y: newY } = clampToScreen(rawX, rawY);
   mainWindow.setPosition(newX, newY);
   // 歌词窗口跟随（在球体上方）
   if (lyricsWindow) {
@@ -707,8 +727,9 @@ ipcMain.on('drag-pet', (event, { x, y }) => {
 ipcMain.on('move-window', (event, { x, y }) => {
   if (!mainWindow) return;
   const [currentX, currentY] = mainWindow.getPosition();
-  const newX = currentX + x;
-  const newY = currentY + y;
+  const rawX = currentX + x;
+  const rawY = currentY + y;
+  const { x: newX, y: newY } = clampToScreen(rawX, rawY);
   mainWindow.setPosition(newX, newY);
   if (lyricsWindow) {
     lyricsWindow.setPosition(newX - 100, newY - 110);

@@ -383,15 +383,28 @@ function schedBlink() { setTimeout(doBlink, 2000 + Math.random() * 4000); }
 schedBlink();
 
 // ===== 点击 =====
-let isDrag = false, startX, startY, clickCount = 0, clickTimer = null;
+let isDrag = false, startX, startY, dragOffsetX, dragOffsetY, clickCount = 0, clickTimer = null;
 
-pet.addEventListener('mousedown', e => { isDrag = false; startX = e.screenX; startY = e.screenY; });
+pet.addEventListener('mousedown', e => { 
+    isDrag = false; 
+    startX = e.screenX; 
+    startY = e.screenY; 
+    // 记录鼠标在窗口内的相对位置，避免拖动时跳跃
+    dragOffsetX = e.clientX;
+    dragOffsetY = e.clientY;
+});
 document.addEventListener('mousemove', e => {
     if (startX !== undefined) {
         if (Math.abs(e.screenX - startX) > 3 || Math.abs(e.screenY - startY) > 3) isDrag = true;
     }
     if (isDrag && ipcRenderer) {
-        ipcRenderer.send('drag-pet', { x: e.screenX, y: e.screenY });
+        // 用鼠标位置减去相对偏移，精确定位窗口
+        ipcRenderer.send('drag-pet', { 
+            x: e.screenX, 
+            y: e.screenY,
+            offsetX: dragOffsetX,
+            offsetY: dragOffsetY
+        });
     }
 });
 document.addEventListener('mouseup', () => { setTimeout(() => { isDrag = false; startX = undefined; }, 30); });
