@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦞 Claw Desktop Pet — Give OpenClaw a Body</title>
+    <meta name="description" content="A transparent Electron desktop companion for OpenClaw with emotional TTS, fluid glass ball UI, and desktop-lyrics style messages.">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #FF6B4A;
+            --primary-light: #FF8A6A;
+            --bg: #0a0a0a;
+            --card: #141414;
+            --card-border: #222;
+            --text: #e8e8e8;
+            --text-dim: #888;
+            --accent-blue: #6B8AFF;
+            --accent-purple: #A855F7;
+            --accent-pink: #FF6B9D;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255,107,74,0.15) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+        }
+        
+        .hero-emoji { font-size: 4rem; margin-bottom: 1rem; position: relative; }
+        
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            position: relative;
+            background: linear-gradient(135deg, var(--primary), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero .subtitle {
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            color: var(--text-dim);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            position: relative;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .btn {
+            padding: 0.8rem 1.8rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255,107,74,0.3);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: var(--text);
+            border: 1.5px solid var(--card-border);
+        }
+        
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        /* Preview */
+        .preview {
+            margin-top: 3rem;
+            position: relative;
+        }
+        
+        .preview img {
+            max-width: min(90vw, 700px);
+            border-radius: 16px;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        
+        /* Sections */
+        section {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 5rem 2rem;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        /* Features Grid */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .feature-card {
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+        
+        .feature-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(255,107,74,0.1);
+        }
+        
+        .feature-icon { font-size: 2rem; margin-bottom: 1rem; }
+        .feature-card h3 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+        .feature-card p { color: var(--text-dim); font-size: 0.95rem; }
+        
+        /* Tech Stack */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+        
+        .tech-item {
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .tech-item .tech-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        .tech-item .tech-desc {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+        
+        /* Install */
+        .install-section {
+            text-align: center;
+        }
+        
+        .install-box {
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+        
+        .install-box h3 { margin-bottom: 1rem; }
+        
+        .code-block {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            font-family: 'Fira Code', 'SF Mono', monospace;
+            font-size: 0.95rem;
+            color: #7dd3fc;
+            text-align: left;
+            overflow-x: auto;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .code-block:hover::after {
+            content: '📋 Click to copy';
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            font-family: -apple-system, sans-serif;
+        }
+        
+        .code-block .comment { color: #6b7280; }
+        .code-block .cmd { color: #34d399; }
+        
+        /* Moods */
+        .moods {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+        
+        .mood {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            position: relative;
+            transition: transform 0.3s;
+        }
+        
+        .mood:hover {
+            transform: scale(1.3);
+        }
+        
+        .mood::after {
+            content: attr(data-label);
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            white-space: nowrap;
+        }
+        
+        /* Docs */
+        .docs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .doc-card {
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.3s;
+        }
+        
+        .doc-card:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+        }
+        
+        .doc-card h4 { margin-bottom: 0.5rem; }
+        .doc-card p { color: var(--text-dim); font-size: 0.85rem; }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-dim);
+            border-top: 1px solid var(--card-border);
+        }
+        
+        footer a { color: var(--primary); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+        
+        /* Scroll animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease;
+        }
+        
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Lang switcher */
+        .lang-switch {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 100;
+            display: flex;
+            gap: 0.5rem;
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 0.3rem;
+        }
+        
+        .lang-btn {
+            padding: 0.3rem 0.8rem;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+        
+        .lang-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .zh { display: none; }
+        body.zh-mode .zh { display: block; }
+        body.zh-mode .en { display: none; }
+        body.zh-mode .zh-inline { display: inline; }
+        body.zh-mode .en-inline { display: none; }
+        .zh-inline { display: none; }
+        
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2rem; }
+            section { padding: 3rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Language Switch -->
+    <div class="lang-switch">
+        <button class="lang-btn active" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="setLang('zh')">中文</button>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero">
+        <div class="hero-emoji">🦞</div>
+        <h1>Claw Desktop Pet</h1>
+        <p class="subtitle en">Give OpenClaw a body. A transparent desktop companion with emotional voice, expressive eyes, and air-feel UI.</p>
+        <p class="subtitle zh">给 OpenClaw 一个身体。透明桌面伴侣，拥有情感语音、丰富表情和空气感 UI。</p>
+        
+        <div class="hero-buttons">
+            <a href="https://github.com/kk43994/claw-desktop-pet/releases" class="btn btn-primary">
+                ⬇️ <span class="en-inline">Download</span><span class="zh-inline">下载</span>
+            </a>
+            <a href="https://github.com/kk43994/claw-desktop-pet" class="btn btn-outline">
+                GitHub
+            </a>
+            <a href="https://clawhub.ai/kk43994/desktop-pet" class="btn btn-outline">
+                ClawHub
+            </a>
+        </div>
+        
+        <div class="preview">
+            <img src="images/v2-preview.jpg" alt="Claw Desktop Pet V2.0 Preview" onerror="this.style.display='none'">
+        </div>
+    </div>
+
+    <!-- Features -->
+    <section class="fade-in">
+        <h2 class="section-title">
+            <span class="en">✨ Features</span>
+            <span class="zh">✨ 核心特性</span>
+        </h2>
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <h3 class="en">Air-Feel UI</h3>
+                <h3 class="zh">空气感 UI</h3>
+                <p class="en">67px fluid glass ball with 7 mood-based color themes. No clunky windows — just a floating orb on your desktop.</p>
+                <p class="zh">67px 流体玻璃球，7 种情绪色系。没有笨重的窗口，只有一个浮动的小球。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">👀</div>
+                <h3 class="en">Expressive Eyes</h3>
+                <h3 class="zh">丰富表情</h3>
+                <p class="en">15+ eye expressions with idle micro-animations. Capsule-shaped eyes inspired by AIBI robot — blink, look around, react.</p>
+                <p class="zh">15+ 种眼睛表情和待机微表情。胶囊形眼睛灵感来自 AIBI 机器人 —— 眨眼、环顾、反应。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔊</div>
+                <h3 class="en">Emotional TTS</h3>
+                <h3 class="zh">情感语音</h3>
+                <p class="en">MiniMax Speech 2.5 with voice cloning + 7 emotion modes. Your AI speaks with real feeling.</p>
+                <p class="zh">MiniMax Speech 2.5 语音克隆 + 7 种情绪模式。你的 AI 真的会带着感情说话。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎵</div>
+                <h3 class="en">Desktop Lyrics</h3>
+                <h3 class="zh">桌面歌词</h3>
+                <p class="en">Agent responses float like desktop lyrics — typewriter effect, auto-fade, fully mouse-transparent.</p>
+                <p class="zh">AI 回复像桌面歌词一样浮现 —— 打字机效果、自动淡出、完全鼠标穿透。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🏗️</div>
+                <h3 class="en">Dual Windows</h3>
+                <h3 class="zh">双窗口架构</h3>
+                <p class="en">Sprite window (draggable, interactive) + Lyrics window (click-through). Both transparent, always-on-top.</p>
+                <p class="zh">精灵窗口（可拖动）+ 歌词窗口（鼠标穿透）。双透明，双置顶。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💡</div>
+                <h3 class="en">Pure CSS/JS</h3>
+                <h3 class="zh">纯代码动画</h3>
+                <p class="en">All animations procedurally generated. Zero sprite sheets, zero image assets. Everything is code.</p>
+                <p class="zh">所有动画程序化生成。零精灵图、零图片资源。一切都是代码。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mood Colors -->
+    <section class="fade-in">
+        <h2 class="section-title">
+            <span class="en">🎭 Mood System</span>
+            <span class="zh">🎭 情绪系统</span>
+        </h2>
+        <p style="text-align:center;color:var(--text-dim);margin-bottom:1rem">
+            <span class="en">The ball changes color based on the AI's mood</span>
+            <span class="zh">球体根据 AI 的情绪变化颜色</span>
+        </p>
+        <div class="moods">
+            <div class="mood" style="background:radial-gradient(circle,#FF6B4A,#FF4500)" data-label="idle"></div>
+            <div class="mood" style="background:radial-gradient(circle,#FFD700,#FFA500)" data-label="happy"></div>
+            <div class="mood" style="background:radial-gradient(circle,#FF69B4,#FF1493)" data-label="talking"></div>
+            <div class="mood" style="background:radial-gradient(circle,#7B68EE,#4B0082)" data-label="thinking"></div>
+            <div class="mood" style="background:radial-gradient(circle,#DDA0DD,#C0C0C0)" data-label="sleepy"></div>
+            <div class="mood" style="background:radial-gradient(circle,#FFD700,#FF6347)" data-label="surprised"></div>
+            <div class="mood" style="background:radial-gradient(circle,#b0b0b0,#808080)" data-label="offline"></div>
+        </div>
+    </section>
+
+    <!-- Tech Stack -->
+    <section class="fade-in">
+        <h2 class="section-title">
+            <span class="en">🛠️ Tech Stack</span>
+            <span class="zh">🛠️ 技术栈</span>
+        </h2>
+        <div class="tech-grid">
+            <div class="tech-item">
+                <div class="tech-name">Electron</div>
+                <div class="tech-desc en">Dual transparent windows</div>
+                <div class="tech-desc zh">双透明窗口</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-name">OpenClaw</div>
+                <div class="tech-desc en">AI conversation engine</div>
+                <div class="tech-desc zh">AI 对话引擎</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-name">MiniMax Speech</div>
+                <div class="tech-desc en">Emotional TTS + voice cloning</div>
+                <div class="tech-desc zh">情感 TTS + 声音克隆</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-name">CSS/JS</div>
+                <div class="tech-desc en">Pure code animations</div>
+                <div class="tech-desc zh">纯代码动画</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Install -->
+    <section class="install-section fade-in">
+        <h2 class="section-title">
+            <span class="en">🚀 Get Started</span>
+            <span class="zh">🚀 快速开始</span>
+        </h2>
+        
+        <div class="install-box">
+            <h3 class="en">Install via ClawHub</h3>
+            <h3 class="zh">通过 ClawHub 安装</h3>
+            <div class="code-block" onclick="navigator.clipboard.writeText('npx clawhub@latest install kk43994/desktop-pet')">
+                <span class="cmd">npx clawhub@latest install kk43994/desktop-pet</span>
+            </div>
+        </div>
+        
+        <div class="install-box">
+            <h3 class="en">Or clone from GitHub</h3>
+            <h3 class="zh">或从 GitHub 克隆</h3>
+            <div class="code-block" onclick="navigator.clipboard.writeText('git clone https://github.com/kk43994/claw-desktop-pet.git\ncd claw-desktop-pet\nnpm install\nnpm start')">
+                <span class="comment"># Clone and run</span><br>
+                <span class="cmd">git clone</span> https://github.com/kk43994/claw-desktop-pet.git<br>
+                <span class="cmd">cd</span> claw-desktop-pet<br>
+                <span class="cmd">npm install</span><br>
+                <span class="cmd">npm start</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Docs -->
+    <section class="fade-in">
+        <h2 class="section-title">
+            <span class="en">📚 Documentation</span>
+            <span class="zh">📚 文档</span>
+        </h2>
+        <div class="docs-grid">
+            <a href="https://github.com/kk43994/claw-desktop-pet#readme" class="doc-card">
+                <h4>📖 README</h4>
+                <p class="en">Full project overview and setup guide</p>
+                <p class="zh">完整项目介绍和安装指南</p>
+            </a>
+            <a href="https://github.com/kk43994/claw-desktop-pet/issues" class="doc-card">
+                <h4>🐛 Issues</h4>
+                <p class="en">Report bugs or request features</p>
+                <p class="zh">报告问题或请求新功能</p>
+            </a>
+            <a href="https://clawhub.ai/kk43994/desktop-pet" class="doc-card">
+                <h4>📦 ClawHub</h4>
+                <p class="en">Skill page with install instructions</p>
+                <p class="zh">技能页面和安装说明</p>
+            </a>
+            <a href="https://github.com/kk43994/claw-desktop-pet/releases" class="doc-card">
+                <h4>📋 Releases</h4>
+                <p class="en">Download latest version</p>
+                <p class="zh">下载最新版本</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>
+            <span class="en">Made with ❤️ by <a href="https://github.com/kk43994">KK</a> · Powered by <a href="https://openclaw.ai">OpenClaw</a></span>
+            <span class="zh">由 <a href="https://github.com/kk43994">KK</a> 用 ❤️ 制作 · 基于 <a href="https://openclaw.ai">OpenClaw</a></span>
+        </p>
+        <p style="margin-top:0.5rem;font-size:0.85rem">
+            <a href="https://github.com/kk43994/claw-desktop-pet">GitHub</a> · 
+            <a href="https://clawhub.ai/kk43994/desktop-pet">ClawHub</a>
+        </p>
+    </footer>
+
+    <script>
+        // Language switching
+        function setLang(lang) {
+            document.body.classList.toggle('zh-mode', lang === 'zh');
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            localStorage.setItem('lang', lang);
+        }
+        
+        // Restore language
+        if (localStorage.getItem('lang') === 'zh') {
+            document.body.classList.add('zh-mode');
+            document.querySelectorAll('.lang-btn')[1].classList.add('active');
+            document.querySelectorAll('.lang-btn')[0].classList.remove('active');
+        }
+        
+        // Scroll animations
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.1 });
+        
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>
