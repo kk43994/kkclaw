@@ -764,7 +764,7 @@ function openModelSettings() {
   modelSettingsWindow = new BrowserWindow({
     width: 520,
     height: 640,
-    title: '模型管理',
+    title: 'KKClaw Switch',
     resizable: true,
     minimizable: true,
     maximizable: false,

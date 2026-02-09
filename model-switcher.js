@@ -139,8 +139,8 @@ const PROVIDER_PRESETS = {
   // 自定义中转站模板
   'custom-proxy': {
     name: '自定义中转站',
-    baseUrl: '',
-    website: '',
+    baseUrl: 'https://api.kk666.online/v1',
+    website: 'https://api.kk666.online',
     api: 'anthropic-messages',
     icon: '⚙',
     color: '#888888',

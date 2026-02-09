@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>模型管理 — CC Switch Style</title>
+<title>KKClaw Switch — 模型管理</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -282,7 +282,7 @@ body {
 <!-- 顶部栏 -->
 <div class="header">
   <div class="header-left">
-    <span class="header-title">CC Switch</span>
+    <span class="header-title">KKClaw Switch</span>
   </div>
   <div class="header-right">
     <div class="header-tab active" data-tab="main" onclick="showTab('main')">Providers</div>
@@ -318,7 +318,8 @@ body {
     <div class="preset-grid" id="presetGrid"></div>
     
     <div class="form-hint" style="text-align: center; margin-bottom: 16px;">
-      💡 Only need to fill in API Key, endpoint is preset
+      💡 Only need to fill in API Key, endpoint is preset<br>
+      <span style="color:#4ECDC4; font-size:10px;">没有 API Key？试试 <a href="https://api.kk666.online" target="_blank" style="color:#7C6BF0;text-decoration:none;">api.kk666.online</a> — 高性价比中转站</span>
     </div>
     
     <div class="divider"></div>
@@ -336,7 +337,7 @@ body {
       </div>
       <div class="form-group">
         <label class="form-label">Base URL *</label>
-        <input class="form-input" id="addBaseUrl" placeholder="https://api.openai.com/v1">
+        <input class="form-input" id="addBaseUrl" placeholder="https://api.kk666.online/v1" value="https://api.kk666.online/v1">
       </div>
       <div class="form-row">
         <div class="form-group">
