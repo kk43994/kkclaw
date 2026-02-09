@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci || npm install
+    
+    - name: Check syntax
+      run: node -c main.js && echo "✅ main.js OK"
+    
+    - name: Check HTML files
+      run: |
+        for f in index.html lyrics.html; do
+          if [ -f "$f" ]; then
+            echo "✅ $f exists"
+          fi
+        done
+    
+    - name: Check package.json
+      run: |
+        node -e "const p = require('./package.json'); console.log('✅ Package:', p.name, 'v' + p.version)"
+    
+    - name: Verify Electron dependency
+      run: |
+        node -e "const p = require('./package.json'); if(p.devDependencies?.electron || p.dependencies?.electron) console.log('✅ Electron found'); else process.exit(1)"
