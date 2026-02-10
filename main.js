@@ -258,11 +258,8 @@ async function createWindow() {
   // 启动服务管理器
   serviceManager.start();
 
-  // 🛡️ 启动 Gateway 进程守护
-  gatewayGuardian = new GatewayGuardian({
-    checkInterval: 5000,        // 每5秒检查一次
-    maxRestarts: 10,            // 1小时内最多重启10次
-    restartWindow: 60 * 60 * 1000, // 1小时窗口
+  // 启动 Gateway 进程守护
+  gatewayGuardian = new GatewayGuardian(serviceManager, {
     gatewayHost: 'http://127.0.0.1:18789'
   });
 
@@ -284,16 +281,15 @@ async function createWindow() {
   });
 
   gatewayGuardian.on('restart-limit-reached', (info) => {
-    console.log('❌ Gateway 重启次数过多，已停止自动重启');
+    console.log('❌ Gateway 重启次数过多，进入低频监控');
     if (voiceSystem) {
-      voiceSystem.speak('Gateway频繁异常，已停止自动重启，请检查日志', { priority: 'high' });
+      voiceSystem.speak('Gateway频繁异常，进入低频监控', { priority: 'high' });
     }
-    workLogger.logError(`Gateway 重启次数过多 (${info.restartHistory.length} 次)`);
+    workLogger.logError(`Gateway 重启次数过多 (${info.restartHistory.length} 次)，进入低频监控`);
 
-    // 发送桌面通知
     new Notification({
       title: 'OpenClaw Gateway 异常',
-      body: 'Gateway 频繁重启，已停止自动恢复。请检查日志或手动重启。',
+      body: 'Gateway 频繁重启，已进入低频监控模式。',
       icon: path.join(__dirname, 'icon.png')
     }).show();
   });
@@ -303,62 +299,15 @@ async function createWindow() {
     workLogger.logError(`Gateway 重启失败: ${info.error}`);
   });
 
+  gatewayGuardian.on('recovered', () => {
+    workLogger.log('success', 'Gateway 已自动恢复');
+    if (voiceSystem) {
+      voiceSystem.speak('连接已恢复');
+    }
+  });
+
   // 启动守护
   gatewayGuardian.start();
-
-  // 🔄 心跳检测 - 自动恢复语音播报连接
-  let lastSuccessfulPing = Date.now();
-  let consecutiveFailures = 0;
-  let isRecovering = false; // 防止重复恢复
-
-  const heartbeatCheck = setInterval(async () => {
-    try {
-      const connected = await openclawClient.checkConnection();
-
-      if (connected) {
-        lastSuccessfulPing = Date.now();
-        consecutiveFailures = 0;
-        isRecovering = false;
-      } else {
-        consecutiveFailures++;
-        const timeSinceLastSuccess = Date.now() - lastSuccessfulPing;
-
-        // 如果连续失败3次且超过30秒没响应，尝试自动恢复
-        if (consecutiveFailures >= 3 && timeSinceLastSuccess > 30000 && !isRecovering) {
-          isRecovering = true;
-          console.log('🔄 检测到 OpenClaw 掉线，尝试自动恢复...');
-
-          if (voiceSystem) {
-            voiceSystem.speak('检测到连接断开，正在自动恢复');
-          }
-
-          // 重启 gateway
-          const result = await serviceManager.restartGateway();
-
-          if (result.success) {
-            // 重置计数
-            consecutiveFailures = 0;
-            lastSuccessfulPing = Date.now();
-
-            workLogger.log('success', '自动恢复成功');
-
-            if (voiceSystem) {
-              voiceSystem.speak('连接已自动恢复');
-            }
-          } else {
-            workLogger.logError(`自动恢复失败: ${result.error || '未知错误'}`);
-
-            // 恢复失败，等待下一次尝试
-            setTimeout(() => {
-              isRecovering = false;
-            }, 60000); // 1分钟后允许再次尝试
-          }
-        }
-      }
-    } catch (err) {
-      console.error('心跳检测失败:', err.message);
-    }
-  }, 10000); // 每10秒检查一次
 
   // 监听服务状态变化
   serviceManager.on('status-change', (change) => {

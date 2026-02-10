@@ -877,11 +877,49 @@ class ModelSwitcher {
       }
       this.switchLog.info('配置写入', `${previousModel || '(none)'} → ${modelId} (Gateway file watcher 热加载)`);
 
+      // 清理飞书 session，迫使 Gateway 用新模型重建对话
+      this._clearLarkSessions();
+
       // 重新加载内存状态
       this._loadConfig();
     } catch (err) {
       console.error(`❌ 写入 openclaw.json 失败:`, err.message);
       this.switchLog.error('配置写入失败', err.message);
+    }
+  }
+
+  _clearLarkSessions() {
+    try {
+      const sessionDir = path.join(process.env.HOME || process.env.USERPROFILE, '.openclaw', 'agents', 'main', 'sessions');
+      const sessionFile = path.join(sessionDir, 'sessions.json');
+
+      if (!fs.existsSync(sessionFile)) return;
+
+      const sessionsData = JSON.parse(fs.readFileSync(sessionFile, 'utf8'));
+      let deletedCount = 0;
+
+      for (const [key, value] of Object.entries(sessionsData)) {
+        if (key.includes('lark:') && value.sessionId) {
+          const sessionPath = path.join(sessionDir, `${value.sessionId}.jsonl`);
+          const lockPath = sessionPath + '.lock';
+
+          if (fs.existsSync(sessionPath)) {
+            fs.unlinkSync(sessionPath);
+            deletedCount++;
+          }
+          if (fs.existsSync(lockPath)) {
+            fs.unlinkSync(lockPath);
+          }
+        }
+      }
+
+      if (deletedCount > 0) {
+        console.log(`🗑️ 已清理 ${deletedCount} 个飞书 session，新消息将使用新模型`);
+        this.switchLog.info('Session 清理', `删除 ${deletedCount} 个飞书会话，下次消息使用新模型`);
+      }
+    } catch (err) {
+      console.error(`⚠️ 清理飞书 session 失败:`, err.message);
+      this.switchLog.warn('Session 清理失败', err.message);
     }
   }
 
