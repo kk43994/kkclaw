@@ -4,8 +4,8 @@ const { promisify } = require('util');
 const execAsync = promisify(exec);
 const path = require('path');
 const fs = require('fs').promises;
-const DashScopeTTS = require('./dashscope-tts');
-const MiniMaxTTS = require('./minimax-tts');
+const DashScopeTTS = require('./voice/dashscope-tts');
+const MiniMaxTTS = require('./voice/minimax-tts');
 
 class SmartVoiceSystem {
     constructor() {

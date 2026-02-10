@@ -1,4 +1,4 @@
-# 🦞 Claw Desktop Pet
+# 🦞 KKClaw Desktop Pet
 
 **给 OpenClaw 一个身体 — 透明桌面AI伴侣，情感语音、生动表情、空气感UI**
 
