@@ -899,35 +899,9 @@
                     <div class="demo-particles" id="demoParticles"></div>
                 </div>
                 
-                <!-- Mood Control - 7 emotions -->
-                <div style="margin-top: 2rem; text-align: center;">
-                    <div style="font-size: 0.9rem; color: var(--text-dim); margin-bottom: 1rem;">
-                        <span class="en-inline">✨ Try different moods!</span>
-                        <span class="zh-inline">✨ 试试不同情绪!</span>
-                    </div>
-                    <div style="display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; max-width: 500px; margin: 0 auto;">
-                        <button onclick="setDemoMood('idle')" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, rgba(255,107,74,0.12), rgba(255,154,108,0.12)); border: 1px solid rgba(255,107,74,0.4); border-radius: 25px; color: var(--primary); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.25s; box-shadow: 0 2px 8px rgba(255,107,74,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(255,107,74,0.2)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(255,107,74,0.1)'">
-                            <span class="en-inline">🔴 Idle</span><span class="zh-inline">🔴 待机</span>
-                        </button>
-                        <button onclick="setDemoMood('happy')" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, rgba(251,191,36,0.12), rgba(255,215,0,0.12)); border: 1px solid rgba(251,191,36,0.4); border-radius: 25px; color: #FBBF24; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.25s; box-shadow: 0 2px 8px rgba(251,191,36,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(251,191,36,0.2)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(251,191,36,0.1)'">
-                            <span class="en-inline">🟡 Happy</span><span class="zh-inline">🟡 开心</span>
-                        </button>
-                        <button onclick="setDemoMood('talking')" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, rgba(255,107,157,0.12), rgba(255,154,200,0.12)); border: 1px solid rgba(255,107,157,0.4); border-radius: 25px; color: #FF6B9D; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.25s; box-shadow: 0 2px 8px rgba(255,107,157,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(255,107,157,0.2)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(255,107,157,0.1)'">
-                            <span class="en-inline">💗 Talking</span><span class="zh-inline">💗 对话</span>
-                        </button>
-                        <button onclick="setDemoMood('thinking')" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, rgba(107,138,255,0.12), rgba(168,85,247,0.12)); border: 1px solid rgba(107,138,255,0.4); border-radius: 25px; color: #6B8AFF; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.25s; box-shadow: 0 2px 8px rgba(107,138,255,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(107,138,255,0.2)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(107,138,255,0.1)'">
-                            <span class="en-inline">🔵 Thinking</span><span class="zh-inline">🔵 思考</span>
-                        </button>
-                        <button onclick="setDemoMood('sleepy')" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, rgba(160,130,120,0.12), rgba(180,150,140,0.12)); border: 1px solid rgba(160,130,120,0.4); border-radius: 25px; color: #A08278; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.25s; box-shadow: 0 2px 8px rgba(160,130,120,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(160,130,120,0.2)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(160,130,120,0.1)'">
-                            <span class="en-inline">🤎 Sleepy</span><span class="zh-inline">🤎 困了</span>
-                        </button>
-                        <button onclick="setDemoMood('surprised')" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, rgba(255,165,0,0.12), rgba(255,200,100,0.12)); border: 1px solid rgba(255,165,0,0.4); border-radius: 25px; color: #FFA500; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.25s; box-shadow: 0 2px 8px rgba(255,165,0,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(255,165,0,0.2)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(255,165,0,0.1)'">
-                            <span class="en-inline">🟠 Surprised</span><span class="zh-inline">🟠 惊讶</span>
-                        </button>
-                        <button onclick="setDemoMood('offline')" style="padding: 0.5rem 1rem; background: linear-gradient(135deg, rgba(128,128,128,0.12), rgba(160,160,160,0.12)); border: 1px solid rgba(128,128,128,0.4); border-radius: 25px; color: #808080; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.25s; box-shadow: 0 2px 8px rgba(128,128,128,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(128,128,128,0.2)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(128,128,128,0.1)'">
-                            <span class="en-inline">⚫ Offline</span><span class="zh-inline">⚫ 离线</span>
-                        </button>
-                    </div>
+                <!-- Mood System Image -->
+                <div style="margin-top: 2.5rem; text-align: center;">
+                    <img src="images/mood-system.jpg" alt="7种情绪状态" style="max-width: 100%; height: auto; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
                 </div>
             </div>
 
