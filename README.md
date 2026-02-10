@@ -2,7 +2,7 @@
 
 **空气感AI桌面伙伴 — 像桌面歌词一样，不妨碍操作的智能助手**
 
-一款面向 7×24 稳定运行的透明桌面 AI 伙伴，集成 OpenClaw AI、MiniMax 语音克隆、流体玻璃球UI。
+一款面向 7×24 稳定运行的透明桌面 AI 伙伴，集成 OpenClaw AI、MiniMax 语音克隆、流体玻璃球UI、**KKClaw Switch 模型热切换**。
 
 <div align="center">
 
@@ -94,6 +94,18 @@
 - 飞书消息双向同步
 - 截图发送功能
 - 三击查看历史消息
+
+</td>
+<td width="50%">
+
+### 🔁 **KKClaw Switch 热切换**
+- **Provider切换自动同步**
+  - 实时监听DB变化 (每2秒)
+  - 自动同步到OpenClaw配置
+  - 零重启切换模型
+- **手动同步脚本**
+  - 一键同步 + 重启
+  - 配置文件修复工具
 
 </td>
 <td width="50%">
@@ -270,6 +282,71 @@ Edge TTS (兜底)
   - 显示 Gateway 状态
 - **恢复Session** — 一键恢复OpenClaw会话
 - **退出** — 优雅关闭所有服务
+
+### 🔁 KKClaw Switch 模型热切换
+
+#### 自动同步模式（推荐）
+桌面龙虾启动时会自动启动 **KKClaw Switch 监听器**：
+
+```javascript
+// kkclaw-auto-sync.js 自动运行
+// - 每2秒监听 ~/.cc-switch/cc-switch.db
+// - 检测到provider变化 → 自动同步到OpenClaw配置
+// - 自动重启Gateway使配置生效
+```
+
+**工作流程：**
+1. 在 KKClaw Switch / CC Switch 切换provider
+2. 监听器自动检测DB变化
+3. 读取新的active provider配置
+4. 同步到 `~/.openclaw/openclaw.json`
+5. 自动重启OpenClaw Gateway
+6. **零手动操作，切换即生效！** ✨
+
+#### 手动同步模式
+如果自动同步失败，可以手动运行：
+
+```bash
+# 同步当前激活provider到OpenClaw
+node C:\Users\zhouk\openclaw-data\kkclaw-hotswitch.js
+
+# 同步并自动重启Gateway（推荐）
+node C:\Users\zhouk\openclaw-data\kkclaw-hotswitch.js --restart
+```
+
+#### 配置修复工具
+如果遇到 `openclaw.json` 重复key问题：
+
+```bash
+# 自动清理重复的provider key（大小写冲突）
+node C:\Users\zhouk\openclaw-data\fix-openclaw-config.js
+```
+
+#### 常见问题
+
+**Q: 为什么切换了provider但不生效？**
+
+A: 可能原因：
+1. OpenClaw Gateway没有重启 → 使用 `--restart` 选项
+2. 配置文件有重复key → 运行 `fix-openclaw-config.js`
+3. 自动监听器未启动 → 重启桌面龙虾
+
+**Q: PowerShell报错 "&& is not a valid statement separator"？**
+
+A: PowerShell不支持 `&&`，请用 `;` 分隔命令：
+```powershell
+node kkclaw-hotswitch.js ; openclaw gateway restart
+```
+
+**Q: 如何确认当前使用的provider？**
+
+A: 运行 `kkclaw-hotswitch.js` 会显示当前激活的provider：
+```
+🔍 Current active provider: kok6/claude-sonnet-4-5-20250929
+✅ Synced to OpenClaw config
+```
+
+详细说明见: [SYNC-GUIDE.md](SYNC-GUIDE.md)
 
 ### 🛡️ 稳定性系统
 
