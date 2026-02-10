@@ -14,7 +14,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const https = require('https');
-const SwitchLogger = require('./switch-logger');
+const SwitchLogger = require('./utils/switch-logger');
 
 // ===== 预设 Provider 模板（参考 CC Switch 的 17+ 预设） =====
 const PROVIDER_PRESETS = {
