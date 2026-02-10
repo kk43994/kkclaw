@@ -1,4 +1,4 @@
-# 🦞 Claw Desktop Pet
+﻿# 🦞 Claw Desktop Pet
 
 <div align="center">
 
@@ -41,7 +41,7 @@
 <td width="50%" align="center">
 
 <!-- TODO: Replace with real screenshot -->
-![Fluid Glass Ball](https://via.placeholder.com/400x300/1a1a2e/e94560?text=Fluid+Glass+Ball+%2867px%29)
+![Fluid Glass Ball](docs/images/screenshot-ball-toolbar.png)
 
 **Fluid Glass Ball UI**
 67px ball with 7 mood colors and 15+ eye expressions
@@ -52,7 +52,7 @@
 <td width="50%" align="center">
 
 <!-- TODO: Replace with real screenshot -->
-![Desktop Lyrics](https://via.placeholder.com/400x300/1a1a2e/e94560?text=Desktop+Lyrics+Effect)
+![Desktop Lyrics](docs/images/screenshot-lyrics.jpg)
 
 **Desktop Lyrics Effect**
 Typewriter text with glow, fully click-through
@@ -65,7 +65,7 @@ Typewriter text with glow, fully click-through
 <td width="50%" align="center">
 
 <!-- TODO: Replace with real screenshot -->
-![KKClaw Switch](https://via.placeholder.com/400x300/1a1a2e/e94560?text=KKClaw+Switch+Panel)
+![KKClaw Switch](docs/images/screenshot-kkclaw-switch.png)
 
 **KKClaw Switch**
 One-click provider/model management and sync
@@ -76,7 +76,7 @@ One-click provider/model management and sync
 <td width="50%" align="center">
 
 <!-- TODO: Replace with real screenshot -->
-![Offline & Revive](https://via.placeholder.com/400x300/1a1a2e/e94560?text=Offline+%E2%86%92+Revive+Animation)
+![Offline & Revive](docs/images/screenshot-model-menu.jpg)
 
 **Offline → Revive Animation**
 Grey when disconnected, colorful particle burst on connect
@@ -502,3 +502,4 @@ See [LICENSE](LICENSE) for full terms.
 **⭐ Star this repo if you like it!**
 
 </div>
+
