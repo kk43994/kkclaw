@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog, and this project loosely follows semantic versioning.
 
 
+## [2.0.2] - 2026-02-10
+
+### 📝 Docs
+- README hardened into a bilingual, open-source friendly "enterprise" layout
+- Added configuration matrix, troubleshooting, security, contributing and release checklist
+- Added community QR + support QR entries to GitHub Pages and README
+
+---
+
 ## [2.0.1] - 2026-02-10
 
 ### 🐛 Fixes

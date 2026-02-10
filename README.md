@@ -1,8 +1,12 @@
-# 🦞 Claw Desktop Pet
+﻿# 🦞 Claw Desktop Pet
+
+A production-minded, transparent Electron desktop companion for OpenClaw.
+
+一款面向 7x24 稳定运行的透明桌面 AI 伙伴（OpenClaw 的“身体”）。
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-2.0.1-blue)
+![Version](https://img.shields.io/badge/version-2.0.2-blue)
 ![Updated](https://img.shields.io/badge/updated-2026--02--10-informational)
 ![CI](https://github.com/kk43994/claw-desktop-pet/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -13,7 +17,7 @@
 
 集成 OpenClaw AI、MiniMax 语音克隆、流体玻璃球UI、桌面歌词效果
 
-[快速开始](#-快速开始) • [功能特性](#-核心亮点) • [更新日志](#-更新日志) • [模型热切换](#-模型热切换kkclaw-switch) • [文档](#-文档) • [加入社群](#-加入社群)
+[快速开始](#-快速开始) • [功能特性](#-核心亮点) • [更新日志](#-更新日志) • [配置矩阵](#%EF%B8%8F-configuration-matrix-recommended) • [排障](#-troubleshooting-symptom---fix) • [模型热切换](#-模型热切换kkclaw-switch) • [文档](#-文档) • [加入社群](#-加入社群) • [赞赏支持](#-赞赏支持)
 
 </div>
 
@@ -101,30 +105,35 @@
 
 ---
 
-## 🚀 系统架构
+## 🚀 System Architecture & Components
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                   🦞 桌面龙虾 v2.0.0                     │
-├─────────────────────────────────────────────────────────┤
-│                                                          │
-│  ┌─────── 精灵窗口 (200×220) ──────┐  ┌─ 歌词窗口 ──┐  │
-│  │  67px 流体玻璃球                 │  │  桌面歌词     │  │
-│  │  • 7色流体动画                   │  │  • 打字机     │  │
-│  │  • 15+种眼睛表情                 │  │  • 自发光     │  │
-│  │  • SVG图标工具栏                 │  │  • 鼠标穿透   │  │
-│  │  • 离线灰色/上线复活             │  │  • 优雅淡出   │  │
-│  └──��──────────────────────────────┘  └──────────────┘  │
-│                                                          │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │ 🎤 MiniMax    │  │ 🛡️ 稳定系统   │  │ 📊 性能监控   │  │
-│  │ 语音克隆      │  │ 错误处理     │  │ 健康评分     │  │
-│  │ 情感控制      │  │ 自动恢复     │  │ 异常告警     │  │
-│  └──────────────┘  └──────────────┘  └──────────────┘  │
-│                                                          │
-├─────────────────────────────────────────────────────────┤
-│         ⚡ OpenClaw AI • 🎨 Electron • 🔊 MiniMax        │
-└─────────────────────────────────────────────────────────┘
+```text
+┌──────────────────────────────────────────────────────────────────┐
+│                    🦞 Claw Desktop Pet (Electron)                 │
+├──────────────────────────────────────────────────────────────────┤
+│  Windows Desktop (Transparent Always-on-top Windows)              │
+│                                                                  │
+│  ┌────────────── Sprite Window ──────────────┐   ┌─ Lyrics Window ┐
+│  │ Fluid Glass Ball UI (67px)                │   │ Desktop Lyrics │
+│  │ - Eye micro-expressions (15+)             │   │ - Typewriter   │
+│  │ - Mood-based colors (7)                   │   │ - Glow + fade  │
+│  │ - Toolbar (SVG icons)                     │   │ - Click-through│
+│  └───────────────────────────────────────────┘   └───────────────┘
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────────┐
+│  │ Runtime Services                                             │
+│  │ - Message Bridge (Feishu <-> Desktop)                        │
+│  │ - TTS Pipeline (MiniMax -> CosyVoice -> Edge TTS)            │
+│  │ - Resilience Layer (global error hooks, auto-restart)        │
+│  │ - Observability (health score, perf monitor, log rotation)   │
+│  └──────────────────────────────────────────────────────────────┘
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────────┐
+│  │ OpenClaw Gateway (optional)                                  │
+│  │ - Model providers + routing (Claude / Codex etc.)            │
+│  │ - KKClaw Switch (provider/model hotswitch + sync)            │
+│  └──────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -156,8 +165,9 @@ npm install -g openclaw
 # 4️⃣ 启动 Gateway
 openclaw gateway start
 
-# 5️⃣ 配置 MiniMax API Key (可选)
-# 在 pet-config.json 中设置 minimax.apiKey
+# 5️⃣ Configure TTS API Keys (optional)
+# Copy `pet-config.example.json` -> `pet-config.json` and fill in your keys
+# (DO NOT commit real keys)
 
 # 6️⃣ 启动龙虾
 npm start
@@ -207,6 +217,78 @@ npm start
 
 ## 📊 性能指标
 
+## ⚙️ Configuration Matrix (Recommended)
+
+> Never commit real credentials. Use `pet-config.example.json` as a safe template.
+>
+> ✅ Tip: keep secrets only in local files (`pet-config.json`, `~/.openclaw/openclaw.json`), never in git.
+
+### Desktop Pet Runtime (`pet-config.json`)
+
+| Key | Type | Default | Description (EN) | 说明 (中文) |
+|---|---|---:|---|---|
+| `voiceEnabled` | boolean | `true` | Enable/disable TTS playback | 是否开启语音播报 |
+| `ttsEngine` | string | `minimax` | Active TTS engine: `minimax` / `dashscope` | 当前使用的TTS引擎 |
+| `minimax.apiKey` | string | - | MiniMax API key (required if `ttsEngine=minimax`) | MiniMax密钥（不要提交到仓库） |
+| `minimax.model` | string | `speech-2.5-turbo-preview` | MiniMax voice model | MiniMax语音模型 |
+| `minimax.voiceId` | string | - | MiniMax cloned voice id | MiniMax克隆音色ID |
+| `minimax.speed` | number | `1.1` | Speech speed | 语速 |
+| `minimax.vol` | number | `3` | Volume | 音量 |
+| `minimax.emotion` | string | `calm` | Emotion hint | 情绪提示 |
+| `dashscope.apiKey` | string | - | DashScope API key | DashScope密钥（不要提交） |
+| `dashscope.model` | string | `cosyvoice-v3-plus` | CosyVoice model | CosyVoice模型 |
+| `dashscope.voice` | string | - | CosyVoice voice id | CosyVoice音色ID |
+| `dashscope.speechRate` | number | `1.1` | Speech rate | 语速 |
+
+### OpenClaw Gateway (Optional)
+
+| Command | Purpose (EN) | 说明 (中文) |
+|---|---|---|
+| `openclaw gateway start` | Start local gateway | 启动本地网关 |
+| `openclaw gateway restart` | Restart to apply model/provider changes | 重启以应用模型/Provider变更 |
+
+---
+
+## 🧰 Troubleshooting (Symptom -> Fix)
+
+### "Switched provider but it doesn't take effect"
+- **Cause**: OpenClaw config not reloaded; or duplicated JSON keys in `openclaw.json`.
+- **Fix**:
+  1) Run hot switch sync: `node kkclaw-hotswitch.js --restart`
+  2) If OpenClaw cannot parse config: `node fix-openclaw-config.js` then restart gateway
+
+### PowerShell "&& is not a valid statement separator"
+- **Fix**: Use `;` instead of `&&` in PowerShell.
+
+### "I updated config but OpenClaw still uses the old model"
+- **Fix**: Confirm current session model, then restart gateway.
+
+---
+
+## 🔐 Security & Privacy
+
+- Never commit API keys or tokens. Keep `pet-config.json` local.
+- Prefer `pet-config.example.json` for documentation and onboarding.
+- If you accidentally leaked a key, rotate it immediately.
+
+---
+
+## 🤝 Contributing
+
+- Fork -> feature branch -> PR.
+- Keep UI changes isolated from runtime logic when possible.
+- Add screenshots/GIFs for any UI behavior change.
+
+---
+
+## 🧾 Release Checklist
+
+- [ ] Bump `package.json` version
+- [ ] Update README badges + `CHANGELOG.md`
+- [ ] Verify `docs/` renders (GitHub Pages)
+- [ ] Tag release: `git tag vX.Y.Z && git push --tags`
+
+
 | 指标 | 数值 | 说明 |
 |------|------|------|
 | 内存占用 | ~60MB | 含监控数据 |
@@ -236,6 +318,18 @@ npm start
 ---
 
 ## 📝 更新日志
+
+### v2.0.2 (2026-02-10) 📚 Documentation Hardening (Open-Source Style)
+
+<details>
+<summary>View details</summary>
+
+- Added bilingual positioning and a more "enterprise" documentation layout
+- Added Architecture section refresh (component breakdown)
+- Added Configuration Matrix, Troubleshooting, Security, Contributing, Release checklist
+- Added community QR + support QR entries in both README and GitHub Pages
+
+</details>
 
 ### v2.0.1 (2026-02-10) 🔁 KKClaw Switch 热切换修复 + 文档完善
 
@@ -377,3 +471,4 @@ Made with ❤️ and 🦞
 [⬆ 回到顶部](#-claw-desktop-pet)
 
 </div>
+

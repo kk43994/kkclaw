@@ -1,0 +1,26 @@
+{
+  "position": {
+    "x": 0,
+    "y": 0
+  },
+  "mood": "idle",
+  "theme": "default",
+  "voiceEnabled": true,
+  "ttsEngine": "minimax",
+  "minimax": {
+    "apiKey": "YOUR_MINIMAX_API_KEY",
+    "model": "speech-2.5-turbo-preview",
+    "voiceId": "YOUR_VOICE_ID",
+    "voiceName": "Your cloned voice",
+    "speed": 1.1,
+    "vol": 3,
+    "emotion": "calm"
+  },
+  "dashscope": {
+    "apiKey": "YOUR_DASHSCOPE_API_KEY",
+    "model": "cosyvoice-v3-plus",
+    "voice": "YOUR_COSYVOICE_VOICE_ID",
+    "voiceName": "Backup voice",
+    "speechRate": 1.1
+  }
+}
