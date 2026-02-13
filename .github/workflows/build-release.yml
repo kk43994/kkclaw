@@ -28,13 +28,13 @@ jobs:
       
       - name: Build for Windows
         if: matrix.os == 'windows-latest'
-        run: npx electron-builder --win --x64 --config.win.signAndEditExecutable=false
+        run: npx electron-builder --win --x64 --config.win.signAndEditExecutable=false --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
       
       - name: Build for macOS
         if: matrix.os == 'macos-latest'
-        run: npx electron-builder --mac --x64 --arm64
+        run: npx electron-builder --mac --x64 --arm64 --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
       
