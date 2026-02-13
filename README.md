@@ -8,11 +8,11 @@
 
 *OpenClaw Core + Desktop Embodiment = A living interface with emotion, voice, and presence*
 
-[![Version](https://img.shields.io/badge/version-2.0.4-FF6B4A?style=for-the-badge&logo=github)](https://github.com/kk43994/kkclaw/releases)
-[![Updated](https://img.shields.io/badge/updated-2026--02--10-34D399?style=for-the-badge)](https://github.com/kk43994/kkclaw)
-[![CI](https://img.shields.io/github/actions/workflow/status/kk43994/kkclaw/ci.yml?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/kk43994/kkclaw/actions)
+[![Version](https://img.shields.io/badge/version-2.1.0-FF6B4A?style=for-the-badge&logo=github)](https://github.com/kk43994/kkclaw/releases)
+[![Updated](https://img.shields.io/badge/updated-2026--02--13-34D399?style=for-the-badge)](https://github.com/kk43994/kkclaw)
+[![Build](https://img.shields.io/github/actions/workflow/status/kk43994/kkclaw/build-release.yml?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/kk43994/kkclaw/actions)
 [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Windows_10/11-0078D6?style=for-the-badge&logo=windows)](https://github.com/kk43994/kkclaw)
+[![Platform](https://img.shields.io/badge/platform-Windows_|_macOS-0078D6?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/kk43994/kkclaw)
 
 [🎥 **在线演示**](https://kk43994.github.io/kkclaw/) | [📦 **下载最新版**](https://github.com/kk43994/kkclaw/releases) | [📖 **文档**](#-文档) | [💬 **加入社群**](#-社群)
 
@@ -30,6 +30,39 @@
 - 🎙️ **克隆音色TTS** — MiniMax 2.5 Turbo，小团团音色，7种情感
 - 🔁 **KKClaw Switch** — 3秒热切换AI模型，无需重启
 - 🎯 **7×24 稳定** — 自动重启、日志轮转、错误恢复
+- 🍎 **跨平台支持** — Windows 10/11 + macOS (Intel & Apple Silicon)
+
+---
+
+## 📦 下载安装
+
+### 最新版本：v2.1.0
+
+<div align="center">
+
+| 平台 | 架构 | 下载链接 | 大小 |
+|------|------|----------|------|
+| 🪟 **Windows** | x64 | [KKClaw-Desktop-Pet-2.1.0-Setup.exe](https://github.com/kk43994/kkclaw/releases/download/v2.1.0/KKClaw-Desktop-Pet-2.1.0-Setup.exe) | ~150MB |
+| 🍎 **macOS** | Intel | [KKClaw-Desktop-Pet-2.1.0-x64.dmg](https://github.com/kk43994/kkclaw/releases/download/v2.1.0/KKClaw-Desktop-Pet-2.1.0-x64.dmg) | ~160MB |
+| 🍎 **macOS** | Apple Silicon | [KKClaw-Desktop-Pet-2.1.0-arm64.dmg](https://github.com/kk43994/kkclaw/releases/download/v2.1.0/KKClaw-Desktop-Pet-2.1.0-arm64.dmg) | ~160MB |
+
+[📦 查看所有版本](https://github.com/kk43994/kkclaw/releases) | [🎥 在线演示](https://kk43994.github.io/kkclaw/)
+
+</div>
+
+### 安装说明
+
+#### Windows
+1. 下载 `.exe` 安装程序
+2. 双击运行（可能需要允许"未知发布者"）
+3. 按提示完成安装
+
+#### macOS
+1. 下载对应架构的 `.dmg` 文件
+2. 打开 DMG，拖动应用到 Applications 文件夹
+3. 首次运行需要在"系统偏好设置 → 安全性与隐私"中允许
+
+> **注意**：macOS 版本未签名，首次运行需要右键点击 → "打开"
 
 ---
 
@@ -277,7 +310,7 @@ function createColorTransition(fromColor, toColor) {
 ### 前置要求
 
 - **Node.js** ≥ 18.x ([下载](https://nodejs.org))
-- **Windows** 10 / 11
+- **Windows** 10/11 或 **macOS** 10.15+
 - **OpenClaw** ≥ 2026.x ([中文社区](https://clawd.org.cn) | [国际版](https://openclaw.ai))
 
 ### 安装
@@ -547,6 +580,27 @@ node kkclaw-hotswitch.js --restart
 ---
 
 ## 📝 更新日志
+
+### [2.1.0] - 2026-02-13
+
+#### 🎉 重大更新
+- ✨ **完整 macOS 支持** — Intel 和 Apple Silicon 双架构
+- 🤖 **GitHub Actions 自动化** — 推送 tag 自动构建发布
+- 📦 **跨平台打包** — DMG 安装器 + ZIP 便携版
+- 🔄 **自动发布流程** — electron-builder 直接发布到 GitHub Release
+
+#### 技术改进
+- 🔧 跳过代码签名配置（Windows + macOS）
+- 📦 升级 GitHub Actions artifacts 到 v4
+- 🔐 配置完整的 GitHub Actions 权限
+- 🎨 生成 macOS 专用 .icns 图标文件
+
+#### 文档更新
+- 📖 README 增加下载安装章节
+- 🌐 GitHub Pages 更新双平台支持
+- 📋 完善跨平台安装说明
+
+---
 
 ### [2.0.4] - 2026-02-10
 
