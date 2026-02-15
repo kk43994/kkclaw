@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KKClaw 桌面龙虾 - 演示视频</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .video-container {
+            padding: 40px 30px;
+            background: #f8f9fa;
+        }
+        
+        video {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            background: #000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .info {
+            padding: 30px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .info h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .info p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .feature {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .feature strong {
+            color: #333;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .feature span {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .links {
+            padding: 30px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            text-align: center;
+        }
+        
+        .links a {
+            display: inline-block;
+            margin: 0 10px;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.3s;
+            font-size: 14px;
+        }
+        
+        .links a:hover {
+            background: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🦞 KKClaw 桌面龙虾</h1>
+            <p>让 OpenClaw 给自己做了个身体！</p>
+        </div>
+        
+        <div class="video-container">
+            <video controls width="100%">
+                <source src="../videos/demo.mp4" type="video/mp4">
+                您的浏览器不支持视频播放。请升级浏览器或使用其他设备观看。
+            </video>
+        </div>
+        
+        <div class="info">
+            <h2>✨ 项目介绍</h2>
+            <p>KKClaw 是一个创新的桌面 AI 助手项目，将 OpenClaw 的强大功能与可爱的视觉界面结合在一起。</p>
+            
+            <div class="features">
+                <div class="feature">
+                    <strong>🤖 AI 驱动</strong>
+                    <span>基于 OpenClaw 框架</span>
+                </div>
+                <div class="feature">
+                    <strong>🎨 精美界面</strong>
+                    <span>可爱的龙虾角色设计</span>
+                </div>
+                <div class="feature">
+                    <strong>⚡ 高效工作</strong>
+                    <span>自动化任务处理</span>
+                </div>
+                <div class="feature">
+                    <strong>🔧 易于集成</strong>
+                    <span>支持多种平台接入</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="links">
+            <a href="https://github.com/kk43994/KKClaw-Desktop-Pet" target="_blank">📦 GitHub 仓库</a>
+            <a href="https://b23.tv/85bz09G" target="_blank">📱 B站视频</a>
+            <a href="https://v.douyin.com/9wKpkB8z4ew/" target="_blank">📱 抖音视频</a>
+        </div>
+    </div>
+</body>
+</html>
