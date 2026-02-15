@@ -21,6 +21,7 @@ class ServiceManager extends EventEmitter {
         this.logs = [];
         this.maxLogs = 100;
         this._restartLock = false; // 防止并发重启
+        this._startupState = null; // 启动状态追踪: { pid, startedAt, child }
     }
 
     // 开始（仅初始化，不轮询）
@@ -116,7 +117,7 @@ class ServiceManager extends EventEmitter {
     // 查找占用指定端口的进程 PID（排除 Electron 自身）
     _findPortPids(port) {
         return new Promise((resolve) => {
-            exec(`netstat -ano | findstr :${port} | findstr LISTENING`, (err, stdout) => {
+            exec(`netstat -ano | findstr :${port} | findstr LISTENING`, { windowsHide: true }, (err, stdout) => {
                 if (err || !stdout) {
                     resolve([]);
                     return;
@@ -148,7 +149,7 @@ class ServiceManager extends EventEmitter {
         this.log('info', `强制终止占用端口 ${port} 的进程: ${pids.join(', ')}`, 'gateway');
 
         const killPromises = pids.map(pid => new Promise((resolve) => {
-            exec(`taskkill /PID ${pid} /F /T`, (err) => {
+            exec(`taskkill /PID ${pid} /F /T`, { windowsHide: true }, (err) => {
                 if (err) {
                     this.log('warn', `终止 PID ${pid} 失败: ${err.message}`, 'gateway');
                 }
@@ -173,6 +174,25 @@ class ServiceManager extends EventEmitter {
         }
 
         return false;
+    }
+
+    // 检查 gateway 是否仍在启动中（进程存活且在宽限期内）
+    isGatewayStartingUp() {
+        if (!this._startupState) return false;
+        const { startedAt, exited } = this._startupState;
+        // 进程已退出，不算启动中
+        if (exited) {
+            this._startupState = null;
+            return false;
+        }
+        // 60 秒宽限期：gateway 可能需要较长时间初始化
+        const STARTUP_GRACE_MS = 60000;
+        if (Date.now() - startedAt > STARTUP_GRACE_MS) {
+            this.log('warn', '启动宽限期已过，放弃等待', 'gateway');
+            this._startupState = null;
+            return false;
+        }
+        return true;
     }
 
     // 启动 Gateway
@@ -201,57 +221,76 @@ class ServiceManager extends EventEmitter {
 
         const child = spawn('node', [openclawPath, 'gateway', '--port', '18789'], {
             detached: true,
-            stdio: ['ignore', 'ignore', 'pipe'], // 捕获 stderr 用于诊断闪退
-            shell: true
+            stdio: ['ignore', 'pipe', 'pipe'], // 捕获 stdout + stderr 用于诊断
+            shell: false,
+            windowsHide: true
         });
 
-        // 收集 stderr 输出（最多保留最后 2KB）
+        // 收集 stdout + stderr 输出（各保留最后 2KB）
+        let stdoutBuf = '';
         let stderrBuf = '';
         let exited = false;
+        let exitCode = null;
+
+        // 记录启动状态
+        this._startupState = { pid: child.pid, startedAt: Date.now(), exited: false };
+
+        child.stdout.on('data', (chunk) => {
+            stdoutBuf = (stdoutBuf + chunk.toString()).slice(-2048);
+        });
         child.stderr.on('data', (chunk) => {
             stderrBuf = (stderrBuf + chunk.toString()).slice(-2048);
         });
-        child.on('exit', (code) => {
+        // 用 close 而不是 exit — close 在所有 stdio 流结束后才触发，确保 buffer 已填充
+        child.on('close', (code) => {
+            exitCode = code;
             exited = true;
+            if (this._startupState) this._startupState.exited = true;
             if (code !== null && code !== 0) {
-                const reason = stderrBuf.trim() || `exit code ${code}`;
+                const reason = this._extractErrorReason(stdoutBuf, stderrBuf) || `exit code ${code}`;
                 this.log('error', `Gateway 进程异常退出 (code ${code}): ${reason}`, 'gateway');
             }
         });
 
         child.unref();
 
-        // 轮询等待启动完成（最长 15 秒）
+        // 轮询等待启动完成（最长 30 秒）
         const startTime = Date.now();
-        const maxWait = 15000;
+        const maxWait = 30000;
         const pollInterval = 1000;
 
         while (Date.now() - startTime < maxWait) {
             // 进程已退出说明闪退了，不用继续等
             if (exited) {
-                const reason = stderrBuf.trim() || '进程异常退出';
+                this._startupState = null;
+                // 等一下让 close 事件的回调跑完，确保 buffer 已填充
+                await new Promise(r => setTimeout(r, 200));
+                const reason = this._extractErrorReason(stdoutBuf, stderrBuf) || '进程异常退出';
                 this.log('error', `Gateway 闪退: ${reason}`, 'gateway');
-                return { success: false, error: `Gateway 闪退: ${reason}` };
+                return { success: false, error: `闪退: ${reason}` };
             }
             await new Promise(r => setTimeout(r, pollInterval));
             const status = await this.checkGateway();
             if (status.status === 'running') {
+                this._startupState = null;
                 this.log('success', `Gateway 启动成功 (${Math.round((Date.now() - startTime) / 1000)}s)`, 'gateway');
                 return { success: true };
             }
         }
 
-        const timeoutReason = stderrBuf.trim();
-        const errorDetail = timeoutReason
-            ? `启动超时 (${maxWait / 1000}s), stderr: ${timeoutReason}`
-            : `启动超时 (${maxWait / 1000}s)`;
-        this.log('error', `Gateway ${errorDetail}`, 'gateway');
-        return { success: false, error: errorDetail };
+        // 超时但进程还活着 → 不杀进程，保留 _startupState 让 Guardian 知道还在启动
+        const errorReason = this._extractErrorReason(stdoutBuf, stderrBuf);
+        const errorDetail = errorReason
+            ? `启动超时: ${errorReason}`
+            : `启动超时 (${maxWait / 1000}s)，进程仍在运行`;
+        this.log('warn', `Gateway ${errorDetail}`, 'gateway');
+        return { success: false, error: errorDetail, stillStarting: !exited };
     }
 
     // 停止 Gateway — 强制杀死并确认端口释放
     async stopGateway() {
         this.log('info', '正在停止 Gateway...', 'gateway');
+        this._startupState = null; // 主动停止时清除启动状态
 
         await this._forceKillPort(18789);
 
@@ -299,6 +338,49 @@ class ServiceManager extends EventEmitter {
             gateway: { ...this.services.gateway },
             timestamp: Date.now()
         };
+    }
+
+    // 从 gateway 输出中提取可读的错误原因
+    _extractErrorReason(stdout, stderr) {
+        const combined = (stdout + '\n' + stderr).replace(/\x1b\[[0-9;]*m/g, ''); // 去掉 ANSI 颜色码
+
+        // 配置校验错误
+        const configMatch = combined.match(/Config invalid[\s\S]*?Problem:\s*([\s\S]*?)(?:\n\nRun:|$)/);
+        if (configMatch) {
+            return `配置错误: ${configMatch[1].trim()}`;
+        }
+
+        // Invalid config 单行格式
+        const invalidCfg = combined.match(/Invalid config[^:]*:\s*\n\s*-\s*(.+)/);
+        if (invalidCfg) {
+            return `配置错误: ${invalidCfg[1].trim()}`;
+        }
+
+        // 端口占用
+        if (combined.includes('EADDRINUSE') || combined.includes('address already in use')) {
+            return '端口 18789 被占用';
+        }
+
+        // 权限错误
+        if (combined.includes('EACCES') || combined.includes('permission denied')) {
+            return '权限不足';
+        }
+
+        // 模块找不到
+        const moduleMatch = combined.match(/Cannot find module '([^']+)'/);
+        if (moduleMatch) {
+            return `缺少模块: ${moduleMatch[1]}`;
+        }
+
+        // 通用 Error
+        const errorMatch = combined.match(/(?:Error|TypeError|ReferenceError):\s*(.+)/);
+        if (errorMatch) {
+            return errorMatch[1].trim().slice(0, 200);
+        }
+
+        // 兜底：返回 stderr 或 stdout 最后一行有意义的内容
+        const lastLine = (stderr.trim() || stdout.trim()).split('\n').filter(l => l.trim()).pop();
+        return lastLine ? lastLine.trim().slice(0, 200) : '';
     }
 
     // 获取服务运行时间

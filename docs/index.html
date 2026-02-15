@@ -864,7 +864,7 @@
             <a href="#architecture" class="nav-link"><span class="en-inline">Architecture</span><span class="zh-inline">架构</span></a>
             <a href="#voice" class="nav-link"><span class="en-inline">Voice</span><span class="zh-inline">语音</span></a>
             <a href="#install" class="nav-link"><span class="en-inline">Install</span><span class="zh-inline">安装</span></a>
-            <span class="nav-version">v2.1.0</span>
+            <span class="nav-version">v2.2.0</span>
             <div class="lang-switch">
                 <button class="lang-btn active" onclick="setLang('en')">EN</button>
                 <button class="lang-btn" onclick="setLang('zh')">中文</button>
@@ -982,7 +982,7 @@
             <p class="tagline zh">给 OpenClaw 一个身体。透明桌面伴侣，情感语音、丰富表情、空气感 UI。</p>
 
             <div class="badges">
-                <span class="badge badge-primary">v2.1.0</span>
+                <span class="badge badge-primary">v2.2.0</span>
                 <span class="badge badge-green">7×24 Stable</span>
                 <span class="badge badge-blue">Windows + macOS</span>
                 <span class="badge badge-primary">Electron 28</span>
@@ -1051,6 +1051,78 @@
             </div>
         </div>
     </div>
+
+    <!-- What's New in v2.2.0 -->
+    <section id="whats-new" style="padding: 5rem 2rem; background: linear-gradient(180deg, rgba(255,107,74,0.04) 0%, transparent 100%);">
+        <div style="max-width:1100px; margin:0 auto;">
+            <div class="section-header reveal">
+                <div class="section-label" style="background: rgba(255,107,74,0.15); color: var(--primary);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+                    <span class="en-inline">WHAT'S NEW</span><span class="zh-inline">新版亮点</span>
+                </div>
+                <h2 class="section-title en">v2.2.0 — Reliability Update</h2>
+                <h2 class="section-title zh">v2.2.0 — 可靠性升级</h2>
+                <p class="section-subtitle en">Smarter error handling, safer model switching, and full session awareness.</p>
+                <p class="section-subtitle zh">更智能的错误处理、更安全的模型切换、完整的会话感知。</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 2.5rem;">
+                <div class="feature-card reveal" style="border-left: 3px solid var(--primary);">
+                    <div class="feature-icon" style="background:rgba(255,107,74,0.08)">
+                        <svg viewBox="0 0 24 24" stroke="var(--primary)"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </div>
+                    <h3 class="en">Error Diagnosis Chain</h3><h3 class="zh">错误诊断链路</h3>
+                    <p class="en">Gateway Guardian now captures stdout/stderr, extracts error reasons, and shows specific failure causes in desktop notifications. No more guessing why Gateway crashed.</p>
+                    <p class="zh">Gateway Guardian 现在捕获 stdout/stderr，提取错误原因，在桌面通知中显示具体失败原因。不再猜测 Gateway 为什么崩溃。</p>
+                </div>
+
+                <div class="feature-card reveal reveal-delay-1" style="border-left: 3px solid var(--accent-purple);">
+                    <div class="feature-icon" style="background:rgba(168,85,247,0.08)">
+                        <svg viewBox="0 0 24 24" stroke="var(--accent-purple)"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                    </div>
+                    <h3 class="en">Safe Model Switch + Rollback</h3><h3 class="zh">安全模型切换 + 回滚</h3>
+                    <p class="en">Model switching now verifies gateway reload and auto-rolls back if the new model fails to load within 5 seconds. Your pet never gets stuck on a broken config.</p>
+                    <p class="zh">模型切换现在会验证 Gateway 重载，如果新模型 5 秒内加载失败则自动回滚。宠物永远不会卡在错误配置上。</p>
+                </div>
+
+                <div class="feature-card reveal reveal-delay-2" style="border-left: 3px solid var(--accent-green);">
+                    <div class="feature-icon" style="background:rgba(52,211,153,0.08)">
+                        <svg viewBox="0 0 24 24" stroke="var(--accent-green)"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    </div>
+                    <h3 class="en">Session Management</h3><h3 class="zh">会话管理</h3>
+                    <p class="en">New tray menu for session control — check context usage percentage, estimated tokens, and one-click session cleanup. Stay aware of your AI's memory state.</p>
+                    <p class="zh">新增托盘菜单会话控制 — 查看上下文使用百分比、估算 token 数、一键清理会话。随时掌握 AI 的记忆状态。</p>
+                </div>
+
+                <div class="feature-card reveal" style="border-left: 3px solid var(--accent-blue);">
+                    <div class="feature-icon" style="background:rgba(107,138,255,0.08)">
+                        <svg viewBox="0 0 24 24" stroke="var(--accent-blue)"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    </div>
+                    <h3 class="en">Request Tracking</h3><h3 class="zh">请求追踪</h3>
+                    <p class="en">Every API request gets a sequential ID with timing data. Error history (last 50) and request logs (last 20) for debugging. 30s timeout warnings with diagnostic hints.</p>
+                    <p class="zh">每个 API 请求获得序列 ID 和计时数据。错误历史（最近 50 条）和请求日志（最近 20 条）用于调试。30 秒超时警告附带诊断提示。</p>
+                </div>
+
+                <div class="feature-card reveal reveal-delay-1" style="border-left: 3px solid var(--accent-pink);">
+                    <div class="feature-icon" style="background:rgba(255,107,157,0.08)">
+                        <svg viewBox="0 0 24 24" stroke="var(--accent-pink)"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </div>
+                    <h3 class="en">Startup Grace Period</h3><h3 class="zh">启动宽限期</h3>
+                    <p class="en">Gateway Guardian waits 60 seconds for slow gateway initialization before triggering restarts. Prevents false-positive restart loops on cold starts.</p>
+                    <p class="zh">Gateway Guardian 在触发重启前等待 60 秒让 Gateway 完成初始化。防止冷启动时的误判重启循环。</p>
+                </div>
+
+                <div class="feature-card reveal reveal-delay-2" style="border-left: 3px solid var(--accent-yellow);">
+                    <div class="feature-icon" style="background:rgba(251,191,36,0.08)">
+                        <svg viewBox="0 0 24 24" stroke="var(--accent-yellow)"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <h3 class="en">Context Awareness</h3><h3 class="zh">上下文感知</h3>
+                    <p class="en">Token estimation for Chinese (~2/char) and English (~1.3/word). Warns when approaching model context limits. Smart degradation with actionable suggestions.</p>
+                    <p class="zh">中文（~2 token/字）和英文（~1.3 token/词）的 token 估算。接近模型上下文限制时发出警告。智能降级并提供可操作建议。</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Features -->
     <section id="features">
@@ -1395,15 +1467,15 @@ node kkclaw-hotswitch.js --restart</code></pre>
                     <p class="install-desc en">Pre-built binaries for Windows and macOS</p>
                     <p class="install-desc zh">Windows 和 macOS 预编译安装包</p>
                     <div style="display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1rem;">
-                        <a href="https://github.com/kk43994/kkclaw/releases/latest/download/KKClaw-Desktop-Pet-2.1.0-Setup.exe" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                        <a href="https://github.com/kk43994/kkclaw/releases/latest/download/KKClaw-Desktop-Pet-2.2.0-Setup.exe" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
                             <span class="en-inline">Windows (x64)</span><span class="zh-inline">Windows (x64)</span>
                         </a>
-                        <a href="https://github.com/kk43994/kkclaw/releases/latest/download/KKClaw-Desktop-Pet-2.1.0-x64.dmg" class="btn btn-outline" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                        <a href="https://github.com/kk43994/kkclaw/releases/latest/download/KKClaw-Desktop-Pet-2.2.0-x64.dmg" class="btn btn-outline" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
                             <span class="en-inline">macOS (Intel)</span><span class="zh-inline">macOS (Intel)</span>
                         </a>
-                        <a href="https://github.com/kk43994/kkclaw/releases/latest/download/KKClaw-Desktop-Pet-2.1.0-arm64.dmg" class="btn btn-outline" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                        <a href="https://github.com/kk43994/kkclaw/releases/latest/download/KKClaw-Desktop-Pet-2.2.0-arm64.dmg" class="btn btn-outline" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
                             <span class="en-inline">macOS (Apple Silicon)</span><span class="zh-inline">macOS (Apple Silicon)</span>
                         </a>

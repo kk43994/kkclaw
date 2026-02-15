@@ -30,6 +30,7 @@ class GatewayGuardian extends EventEmitter {
         this.consecutiveRestartFailures = 0;
         this.restartHistory = [];
         this.isRestarting = false; // 防止重复触发
+        this._lastError = null;   // 最近一次错误原因
     }
 
     start() {
@@ -159,6 +160,13 @@ class GatewayGuardian extends EventEmitter {
             return;
         }
 
+        // 检查 gateway 是否仍在启动中（进程还活着，只是还没就绪）
+        if (this.serviceManager.isGatewayStartingUp()) {
+            console.log('[Guardian] Gateway 进程仍在启动中，跳过重启，继续等待');
+            this._scheduleNext(this.baseInterval);
+            return;
+        }
+
         if (this._canRestart()) {
             this.isRestarting = true;
             this.emit('unhealthy', { reason, consecutiveFailures: this.consecutiveFailures });
@@ -196,15 +204,22 @@ class GatewayGuardian extends EventEmitter {
                 this._scheduleNext(this.healthyInterval);
             } else {
                 this.isRestarting = false;
-                this.consecutiveRestartFailures++;
-                console.log(`[Guardian] Gateway 重启失败 (连续 ${this.consecutiveRestartFailures} 次): ${result.error}`);
-                this.emit('restart-failed', { error: result.error, consecutiveRestartFailures: this.consecutiveRestartFailures });
-                this._scheduleNext(this._backoffInterval());
+                // 进程还在启动中，不计入重启失败，用短间隔继续观察
+                if (result.stillStarting) {
+                    console.log(`[Guardian] Gateway 启动超时但进程仍在运行，继续等待`);
+                    this._scheduleNext(this.baseInterval);
+                } else {
+                    this.consecutiveRestartFailures++;
+                    this._lastError = result.error;
+                    console.log(`[Guardian] Gateway 重启失败 (连续 ${this.consecutiveRestartFailures} 次): ${result.error}`);
+                    this.emit('restart-failed', { error: result.error, consecutiveRestartFailures: this.consecutiveRestartFailures });
+                    this._scheduleNext(this._backoffInterval());
+                }
             }
         } else {
             // 达到重启上限，进入长间隔监控（不放弃）
             console.log(`[Guardian] 重启次数达上限，进入低频监控 (${this.maxInterval / 1000}s)`);
-            this.emit('restart-limit-reached', { restartHistory: this.restartHistory });
+            this.emit('restart-limit-reached', { restartHistory: this.restartHistory, lastError: this._lastError });
             this._scheduleNext(this.maxInterval);
         }
     }

@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog, and this project loosely follows semantic versioning.
 
 
+## [2.2.0] - 2026-02-15
+
+### 🛡️ Gateway Error Diagnosis Chain
+- **Gateway Guardian v2**: Startup grace period (60s), prevents false-positive restarts during slow init
+- **Service Manager**: Captures stdout + stderr from gateway process for error diagnosis
+- **Error extraction**: `_extractErrorReason()` parses gateway output to identify root cause
+- **Restart notifications**: Desktop notifications now show specific error reasons (not just "restart failed")
+- **Restart-limit-reached event**: Emits last error for UI display when entering low-frequency monitoring
+- **shell:false**: Spawns gateway without shell wrapper for cleaner process management
+
+### 🔄 Safe Model Switching with Rollback
+- **Optimistic update + verify**: Switches model, waits for gateway reload, then verifies
+- **Auto-rollback**: If gateway fails to load new model within 5s, rolls back to previous model
+- **Switch logging**: Detailed logs for every switch attempt (success/fail/rollback)
+- **Gateway reload detection**: `_waitForGatewayReload()` polls gateway status after config write
+
+### 📊 Session Management & Context Tracking
+- **Tray menu**: New "会话管理" submenu with context status and session clear
+- **Context length check**: Estimates token usage percentage before each request
+- **Token estimation**: Chinese (~2 tokens/char) and English (~1.3 tokens/word) heuristics
+- **Request tracking**: Numbered requests with timing, error history (last 50), request history (last 20)
+- **Timeout warnings**: 30s timeout detection with diagnostic suggestions
+- **Session clear**: One-click session cleanup from tray menu
+
+### 🔧 OpenClaw Client v2
+- **Request counter**: Sequential request IDs for log correlation
+- **Error history**: Tracks last 50 errors with request ID, message, elapsed time
+- **Context awareness**: `checkContextLength()` warns when approaching model limits
+- **Graceful degradation**: Better error messages with actionable suggestions
+
+---
+
 ## [2.0.4] - 2026-02-11
 
 ### 🏗️ Major Refactor

@@ -289,7 +289,9 @@ async function createWindow() {
 
     new Notification({
       title: 'OpenClaw Gateway 异常',
-      body: 'Gateway 频繁重启，已进入低频监控模式。',
+      body: info.lastError
+        ? `原因: ${info.lastError}\n已重启 ${info.restartHistory.length} 次，进入低频监控。`
+        : `Gateway 已重启 ${info.restartHistory.length} 次，进入低频监控。`,
       icon: path.join(__dirname, 'icon.png')
     }).show();
   });
@@ -297,6 +299,12 @@ async function createWindow() {
   gatewayGuardian.on('restart-failed', (info) => {
     console.log(`❌ Gateway 重启失败 (连续 ${info.consecutiveRestartFailures || '?'} 次):`, info.error);
     workLogger.logError(`Gateway 重启失败: ${info.error}`);
+
+    // 弹通知告诉用户具体原因
+    showServiceNotification(
+      'Gateway 重启失败',
+      info.error || '未知错误'
+    );
   });
 
   gatewayGuardian.on('session-cleanup', (info) => {
@@ -615,6 +623,191 @@ async function createWindow() {
             const logText = logs.map(l => `[${l.level}] ${l.message}`).join('\n');
             showServiceNotification('最近日志', logText || '暂无日志');
           }
+        },
+        { type: 'separator' },
+        {
+          label: '💬 会话管理',
+          submenu: [
+            {
+              label: '📊 查看会话状态',
+              click: async () => {
+                const info = await openclawClient.getSessionInfo();
+                const contextCheck = await openclawClient.checkContextLength('');
+                const percentage = contextCheck.percentage || 0;
+                const statusIcon = percentage > 80 ? '🔴' : percentage > 50 ? '🟡' : '🟢';
+
+                showServiceNotification(
+                  '会话状态',
+                  `${statusIcon} 上下文使用: ${percentage}%\n` +
+                  `活跃会话: ${info.activeSessions} 个\n` +
+                  `估算 tokens: ~${info.estimatedTokens}\n` +
+                  `模型限制: ${contextCheck.limit} tokens`
+                );
+              }
+            },
+            {
+              label: '🗑️ 清理当前会话',
+              click: async () => {
+                showServiceNotification('正在清理...', '删除会话文件');
+                const result = await openclawClient.clearCurrentSession();
+                if (result.success) {
+                  showServiceNotification('清理成功', result.message);
+                  if (voiceSystem) {
+                    voiceSystem.speak('会话已清理，可以开始新对话了');
+                  }
+                } else {
+                  showServiceNotification('清理失败', result.message);
+                }
+              }
+            },
+            {
+              label: '🔍 诊断会话问题',
+              click: async () => {
+                const info = await openclawClient.getSessionInfo();
+                const contextCheck = await openclawClient.checkContextLength('');
+
+                let diagnosis = '会话诊断报告:\n\n';
+
+                // 检查会话数量
+                if (info.activeSessions === 0) {
+                  diagnosis += '✅ 没有活跃会话\n';
+                } else if (info.activeSessions > 3) {
+                  diagnosis += `⚠️ 会话过多 (${info.activeSessions}个)，建议清理\n`;
+                } else {
+                  diagnosis += `✅ 会话数量正常 (${info.activeSessions}个)\n`;
+                }
+
+                // 检查上下文长度
+                if (contextCheck.percentage > 90) {
+                  diagnosis += `🔴 上下文严重超限 (${contextCheck.percentage}%)，必须清理！\n`;
+                } else if (contextCheck.percentage > 80) {
+                  diagnosis += `🟡 上下文接近限制 (${contextCheck.percentage}%)，建议清理\n`;
+                } else {
+                  diagnosis += `✅ 上下文使用正常 (${contextCheck.percentage}%)\n`;
+                }
+
+                // 检查会话文件大小
+                if (info.sessions && info.sessions.length > 0) {
+                  const largeSession = info.sessions.find(s => s.sizeKB > 500);
+                  if (largeSession) {
+                    diagnosis += `⚠️ 发现大型会话文件 (${largeSession.sizeKB}KB)\n`;
+                  }
+                }
+
+                showServiceNotification('诊断结果', diagnosis);
+              }
+            }
+          ]
+        },
+        { type: 'separator' },
+        {
+          label: '🔍 诊断工具',
+          submenu: [
+            {
+              label: '📊 完整诊断报告',
+              click: async () => {
+                const diagnostics = await openclawClient.getDiagnostics();
+
+                let report = '=== OpenClaw 诊断报告 ===\n\n';
+
+                // 连接状态
+                report += `连接状态: ${diagnostics.connection.connected ? '✅ 已连接' : '❌ 未连接'}\n`;
+
+                // 会话状态
+                const contextIcon = diagnostics.session.contextPercentage > 80 ? '🔴' :
+                                   diagnostics.session.contextPercentage > 50 ? '🟡' : '🟢';
+                report += `\n会话状态:\n`;
+                report += `${contextIcon} 上下文: ${diagnostics.session.contextPercentage}% (${diagnostics.session.estimatedTokens}/${diagnostics.session.contextLimit})\n`;
+                report += `活跃会话: ${diagnostics.session.activeSessions} 个\n`;
+
+                // 请求统计
+                report += `\n请求统计:\n`;
+                report += `总请求数: ${diagnostics.requests.total}\n`;
+                report += `最近请求: ${diagnostics.requests.recentCount} 条\n`;
+
+                // 错误统计
+                report += `\n错误统计:\n`;
+                report += `总错误数: ${diagnostics.errors.total}\n`;
+                report += `最近错误: ${diagnostics.errors.recentCount} 条\n`;
+
+                if (diagnostics.errors.recent.length > 0) {
+                  report += `\n最近错误详情:\n`;
+                  diagnostics.errors.recent.slice(0, 3).forEach(err => {
+                    report += `- [Req#${err.requestId}] ${err.error} (${err.elapsed}ms)\n`;
+                  });
+                }
+
+                showServiceNotification('诊断报告', report);
+              }
+            },
+            {
+              label: '❌ 查看最近错误',
+              click: async () => {
+                const errors = openclawClient.getRecentErrors(10);
+
+                if (errors.length === 0) {
+                  showServiceNotification('最近错误', '✅ 没有错误记录');
+                  return;
+                }
+
+                let errorReport = `最近 ${errors.length} 条错误:\n\n`;
+                errors.forEach((err, idx) => {
+                  const time = new Date(err.timestamp).toLocaleTimeString();
+                  errorReport += `${idx + 1}. [${time}] Req#${err.requestId}\n`;
+                  errorReport += `   ${err.error} (${err.elapsed}ms)\n`;
+                  errorReport += `   消息: ${err.message}\n\n`;
+                });
+
+                showServiceNotification('最近错误', errorReport);
+              }
+            },
+            {
+              label: '📝 查看最近请求',
+              click: async () => {
+                const requests = openclawClient.getRecentRequests(10);
+
+                if (requests.length === 0) {
+                  showServiceNotification('最近请求', '没有请求记录');
+                  return;
+                }
+
+                let requestReport = `最近 ${requests.length} 条请求:\n\n`;
+                requests.forEach((req, idx) => {
+                  const time = new Date(req.timestamp).toLocaleTimeString();
+                  const status = req.success ? '✅' : '❌';
+                  requestReport += `${idx + 1}. ${status} [${time}] Req#${req.requestId} (${req.elapsed}ms)\n`;
+                  requestReport += `   消息: ${req.message}\n`;
+                  if (req.response) {
+                    requestReport += `   响应: ${req.response}\n`;
+                  }
+                  requestReport += `\n`;
+                });
+
+                showServiceNotification('最近请求', requestReport);
+              }
+            },
+            {
+              label: '🏥 检查 Gateway 健康',
+              click: async () => {
+                showServiceNotification('正在检查...', 'Gateway 健康状态');
+
+                const isConnected = await openclawClient.checkConnection();
+                const status = serviceManager.getStatus();
+                const uptime = serviceManager.formatUptime(serviceManager.getUptime('gateway'));
+
+                let healthReport = 'Gateway 健康检查:\n\n';
+                healthReport += `连接状态: ${isConnected ? '✅ 正常' : '❌ 异常'}\n`;
+                healthReport += `进程状态: ${status.gateway.status === 'running' ? '✅ 运行中' : '❌ 已停止'}\n`;
+                healthReport += `运行时间: ${uptime}\n`;
+
+                if (status.gateway.pid) {
+                  healthReport += `进程 PID: ${status.gateway.pid}\n`;
+                }
+
+                showServiceNotification('健康检查结果', healthReport);
+              }
+            }
+          ]
         }
       ]
     },
@@ -760,6 +953,191 @@ function rebuildTrayMenu() {
             const logText = logs.map(l => `[${l.level}] ${l.message}`).join('\n');
             showServiceNotification('最近日志', logText || '暂无日志');
           }
+        },
+        { type: 'separator' },
+        {
+          label: '💬 会话管理',
+          submenu: [
+            {
+              label: '📊 查看会话状态',
+              click: async () => {
+                const info = await openclawClient.getSessionInfo();
+                const contextCheck = await openclawClient.checkContextLength('');
+                const percentage = contextCheck.percentage || 0;
+                const statusIcon = percentage > 80 ? '🔴' : percentage > 50 ? '🟡' : '🟢';
+
+                showServiceNotification(
+                  '会话状态',
+                  `${statusIcon} 上下文使用: ${percentage}%\n` +
+                  `活跃会话: ${info.activeSessions} 个\n` +
+                  `估算 tokens: ~${info.estimatedTokens}\n` +
+                  `模型限制: ${contextCheck.limit} tokens`
+                );
+              }
+            },
+            {
+              label: '🗑️ 清理当前会话',
+              click: async () => {
+                showServiceNotification('正在清理...', '删除会话文件');
+                const result = await openclawClient.clearCurrentSession();
+                if (result.success) {
+                  showServiceNotification('清理成功', result.message);
+                  if (voiceSystem) {
+                    voiceSystem.speak('会话已清理，可以开始新对话了');
+                  }
+                } else {
+                  showServiceNotification('清理失败', result.message);
+                }
+              }
+            },
+            {
+              label: '🔍 诊断会话问题',
+              click: async () => {
+                const info = await openclawClient.getSessionInfo();
+                const contextCheck = await openclawClient.checkContextLength('');
+
+                let diagnosis = '会话诊断报告:\n\n';
+
+                // 检查会话数量
+                if (info.activeSessions === 0) {
+                  diagnosis += '✅ 没有活跃会话\n';
+                } else if (info.activeSessions > 3) {
+                  diagnosis += `⚠️ 会话过多 (${info.activeSessions}个)，建议清理\n`;
+                } else {
+                  diagnosis += `✅ 会话数量正常 (${info.activeSessions}个)\n`;
+                }
+
+                // 检查上下文长度
+                if (contextCheck.percentage > 90) {
+                  diagnosis += `🔴 上下文严重超限 (${contextCheck.percentage}%)，必须清理！\n`;
+                } else if (contextCheck.percentage > 80) {
+                  diagnosis += `🟡 上下文接近限制 (${contextCheck.percentage}%)，建议清理\n`;
+                } else {
+                  diagnosis += `✅ 上下文使用正常 (${contextCheck.percentage}%)\n`;
+                }
+
+                // 检查会话文件大小
+                if (info.sessions && info.sessions.length > 0) {
+                  const largeSession = info.sessions.find(s => s.sizeKB > 500);
+                  if (largeSession) {
+                    diagnosis += `⚠️ 发现大型会话文件 (${largeSession.sizeKB}KB)\n`;
+                  }
+                }
+
+                showServiceNotification('诊断结果', diagnosis);
+              }
+            }
+          ]
+        },
+        { type: 'separator' },
+        {
+          label: '🔍 诊断工具',
+          submenu: [
+            {
+              label: '📊 完整诊断报告',
+              click: async () => {
+                const diagnostics = await openclawClient.getDiagnostics();
+
+                let report = '=== OpenClaw 诊断报告 ===\n\n';
+
+                // 连接状态
+                report += `连接状态: ${diagnostics.connection.connected ? '✅ 已连接' : '❌ 未连接'}\n`;
+
+                // 会话状态
+                const contextIcon = diagnostics.session.contextPercentage > 80 ? '🔴' :
+                                   diagnostics.session.contextPercentage > 50 ? '🟡' : '🟢';
+                report += `\n会话状态:\n`;
+                report += `${contextIcon} 上下文: ${diagnostics.session.contextPercentage}% (${diagnostics.session.estimatedTokens}/${diagnostics.session.contextLimit})\n`;
+                report += `活跃会话: ${diagnostics.session.activeSessions} 个\n`;
+
+                // 请求统计
+                report += `\n请求统计:\n`;
+                report += `总请求数: ${diagnostics.requests.total}\n`;
+                report += `最近请求: ${diagnostics.requests.recentCount} 条\n`;
+
+                // 错误统计
+                report += `\n错误统计:\n`;
+                report += `总错误数: ${diagnostics.errors.total}\n`;
+                report += `最近错误: ${diagnostics.errors.recentCount} 条\n`;
+
+                if (diagnostics.errors.recent.length > 0) {
+                  report += `\n最近错误详情:\n`;
+                  diagnostics.errors.recent.slice(0, 3).forEach(err => {
+                    report += `- [Req#${err.requestId}] ${err.error} (${err.elapsed}ms)\n`;
+                  });
+                }
+
+                showServiceNotification('诊断报告', report);
+              }
+            },
+            {
+              label: '❌ 查看最近错误',
+              click: async () => {
+                const errors = openclawClient.getRecentErrors(10);
+
+                if (errors.length === 0) {
+                  showServiceNotification('最近错误', '✅ 没有错误记录');
+                  return;
+                }
+
+                let errorReport = `最近 ${errors.length} 条错误:\n\n`;
+                errors.forEach((err, idx) => {
+                  const time = new Date(err.timestamp).toLocaleTimeString();
+                  errorReport += `${idx + 1}. [${time}] Req#${err.requestId}\n`;
+                  errorReport += `   ${err.error} (${err.elapsed}ms)\n`;
+                  errorReport += `   消息: ${err.message}\n\n`;
+                });
+
+                showServiceNotification('最近错误', errorReport);
+              }
+            },
+            {
+              label: '📝 查看最近请求',
+              click: async () => {
+                const requests = openclawClient.getRecentRequests(10);
+
+                if (requests.length === 0) {
+                  showServiceNotification('最近请求', '没有请求记录');
+                  return;
+                }
+
+                let requestReport = `最近 ${requests.length} 条请求:\n\n`;
+                requests.forEach((req, idx) => {
+                  const time = new Date(req.timestamp).toLocaleTimeString();
+                  const status = req.success ? '✅' : '❌';
+                  requestReport += `${idx + 1}. ${status} [${time}] Req#${req.requestId} (${req.elapsed}ms)\n`;
+                  requestReport += `   消息: ${req.message}\n`;
+                  if (req.response) {
+                    requestReport += `   响应: ${req.response}\n`;
+                  }
+                  requestReport += `\n`;
+                });
+
+                showServiceNotification('最近请求', requestReport);
+              }
+            },
+            {
+              label: '🏥 检查 Gateway 健康',
+              click: async () => {
+                showServiceNotification('正在检查...', 'Gateway 健康状态');
+
+                const isConnected = await openclawClient.checkConnection();
+                const status = serviceManager.getStatus();
+                const uptime = serviceManager.formatUptime(serviceManager.getUptime('gateway'));
+
+                let healthReport = 'Gateway 健康检查:\n\n';
+                healthReport += `连接状态: ${isConnected ? '✅ 正常' : '❌ 异常'}\n`;
+                healthReport += `进程状态: ${status.gateway.status === 'running' ? '✅ 运行中' : '❌ 已停止'}\n`;
+                healthReport += `运行时间: ${uptime}\n`;
+
+                if (status.gateway.pid) {
+                  healthReport += `进程 PID: ${status.gateway.pid}\n`;
+                }
+
+                showServiceNotification('健康检查结果', healthReport);
+              }
+            }
+          ]
         }
       ]
     },

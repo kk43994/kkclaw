@@ -5,7 +5,24 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(tasklist:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(curl:*)",
+      "Bash(openclaw doctor:*)",
+      "Bash(openclaw hooks list:*)",
+      "Bash(openclaw hooks:*)",
+      "Bash(taskkill:*)",
+      "Bash(powershell -Command \"Get-Content -Path \\(Get-ChildItem -Path ''$env:USERPROFILE\\\\.openclaw\\\\logs'' -Filter ''*.log'' | Sort-Object LastWriteTime -Descending | Select-Object -First 1\\).FullName -Tail 150\")",
+      "Bash(Get-Content \"$env:USERPROFILE\\\\.openclaw\\\\logs\\\\gateway.log\" -Tail 100)",
+      "Bash(cmd //c \"taskkill /PID 29292 /F /T\")",
+      "Bash(cmd //c \"taskkill /PID 36424 /F /T\")",
+      "Bash(grep:*)",
+      "Bash(npm view:*)",
+      "Bash(cmd //c \"taskkill /PID 34404 /F /T\")",
+      "Bash(cmd //c \"taskkill /PID 33808 /F /T\")",
+      "mcp__chrome-devtools__new_page",
+      "mcp__chrome-devtools__take_screenshot",
+      "Bash(xargs -I {} cmd //c \"taskkill /PID {} /F /T\")",
+      "WebSearch"
     ]
   }
 }

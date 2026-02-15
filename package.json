@@ -1,6 +1,6 @@
 {
   "name": "kkclaw",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "🦞 kkclaw - AI-powered desktop lobster companion with voice, monitoring & smart interactions",
   "main": "main.js",
   "scripts": {
@@ -41,12 +41,18 @@
       "output": "dist"
     },
     "win": {
-      "target": ["dir", "nsis"],
+      "target": [
+        "dir",
+        "nsis"
+      ],
       "icon": "icon.ico",
       "artifactName": "${productName}-${version}-Setup.${ext}"
     },
     "mac": {
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "icon": "icon.icns",
       "category": "public.app-category.utilities",
       "artifactName": "${productName}-${version}-${arch}.${ext}"

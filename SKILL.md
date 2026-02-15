@@ -1,9 +1,9 @@
 ---
 name: kkclaw
-description: 给你的 AI Agent 一个桌面身体 — 可视化情绪球体 + 语音交互 + 7种情绪表达
-version: 2.0.4
+description: 给你的 AI Agent 一个桌面身体 — 可视化情绪球体 + 语音交互 + 跨平台支持（Windows + macOS）
+version: 2.1.0
 author: xiao-k-assistant
-tags: [desktop-pet, electron, tts, voice, emotion, openclaw, visualization]
+tags: [desktop-pet, electron, tts, voice, emotion, openclaw, visualization, cross-platform]
 ---
 
 # kkclaw — 桌面龙虾 AI 伴侣
@@ -36,8 +36,10 @@ npm install
 npm start
 ```
 
-或下载 Windows exe 安装包：
-https://github.com/kk43994/kkclaw/releases/tag/v2.0.4
+或下载安装包：
+- **Windows:** https://github.com/kk43994/kkclaw/releases/download/v2.1.0/KKClaw-Desktop-Pet-2.1.0-Setup.exe
+- **macOS (Intel):** https://github.com/kk43994/kkclaw/releases/download/v2.1.0/KKClaw-Desktop-Pet-2.1.0-x64.dmg
+- **macOS (Apple Silicon):** https://github.com/kk43994/kkclaw/releases/download/v2.1.0/KKClaw-Desktop-Pet-2.1.0-arm64.dmg
 
 ## 配置
 
@@ -66,4 +68,4 @@ kkclaw/
 
 - GitHub: https://github.com/kk43994/kkclaw
 - Landing Page: https://kk43994.github.io/kkclaw/
-- 版本: v2.0.4
+- 版本: v2.1.0

@@ -8,8 +8,8 @@
 
 *OpenClaw Core + Desktop Embodiment = A living interface with emotion, voice, and presence*
 
-[![Version](https://img.shields.io/badge/version-2.1.0-FF6B4A?style=for-the-badge&logo=github)](https://github.com/kk43994/kkclaw/releases)
-[![Updated](https://img.shields.io/badge/updated-2026--02--13-34D399?style=for-the-badge)](https://github.com/kk43994/kkclaw)
+[![Version](https://img.shields.io/badge/version-2.2.0-FF6B4A?style=for-the-badge&logo=github)](https://github.com/kk43994/kkclaw/releases)
+[![Updated](https://img.shields.io/badge/updated-2026--02--15-34D399?style=for-the-badge)](https://github.com/kk43994/kkclaw)
 [![Build](https://img.shields.io/github/actions/workflow/status/kk43994/kkclaw/build-release.yml?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/kk43994/kkclaw/actions)
 [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows_|_macOS-0078D6?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/kk43994/kkclaw)
@@ -32,19 +32,28 @@
 - 🎯 **7×24 稳定** — 自动重启、日志轮转、错误恢复
 - 🍎 **跨平台支持** — Windows 10/11 + macOS (Intel & Apple Silicon)
 
+### 🆕 v2.2.0 新特性
+
+- 🛡️ **Gateway 错误诊断链路** — 捕获 stdout/stderr，桌面通知显示具体崩溃原因
+- 🔄 **安全模型切换 + 自动回滚** — 切换失败 5 秒内自动恢复上一个模型
+- 📊 **会话管理托盘菜单** — 查看上下文使用率、token 估算、一键清理会话
+- 📡 **请求追踪系统** — 序列 ID + 计时 + 错误历史(50条) + 30s 超时诊断
+- ⏳ **启动宽限期** — 60s 冷启动保护，防止误判重启循环
+- 🧠 **上下文感知** — 中英文 token 估算，接近限制时智能警告
+
 ---
 
 ## 📦 下载安装
 
-### 最新版本：v2.1.0
+### 最新版本：v2.2.0
 
 <div align="center">
 
 | 平台 | 架构 | 下载链接 | 大小 |
 |------|------|----------|------|
-| 🪟 **Windows** | x64 | [KKClaw-Desktop-Pet-2.1.0-Setup.exe](https://github.com/kk43994/kkclaw/releases/download/v2.1.0/KKClaw-Desktop-Pet-2.1.0-Setup.exe) | ~150MB |
-| 🍎 **macOS** | Intel | [KKClaw-Desktop-Pet-2.1.0-x64.dmg](https://github.com/kk43994/kkclaw/releases/download/v2.1.0/KKClaw-Desktop-Pet-2.1.0-x64.dmg) | ~160MB |
-| 🍎 **macOS** | Apple Silicon | [KKClaw-Desktop-Pet-2.1.0-arm64.dmg](https://github.com/kk43994/kkclaw/releases/download/v2.1.0/KKClaw-Desktop-Pet-2.1.0-arm64.dmg) | ~160MB |
+| 🪟 **Windows** | x64 | [KKClaw-Desktop-Pet-2.2.0-Setup.exe](https://github.com/kk43994/kkclaw/releases/download/v2.2.0/KKClaw-Desktop-Pet-2.2.0-Setup.exe) | ~150MB |
+| 🍎 **macOS** | Intel | [KKClaw-Desktop-Pet-2.2.0-x64.dmg](https://github.com/kk43994/kkclaw/releases/download/v2.2.0/KKClaw-Desktop-Pet-2.2.0-x64.dmg) | ~160MB |
+| 🍎 **macOS** | Apple Silicon | [KKClaw-Desktop-Pet-2.2.0-arm64.dmg](https://github.com/kk43994/kkclaw/releases/download/v2.2.0/KKClaw-Desktop-Pet-2.2.0-arm64.dmg) | ~160MB |
 
 [📦 查看所有版本](https://github.com/kk43994/kkclaw/releases) | [🎥 在线演示](https://kk43994.github.io/kkclaw/)
 

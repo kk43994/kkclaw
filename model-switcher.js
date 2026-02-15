@@ -830,15 +830,232 @@ class ModelSwitcher {
   }
 
   async _applySwitch() {
-    this.currentModel = this.models[this.currentIndex];
-    console.log(`🔄 切换模型 → ${this.currentModel.shortName} (${this.currentModel.id})`);
-    this.switchLog.success('切换模型', `${this.currentModel.shortName} (${this.currentModel.provider}/${this.currentModel.modelId})`);
+    const targetModel = this.models[this.currentIndex];
+    const previousModel = this.currentModel;
+    const previousIndex = this.models.findIndex(m => m.id === previousModel?.id);
 
-    // 直接改写 openclaw.json，Gateway 的 file watcher 会自动热加载
-    this._writeModelToConfig(this.currentModel.id);
+    console.log(`🔄 开始切换模型: ${previousModel?.shortName || '(none)'} → ${targetModel.shortName}`);
+    this.switchLog.info('开始切换', `${previousModel?.shortName || '(none)'} → ${targetModel.shortName}`);
 
+    try {
+      // 1. 更新当前模型（乐观更新）
+      this.currentModel = targetModel;
+
+      // 2. 写入配置文件
+      const writeSuccess = await this._writeModelToConfigSafe(targetModel.id, previousModel?.id);
+      if (!writeSuccess) {
+        throw new Error('配置文件写入失败');
+      }
+
+      // 3. 等待 Gateway 重新加载（带超时）
+      console.log(`⏳ 等待 Gateway 加载新模型...`);
+      const loadSuccess = await this._waitForGatewayReload(5000);
+
+      if (!loadSuccess) {
+        console.warn(`⚠️ Gateway 加载超时，尝试回滚`);
+        this.switchLog.warn('加载超时', '尝试回滚到之前的模型');
+        await this._rollbackModel(previousModel, previousIndex);
+        return previousModel;
+      }
+
+      // 4. 验证模型是否真的切换成功
+      const verified = await this._verifyModelSwitch(targetModel.id);
+      if (!verified) {
+        console.warn(`⚠️ 模型验证失败，尝试回滚`);
+        this.switchLog.warn('验证失败', '模型未正确加载，回滚');
+        await this._rollbackModel(previousModel, previousIndex);
+        return previousModel;
+      }
+
+      // 5. 清理 session（改进版）
+      this._clearLarkSessionsSafe();
+
+      // 6. 通知监听器
+      this._notifyListeners();
+
+      console.log(`✅ 模型切换成功: ${targetModel.shortName}`);
+      this.switchLog.success('切换成功', `${targetModel.shortName} (${targetModel.provider}/${targetModel.modelId})`);
+
+      return this.currentModel;
+    } catch (err) {
+      console.error(`❌ 模型切换失败:`, err.message);
+      this.switchLog.error('切换失败', err.message);
+
+      // 回滚到之前的模型
+      await this._rollbackModel(previousModel, previousIndex);
+      return previousModel;
+    }
+  }
+
+  /**
+   * 安全地写入配置文件（带错误处理）
+   */
+  async _writeModelToConfigSafe(modelId, previousModelId) {
+    try {
+      const config = this._readConfig();
+
+      // 确保路径存在
+      if (!config.agents) config.agents = {};
+      if (!config.agents.defaults) config.agents.defaults = {};
+      if (!config.agents.defaults.model) config.agents.defaults.model = {};
+
+      config.agents.defaults.model.primary = modelId;
+
+      // 同步模型的 params
+      if (!config.agents.defaults.models) config.agents.defaults.models = {};
+      const model = this.models.find(m => m.id === modelId);
+      if (model && model.params) {
+        config.agents.defaults.models[modelId] = {
+          ...(config.agents.defaults.models[modelId] || {}),
+          params: model.params
+        };
+      }
+
+      // 原子写入
+      const tmpPath = this.configPath + '.tmp';
+      fs.writeFileSync(tmpPath, JSON.stringify(config, null, 2), 'utf8');
+      fs.renameSync(tmpPath, this.configPath);
+
+      // 同步 models.json
+      this._syncModelsJson(config);
+
+      console.log(`✅ 配置已更新: ${previousModelId || '(none)'} → ${modelId}`);
+      this.switchLog.info('配置写入', `${previousModelId || '(none)'} → ${modelId}`);
+
+      return true;
+    } catch (err) {
+      console.error(`❌ 写入配置失败:`, err.message);
+      this.switchLog.error('配置写入失败', err.message);
+      return false;
+    }
+  }
+
+  /**
+   * 等待 Gateway 重新加载配置
+   */
+  async _waitForGatewayReload(timeoutMs = 5000) {
+    const startTime = Date.now();
+    const checkInterval = 500; // 每500ms检查一次
+
+    while (Date.now() - startTime < timeoutMs) {
+      await new Promise(resolve => setTimeout(resolve, checkInterval));
+
+      // 简单检查：Gateway 是否还在响应
+      try {
+        const response = await fetch('http://127.0.0.1:18789/', {
+          method: 'GET',
+          signal: AbortSignal.timeout(2000)
+        });
+
+        if (response.ok) {
+          console.log(`✅ Gateway 响应正常`);
+          return true;
+        }
+      } catch (err) {
+        // Gateway 可能正在重启，继续等待
+        console.log(`⏳ Gateway 重新加载中...`);
+      }
+    }
+
+    console.warn(`⏰ Gateway 加载超时 (${timeoutMs}ms)`);
+    return false;
+  }
+
+  /**
+   * 验证模型是否切换成功
+   */
+  async _verifyModelSwitch(expectedModelId) {
+    try {
+      // 重新读取配置文件，确认写入成功
+      const config = this._readConfig();
+      const actualModelId = config.agents?.defaults?.model?.primary;
+
+      if (actualModelId !== expectedModelId) {
+        console.error(`❌ 配置验证失败: 期望 ${expectedModelId}, 实际 ${actualModelId}`);
+        return false;
+      }
+
+      console.log(`✅ 配置验证成功: ${actualModelId}`);
+      return true;
+    } catch (err) {
+      console.error(`❌ 验证失败:`, err.message);
+      return false;
+    }
+  }
+
+  /**
+   * 回滚到之前的模型
+   */
+  async _rollbackModel(previousModel, previousIndex) {
+    if (!previousModel) {
+      console.warn(`⚠️ 无法回滚：没有之前的模型`);
+      return;
+    }
+
+    console.log(`🔙 回滚到之前的模型: ${previousModel.shortName}`);
+    this.switchLog.warn('回滚', `恢复到 ${previousModel.shortName}`);
+
+    this.currentModel = previousModel;
+    this.currentIndex = previousIndex >= 0 ? previousIndex : 0;
+
+    // 写回配置文件
+    await this._writeModelToConfigSafe(previousModel.id, null);
+
+    // 通知监听器
     this._notifyListeners();
-    return this.currentModel;
+  }
+
+  /**
+   * 安全地清理飞书 session（改进版）
+   */
+  _clearLarkSessionsSafe() {
+    try {
+      const sessionDir = path.join(process.env.HOME || process.env.USERPROFILE, '.openclaw', 'agents', 'main', 'sessions');
+      const sessionFile = path.join(sessionDir, 'sessions.json');
+
+      if (!fs.existsSync(sessionFile)) return;
+
+      const sessionsData = JSON.parse(fs.readFileSync(sessionFile, 'utf8'));
+      let deletedCount = 0;
+      const updatedSessions = { ...sessionsData };
+
+      for (const [key, value] of Object.entries(sessionsData)) {
+        if (key.includes('lark:') && value.sessionId) {
+          const sessionPath = path.join(sessionDir, `${value.sessionId}.jsonl`);
+          const lockPath = sessionPath + '.lock';
+
+          // 检查锁文件是否存在
+          if (fs.existsSync(lockPath)) {
+            console.warn(`⚠️ Session ${value.sessionId} 被锁定，跳过删除`);
+            continue;
+          }
+
+          // 删除 session 文件
+          if (fs.existsSync(sessionPath)) {
+            try {
+              fs.unlinkSync(sessionPath);
+              deletedCount++;
+              console.log(`🗑️ 已删除会话: ${value.sessionId}`);
+
+              // 从索引中移除
+              delete updatedSessions[key];
+            } catch (err) {
+              console.warn(`⚠️ 删除 session 失败: ${err.message}`);
+            }
+          }
+        }
+      }
+
+      // 更新 sessions.json 索引
+      if (deletedCount > 0) {
+        fs.writeFileSync(sessionFile, JSON.stringify(updatedSessions, null, 2), 'utf8');
+        console.log(`✅ 已清理 ${deletedCount} 个会话，索引已更新`);
+        this.switchLog.info('Session 清理', `删除 ${deletedCount} 个飞书会话`);
+      }
+    } catch (err) {
+      console.error(`⚠️ 清理飞书 session 失败:`, err.message);
+      this.switchLog.warn('Session 清理失败', err.message);
+    }
   }
 
   _writeModelToConfig(modelId) {
