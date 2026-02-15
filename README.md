@@ -43,6 +43,25 @@
 
 ---
 
+## 🎬 演示视频
+
+<div align="center">
+
+### 直接点击播放 ▶️
+
+<video width="100%" controls style="max-width: 800px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+  <source src="videos/demo.mp4" type="video/mp4">
+  您的浏览器不支持视频播放。<a href="https://b23.tv/85bz09G">点击查看B站版本</a>
+</video>
+
+**居然让 OpenClaw 给自己做了个身体！**
+
+[📱 B站视频](https://b23.tv/85bz09G) | [📱 抖音视频](https://v.douyin.com/9wKpkB8z4ew/)
+
+</div>
+
+---
+
 ## 📦 下载安装
 
 ### 最新版本：v2.2.0
