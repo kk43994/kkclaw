@@ -22,7 +22,24 @@
       "mcp__chrome-devtools__new_page",
       "mcp__chrome-devtools__take_screenshot",
       "Bash(xargs -I {} cmd //c \"taskkill /PID {} /F /T\")",
-      "WebSearch"
+      "WebSearch",
+      "Bash(ls:*)",
+      "Bash(dir:*)",
+      "Bash(npm prefix:*)",
+      "Bash(where:*)",
+      "Bash(npm info:*)",
+      "Bash(wmic path win32_videocontroller get:*)",
+      "Bash(wmic memorychip get:*)",
+      "Bash(du:*)",
+      "Bash(npm root:*)",
+      "Bash(find:*)",
+      "Bash(test:*)",
+      "Bash(npm install:*)",
+      "Bash(powershell:*)",
+      "Bash(cleanmgr /verylowdisk /d C:)",
+      "Bash(npm cache clean:*)",
+      "Bash(tee:*)",
+      "Bash(cmd //c:*)"
     ]
   }
 }

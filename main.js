@@ -812,6 +812,10 @@ async function createWindow() {
       ]
     },
     {
+      label: '🏥 诊断工具箱',
+      click: () => { openDiagnosticToolbox(); }
+    },
+    {
       label: '🌐 打开控制台',
       click: () => {
         const token = getGatewayToken();
@@ -1142,6 +1146,10 @@ function rebuildTrayMenu() {
       ]
     },
     {
+      label: '🏥 诊断工具箱',
+      click: () => { openDiagnosticToolbox(); }
+    },
+    {
       label: '🌐 打开控制台',
       click: () => {
         const token = getGatewayToken();
@@ -1207,6 +1215,26 @@ function openModelSettings() {
   modelSettingsWindow.on('closed', () => {
     modelSettingsWindow = null;
   });
+}
+
+/**
+ * 打开诊断工具箱窗口
+ */
+let diagnosticToolboxWindow = null;
+function openDiagnosticToolbox() {
+  if (diagnosticToolboxWindow && !diagnosticToolboxWindow.isDestroyed()) {
+    diagnosticToolboxWindow.focus();
+    return;
+  }
+  diagnosticToolboxWindow = new BrowserWindow({
+    width: 600, height: 700, title: '诊断工具箱',
+    resizable: true, minimizable: true, maximizable: false,
+    autoHideMenuBar: true, backgroundColor: '#0f0f17',
+    webPreferences: { nodeIntegration: true, contextIsolation: false }
+  });
+  diagnosticToolboxWindow.setMenuBarVisibility(false);
+  diagnosticToolboxWindow.loadFile('diagnostic-toolbox.html');
+  diagnosticToolboxWindow.on('closed', () => { diagnosticToolboxWindow = null; });
 }
 
 // 屏幕边界约束 — 防止球体跑到屏幕外
@@ -1461,6 +1489,71 @@ ipcMain.handle('switch-log-clear', async () => {
   return true;
 });
 
+// 🏥 诊断工具箱 IPC
+ipcMain.handle('diag-full-status', async () => {
+  try {
+    const health = performanceMonitor ? performanceMonitor.calculateHealthScore() : { score: 0, status: 'unknown', issues: [] };
+    const stats = performanceMonitor ? performanceMonitor.getCurrentStats() : {};
+    const gwStatus = serviceManager ? serviceManager.getStatus() : { gateway: {} };
+    const guardian = gatewayGuardian ? gatewayGuardian.getStats() : {};
+    let connection = { connected: false };
+    try { connection = { connected: await openclawClient.checkConnection() }; } catch(e) {}
+    let session = { activeSessions: 0, estimatedTokens: 0, contextPercentage: 0 };
+    let requests = { total: 0, recentCount: 0, recent: [] };
+    try {
+      const diag = await openclawClient.getDiagnostics();
+      session = diag.session || session;
+      requests = diag.requests || requests;
+    } catch(e) {}
+    const ocErrors = openclawClient ? openclawClient.getRecentErrors(10) : [];
+    const globalErrors = errorHandler ? errorHandler.getErrorHistory(10) : [];
+    const gwUptime = serviceManager ? serviceManager.formatUptime(serviceManager.getUptime('gateway')) : '--';
+    return {
+      health,
+      stats,
+      gateway: { ...gwStatus.gateway, uptimeFormatted: gwUptime },
+      guardian,
+      connection,
+      session,
+      errors: { openclaw: ocErrors, global: globalErrors },
+      requests: { total: requests.total, recentCount: requests.recentCount, recent: requests.recent || [] }
+    };
+  } catch (err) {
+    return { health: { score: 0, status: 'error', issues: [err.message] }, stats: {}, gateway: {}, guardian: {}, connection: {}, session: {}, errors: {}, requests: {} };
+  }
+});
+
+ipcMain.handle('diag-restart-gateway', async () => {
+  if (!serviceManager) return { success: false, error: 'serviceManager 未初始化' };
+  const result = await serviceManager.restartGateway();
+  return { success: result.success, message: result.success ? 'Gateway 已重启' : (result.error || '重启失败'), error: result.error };
+});
+
+ipcMain.handle('diag-clear-session', async () => {
+  if (!openclawClient) return { success: false, error: 'openclawClient 未初始化' };
+  return await openclawClient.clearCurrentSession();
+});
+
+ipcMain.handle('diag-cleanup-cache', async () => {
+  if (!cacheManager) return { success: false, error: 'cacheManager 未初始化' };
+  try {
+    const result = await cacheManager.triggerCleanup();
+    return { success: true, message: '缓存清理完成' };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('diag-kill-port', async () => {
+  if (!serviceManager) return { success: false, error: 'serviceManager 未初始化' };
+  try {
+    await serviceManager._forceKillPort(18789);
+    await serviceManager._waitForPortFree(18789);
+    return { success: true, message: '端口 18789 已清理' };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
 
 // 🆘 刷新 Session - 清理损坏会话
 ipcMain.handle('refresh-session', async () => {

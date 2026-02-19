@@ -12,14 +12,14 @@ async function notifyDesktopAuto(userMessage, myReply) {
     try {
         // 先通知用户消息
         if (userMessage) {
-            await execAsync(`node "${path.join(desktopPath, 'notify-desktop.js')}" user-message "${userMessage.replace(/"/g, '\\"')}"`);
+            await execAsync(`node "${path.join(desktopPath, 'notify-desktop.js')}" user-message "${userMessage.replace(/"/g, '\\"')}"`, { windowsHide: true });
             console.log('✅ 用户消息已通知桌面');
         }
         
         // 等待1秒后通知我的回复
         if (myReply) {
             await new Promise(resolve => setTimeout(resolve, 1000));
-            await execAsync(`node "${path.join(desktopPath, 'notify-desktop.js')}" agent-response "${myReply.replace(/"/g, '\\"')}"`);
+            await execAsync(`node "${path.join(desktopPath, 'notify-desktop.js')}" agent-response "${myReply.replace(/"/g, '\\"')}"`, { windowsHide: true });
             console.log('✅ AI回复已通知桌面');
         }
         

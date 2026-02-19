@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>诊断工具箱</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+  background: linear-gradient(145deg, #0a0a14 0%, #0d1117 40%, #0f1520 100%);
+  color: #e0e0e0; user-select: none; overflow-y: auto; overflow-x: hidden;
+  min-height: 100vh;
+}
+body::before {
+  content: ''; position: fixed; top: -120px; right: -80px;
+  width: 300px; height: 300px; border-radius: 50%;
+  background: radial-gradient(circle, #7C6BF015 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+body::after {
+  content: ''; position: fixed; bottom: -100px; left: -60px;
+  width: 250px; height: 250px; border-radius: 50%;
+  background: radial-gradient(circle, #4ECDC410 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #ffffff15; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #ffffff30; }
+
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px 12px; position: sticky; top: 0; z-index: 10;
+  background: rgba(12, 12, 20, 0.85); backdrop-filter: blur(20px) saturate(1.2);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.header-left { display: flex; align-items: center; gap: 10px; }
+.header-title {
+  font-size: 17px; font-weight: 700;
+  background: linear-gradient(135deg, #a78bfa, #67e8f9);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: 0.5px;
+}
+.header-right { display: flex; align-items: center; gap: 8px; }
+.refresh-countdown { font-size: 11px; color: #555; }
+.refresh-btn {
+  padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04); color: #888; font-size: 11px;
+  cursor: pointer; transition: all 0.3s;
+}
+.refresh-btn:hover { color: #ccc; background: rgba(255,255,255,0.08); }
+
+.content { padding: 12px 16px 20px; display: flex; flex-direction: column; gap: 14px; position: relative; z-index: 1; }
+
+.glass-card {
+  background: linear-gradient(135deg, rgba(20,22,36,0.8), rgba(24,28,48,0.6));
+  border-radius: 14px; border: 1px solid rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.03);
+  transition: all 0.3s;
+}
+.glass-card:hover {
+  border-color: rgba(255,255,255,0.1);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.section-label {
+  font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 1.2px;
+  font-weight: 600; margin-bottom: 10px; padding: 0 2px;
+}
+
+/* === Health Hero === */
+.health-hero {
+  padding: 20px; display: flex; align-items: center; gap: 20px;
+  position: relative; overflow: hidden;
+}
+.health-hero::before {
+  content: ''; position: absolute; top: -40px; right: -30px;
+  width: 120px; height: 120px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,107,240,0.1), transparent);
+  pointer-events: none;
+}
+.health-ring-wrap { position: relative; width: 90px; height: 90px; flex-shrink: 0; }
+.health-ring-wrap svg { width: 90px; height: 90px; transform: rotate(-90deg); }
+.health-ring-bg { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 6; }
+.health-ring-fg { fill: none; stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 0.8s ease, stroke 0.5s; }
+.health-score-text {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  font-size: 24px; font-weight: 800; letter-spacing: -1px;
+}
+.health-info { flex: 1; }
+.health-status { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.health-issues { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.health-issue-tag {
+  font-size: 10px; padding: 2px 8px; border-radius: 6px;
+  background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.2);
+}
+.health-issue-tag.critical { background: rgba(239,68,68,0.12); color: #ef4444; border-color: rgba(239,68,68,0.2); }
+
+/* === System Vitals Grid === */
+.vitals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 14px; }
+.vital-card {
+  padding: 12px; border-radius: 10px;
+  background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);
+}
+.vital-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
+.vital-value { font-size: 18px; font-weight: 700; color: #fff; margin: 4px 0 2px; }
+.vital-sub { font-size: 11px; color: #555; }
+.vital-bar { height: 3px; border-radius: 2px; background: rgba(255,255,255,0.06); margin-top: 6px; overflow: hidden; }
+.vital-bar-fill { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+
+/* === Gateway Status === */
+.gateway-section { padding: 14px; }
+.gateway-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.status-dot.green { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.5); }
+.status-dot.red { background: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,0.5); }
+.status-dot.yellow { background: #fbbf24; box-shadow: 0 0 6px rgba(251,191,36,0.5); }
+.gateway-label { font-size: 13px; color: #ccc; flex: 1; }
+.gateway-value { font-size: 12px; color: #888; }
+.guardian-stats { display: flex; gap: 12px; margin-top: 6px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.04); }
+.guardian-stat { font-size: 11px; color: #666; }
+.guardian-stat span { color: #aaa; font-weight: 600; }
+
+/* === Session === */
+.session-section { padding: 14px; }
+.session-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.session-label { font-size: 12px; color: #888; }
+.session-value { font-size: 13px; color: #ccc; font-weight: 600; }
+.context-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.06); overflow: hidden; }
+.context-bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+.context-pct { font-size: 11px; color: #666; margin-top: 4px; text-align: right; }
+
+/* === Actions Grid === */
+.actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 14px; }
+.action-btn {
+  padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03); cursor: pointer; transition: all 0.3s;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  position: relative; overflow: hidden;
+}
+.action-btn:hover { background: rgba(255,255,255,0.06); border-color: rgba(124,107,240,0.2); }
+.action-btn:active { transform: scale(0.97); }
+.action-btn.loading { pointer-events: none; opacity: 0.6; }
+.action-btn .icon { font-size: 20px; }
+.action-btn .label { font-size: 11px; color: #aaa; font-weight: 500; }
+.action-btn .spinner {
+  display: none; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.1);
+  border-top-color: #a78bfa; border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+.action-btn.loading .icon { display: none; }
+.action-btn.loading .spinner { display: block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* === History Tabs === */
+.history-section { padding: 14px; }
+.history-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
+.history-tab {
+  padding: 5px 14px; border-radius: 8px; font-size: 12px; font-weight: 500;
+  cursor: pointer; color: #666; transition: all 0.3s; border: 1px solid transparent;
+}
+.history-tab:hover { color: #bbb; background: rgba(255,255,255,0.04); }
+.history-tab.active {
+  color: #e0e0e0;
+  background: linear-gradient(135deg, rgba(124,107,240,0.12), rgba(78,205,196,0.08));
+  border-color: rgba(124,107,240,0.2);
+}
+.history-list { max-height: 200px; overflow-y: auto; }
+.history-item {
+  padding: 8px 10px; border-radius: 8px; margin-bottom: 4px;
+  background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.03);
+  font-size: 11px; line-height: 1.5;
+}
+.history-item .time { color: #555; }
+.history-item .msg { color: #aaa; }
+.history-item.error { border-left: 2px solid rgba(239,68,68,0.4); }
+.history-item.success { border-left: 2px solid rgba(34,197,94,0.3); }
+.history-empty { text-align: center; color: #444; font-size: 12px; padding: 20px; }
+
+/* === Toast === */
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(60px);
+  padding: 8px 18px; border-radius: 10px; font-size: 12px;
+  background: rgba(20,22,36,0.95); border: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(12px); color: #ccc; opacity: 0; transition: all 0.3s;
+  z-index: 100; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: rgba(34,197,94,0.3); color: #22c55e; }
+.toast.error { border-color: rgba(239,68,68,0.3); color: #ef4444; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-title">诊断工具箱</div>
+  </div>
+  <div class="header-right">
+    <span class="refresh-countdown" id="countdown">5s</span>
+    <button class="refresh-btn" onclick="refreshNow()">刷新</button>
+  </div>
+</div>
+
+<div class="content">
+  <!-- 1. Health Hero -->
+  <div class="glass-card health-hero" id="healthHero">
+    <div class="health-ring-wrap">
+      <svg viewBox="0 0 36 36">
+        <circle class="health-ring-bg" cx="18" cy="18" r="15.5"/>
+        <circle class="health-ring-fg" id="healthRing" cx="18" cy="18" r="15.5"
+          stroke-dasharray="97.4" stroke-dashoffset="97.4"/>
+      </svg>
+      <div class="health-score-text" id="healthScore">--</div>
+    </div>
+    <div class="health-info">
+      <div class="health-status" id="healthStatus">加载中...</div>
+      <div class="health-issues" id="healthIssues"></div>
+    </div>
+  </div>
+
+  <!-- 2. System Vitals -->
+  <div>
+    <div class="section-label">系统体征</div>
+    <div class="glass-card">
+      <div class="vitals-grid">
+        <div class="vital-card">
+          <div class="vital-label">进程内存</div>
+          <div class="vital-value" id="vMemValue">--</div>
+          <div class="vital-sub" id="vMemSub">-- / --</div>
+          <div class="vital-bar"><div class="vital-bar-fill" id="vMemBar" style="width:0"></div></div>
+        </div>
+        <div class="vital-card">
+          <div class="vital-label">系统内存</div>
+          <div class="vital-value" id="vSysValue">--</div>
+          <div class="vital-sub" id="vSysSub">-- / --</div>
+          <div class="vital-bar"><div class="vital-bar-fill" id="vSysBar" style="width:0"></div></div>
+        </div>
+        <div class="vital-card">
+          <div class="vital-label">CPU 负载</div>
+          <div class="vital-value" id="vCpuValue">--</div>
+          <div class="vital-sub" id="vCpuSub">-- 核心</div>
+        </div>
+        <div class="vital-card">
+          <div class="vital-label">进程</div>
+          <div class="vital-value" id="vProcValue">--</div>
+          <div class="vital-sub" id="vProcSub">PID --</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Gateway Status -->
+  <div>
+    <div class="section-label">Gateway 状态</div>
+    <div class="glass-card gateway-section">
+      <div class="gateway-row">
+        <div class="status-dot" id="gwDot"></div>
+        <div class="gateway-label" id="gwLabel">--</div>
+        <div class="gateway-value" id="gwUptime">--</div>
+      </div>
+      <div class="gateway-row">
+        <div class="status-dot" id="connDot"></div>
+        <div class="gateway-label" id="connLabel">连接: --</div>
+      </div>
+      <div class="guardian-stats">
+        <div class="guardian-stat">连续失败: <span id="gsFails">0</span></div>
+        <div class="guardian-stat">重启次数: <span id="gsRestarts">0</span></div>
+        <div class="guardian-stat">可重启: <span id="gsCanRestart">--</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Session -->
+  <div>
+    <div class="section-label">会话诊断</div>
+    <div class="glass-card session-section">
+      <div class="session-row">
+        <span class="session-label">活跃会话</span>
+        <span class="session-value" id="sessCount">--</span>
+      </div>
+      <div class="session-row">
+        <span class="session-label">上下文 Token</span>
+        <span class="session-value" id="sessTokens">--</span>
+      </div>
+      <div class="context-bar"><div class="context-bar-fill" id="ctxBar" style="width:0"></div></div>
+      <div class="context-pct" id="ctxPct">--%</div>
+    </div>
+  </div>
+
+  <!-- 5. Actions -->
+  <div>
+    <div class="section-label">急救操作</div>
+    <div class="glass-card">
+      <div class="actions-grid">
+        <div class="action-btn" onclick="doAction('diag-restart-gateway', this)">
+          <span class="icon">🔄</span><div class="spinner"></div>
+          <span class="label">重启 Gateway</span>
+        </div>
+        <div class="action-btn" onclick="doAction('diag-clear-session', this)">
+          <span class="icon">🗑️</span><div class="spinner"></div>
+          <span class="label">清理会话</span>
+        </div>
+        <div class="action-btn" onclick="doAction('diag-cleanup-cache', this)">
+          <span class="icon">🧹</span><div class="spinner"></div>
+          <span class="label">清理缓存</span>
+        </div>
+        <div class="action-btn" onclick="doAction('diag-kill-port', this)">
+          <span class="icon">🔌</span><div class="spinner"></div>
+          <span class="label">清理端口</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. History -->
+  <div>
+    <div class="section-label">历史记录</div>
+    <div class="glass-card history-section">
+      <div class="history-tabs">
+        <div class="history-tab active" onclick="switchTab('errors', this)">错误</div>
+        <div class="history-tab" onclick="switchTab('requests', this)">请求</div>
+      </div>
+      <div class="history-list" id="historyList">
+        <div class="history-empty">加载中...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const { ipcRenderer } = require('electron');
+
+let currentTab = 'errors';
+let lastData = null;
+let countdownTimer = null;
+let countdown = 5;
+
+// Color helpers
+function scoreColor(s) {
+  if (s >= 80) return '#22c55e';
+  if (s >= 60) return '#67e8f9';
+  if (s >= 40) return '#fbbf24';
+  return '#ef4444';
+}
+function barColor(pct) {
+  if (pct < 60) return '#22c55e';
+  if (pct < 80) return '#fbbf24';
+  return '#ef4444';
+}
+function statusText(s) {
+  if (s >= 80) return '状态良好';
+  if (s >= 60) return '基本正常';
+  if (s >= 40) return '需要关注';
+  return '状态异常';
+}
+
+function updateUI(data) {
+  if (!data) return;
+  lastData = data;
+
+  // Health Hero
+  const score = data.health?.score ?? 0;
+  const color = scoreColor(score);
+  const ring = document.getElementById('healthRing');
+  const circumference = 97.4;
+  ring.style.stroke = color;
+  ring.style.strokeDashoffset = circumference - (circumference * score / 100);
+  document.getElementById('healthScore').textContent = score;
+  document.getElementById('healthScore').style.color = color;
+  document.getElementById('healthStatus').textContent = statusText(score);
+  document.getElementById('healthStatus').style.color = color;
+
+  const issuesEl = document.getElementById('healthIssues');
+  issuesEl.innerHTML = '';
+  (data.health?.issues || []).forEach(issue => {
+    const tag = document.createElement('span');
+    tag.className = 'health-issue-tag' + (score < 40 ? ' critical' : '');
+    tag.textContent = issue;
+    issuesEl.appendChild(tag);
+  });
+
+  // System Vitals
+  const stats = data.stats || {};
+  const mem = stats.memory || {};
+  const sys = stats.system || {};
+
+  document.getElementById('vMemValue').textContent = mem.percentage || '--%';
+  document.getElementById('vMemSub').textContent = `${mem.heapUsed || '--'} / ${mem.heapTotal || '--'}`;
+  const memPct = parseFloat(mem.percentage) || 0;
+  document.getElementById('vMemBar').style.width = memPct + '%';
+  document.getElementById('vMemBar').style.background = barColor(memPct);
+
+  const sysTotalBytes = parseSizeToBytes(sys.totalMem);
+  const sysFreeBytes = parseSizeToBytes(sys.freeMem);
+  const sysUsedPct = sysTotalBytes > 0 ? ((sysTotalBytes - sysFreeBytes) / sysTotalBytes * 100) : 0;
+  document.getElementById('vSysValue').textContent = sysUsedPct.toFixed(1) + '%';
+  document.getElementById('vSysSub').textContent = `${sys.usedMem || '--'} / ${sys.totalMem || '--'}`;
+  document.getElementById('vSysBar').style.width = sysUsedPct.toFixed(1) + '%';
+  document.getElementById('vSysBar').style.background = barColor(sysUsedPct);
+
+  document.getElementById('vCpuValue').textContent = sys.loadAvg || '--';
+  document.getElementById('vCpuSub').textContent = `${sys.cpus || '--'} 核心`;
+
+  const uptime = stats.uptime || {};
+  document.getElementById('vProcValue').textContent = uptime.formatted || '--';
+  document.getElementById('vProcSub').textContent = `PID ${data.gateway?.pid || process.pid}`;
+
+  // Gateway
+  const gw = data.gateway || {};
+  const gwRunning = gw.status === 'running';
+  document.getElementById('gwDot').className = 'status-dot ' + (gwRunning ? 'green' : 'red');
+  document.getElementById('gwLabel').textContent = gwRunning ? 'Gateway 运行中' : 'Gateway 已停止';
+  document.getElementById('gwUptime').textContent = gw.uptimeFormatted || '--';
+
+  const conn = data.connection || {};
+  document.getElementById('connDot').className = 'status-dot ' + (conn.connected ? 'green' : 'red');
+  document.getElementById('connLabel').textContent = conn.connected ? '连接: 正常' : '连接: 断开';
+
+  const guardian = data.guardian || {};
+  document.getElementById('gsFails').textContent = guardian.consecutiveFailures ?? 0;
+  document.getElementById('gsRestarts').textContent = guardian.restartsInWindow ?? 0;
+  document.getElementById('gsCanRestart').textContent = guardian.canRestart ? '是' : '否';
+
+  // Session
+  const sess = data.session || {};
+  document.getElementById('sessCount').textContent = sess.activeSessions ?? '--';
+  document.getElementById('sessTokens').textContent = sess.estimatedTokens != null ? `~${sess.estimatedTokens}` : '--';
+  const ctxPct = sess.contextPercentage ?? 0;
+  document.getElementById('ctxBar').style.width = ctxPct + '%';
+  document.getElementById('ctxBar').style.background = barColor(ctxPct);
+  document.getElementById('ctxPct').textContent = ctxPct + '%';
+
+  // History
+  renderHistory(data);
+}
+
+function parseSizeToBytes(str) {
+  if (!str || typeof str !== 'string') return 0;
+  const match = str.match(/([\d.]+)\s*(GB|MB|KB|B)/i);
+  if (!match) return 0;
+  const val = parseFloat(match[1]);
+  const unit = match[2].toUpperCase();
+  if (unit === 'GB') return val * 1024 * 1024 * 1024;
+  if (unit === 'MB') return val * 1024 * 1024;
+  if (unit === 'KB') return val * 1024;
+  return val;
+}
+
+function renderHistory(data) {
+  const list = document.getElementById('historyList');
+  let items = [];
+
+  if (currentTab === 'errors') {
+    const ocErrors = (data.errors?.openclaw || []).map(e => ({
+      time: e.timestamp ? new Date(e.timestamp).toLocaleTimeString('zh-CN') : '',
+      msg: `[Req#${e.requestId || '?'}] ${e.error || e.message || '未知错误'}`,
+      type: 'error'
+    }));
+    const globalErrors = (data.errors?.global || []).map(e => ({
+      time: e.time || '',
+      msg: `[${e.type || '?'}] ${e.message || '未知错误'}`,
+      type: e.critical ? 'error' : 'error'
+    }));
+    items = [...ocErrors, ...globalErrors].slice(0, 10);
+  } else {
+    items = (data.requests?.recent || []).map(r => ({
+      time: r.timestamp ? new Date(r.timestamp).toLocaleTimeString('zh-CN') : '',
+      msg: `${r.success ? '✅' : '❌'} Req#${r.requestId || '?'} (${r.elapsed || 0}ms) ${r.message || ''}`,
+      type: r.success ? 'success' : 'error'
+    })).slice(0, 10);
+  }
+
+  if (items.length === 0) {
+    list.innerHTML = '<div class="history-empty">暂无记录</div>';
+    return;
+  }
+
+  list.innerHTML = items.map(it => `
+    <div class="history-item ${it.type}">
+      <span class="time">${it.time}</span> <span class="msg">${it.msg}</span>
+    </div>
+  `).join('');
+}
+
+function switchTab(tab, el) {
+  currentTab = tab;
+  document.querySelectorAll('.history-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  if (lastData) renderHistory(lastData);
+}
+
+// Actions
+async function doAction(channel, btn) {
+  btn.classList.add('loading');
+  try {
+    const result = await ipcRenderer.invoke(channel);
+    if (result?.success !== false) {
+      showToast(result?.message || '操作成功', 'success');
+      setTimeout(fetchData, 1000);
+    } else {
+      showToast(result?.error || result?.message || '操作失败', 'error');
+    }
+  } catch (err) {
+    showToast(err.message || '操作异常', 'error');
+  } finally {
+    btn.classList.remove('loading');
+  }
+}
+
+function showToast(msg, type) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = 'toast show ' + (type || '');
+  setTimeout(() => { toast.className = 'toast'; }, 2500);
+}
+
+// Data fetching
+async function fetchData() {
+  try {
+    const data = await ipcRenderer.invoke('diag-full-status');
+    updateUI(data);
+  } catch (err) {
+    console.error('Fetch failed:', err);
+  }
+}
+
+function refreshNow() {
+  countdown = 5;
+  fetchData();
+}
+
+function startCountdown() {
+  countdown = 5;
+  clearInterval(countdownTimer);
+  countdownTimer = setInterval(() => {
+    countdown--;
+    document.getElementById('countdown').textContent = countdown + 's';
+    if (countdown <= 0) {
+      countdown = 5;
+      fetchData();
+    }
+  }, 1000);
+}
+
+// Init
+fetchData();
+startCountdown();
+</script>
+</body>
+</html>

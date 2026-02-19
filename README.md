@@ -1,6 +1,8 @@
-﻿# 🦞 kkclaw
+﻿# 🦞 openclaw-kkclaw
 
-**给 OpenClaw 一个身体 — 透明桌面AI伴侣，情感语音、生动表情、空气感UI**
+**Desktop visualization companion for OpenClaw - Fluid glass orb pet, 7-emotion system, voice cloning (MiniMax/CosyVoice), and real-time WebSocket sync**
+
+**OpenClaw 桌面可视化伴侣 — 流体玻璃球宠物、7情绪系统、声音克隆（MiniMax/CosyVoice）、实时 WebSocket 同步**
 
 <div align="center">
 

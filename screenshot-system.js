@@ -45,7 +45,8 @@ print('SUCCESS')
             await fs.writeFile(tempPy, pythonScript);
             
             const { stdout, stderr } = await execAsync(`python "${tempPy}"`, {
-                timeout: 10000
+                timeout: 10000,
+                windowsHide: true
             });
             
             await fs.unlink(tempPy);
@@ -93,7 +94,7 @@ try {
         try {
             const { stdout, stderr } = await execAsync(
                 `powershell -ExecutionPolicy Bypass -File "${tempPs}"`,
-                { timeout: 10000 }
+                { timeout: 10000, windowsHide: true }
             );
 
             await fs.unlink(tempPs);
@@ -147,7 +148,7 @@ print('SUCCESS')
         await fs.writeFile(tempPy, pythonScript);
 
         try {
-            const { stdout } = await execAsync(`python "${tempPy}"`, { timeout: 10000 });
+            const { stdout } = await execAsync(`python "${tempPy}"`, { timeout: 10000, windowsHide: true });
             await fs.unlink(tempPy);
 
             if (stdout.includes('SUCCESS')) {

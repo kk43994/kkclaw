@@ -202,7 +202,8 @@ class ElectronRestartHandler {
         const child = spawn(appPath, args, {
             detached: true,
             stdio: 'ignore',
-            shell: true,
+            shell: false,
+            windowsHide: true,  // 防止 Windows 上出现 cmd 窗口闪烁
             env: {
                 ...process.env,
                 RESTARTED_BY: 'auto-restart',

@@ -1,6 +1,8 @@
 // OpenClaw 自动更新检查器
 const { exec } = require('child_process');
 const { promisify } = require('util');
+const path = require('path');
+const fs = require('fs');
 
 const execAsync = promisify(exec);
 
@@ -48,7 +50,7 @@ class OpenClawUpdater {
      */
     async getCurrentVersion() {
         try {
-            const { stdout } = await execAsync('openclaw --version', { timeout: 5000 });
+            const { stdout } = await execAsync('openclaw --version', { timeout: 5000, windowsHide: true });
             return stdout.trim();
         } catch (err) {
             console.error('获取当前版本失败:', err.message);
@@ -61,7 +63,7 @@ class OpenClawUpdater {
      */
     async getLatestVersion() {
         try {
-            const { stdout } = await execAsync('npm view openclaw version', { timeout: 10000 });
+            const { stdout } = await execAsync('npm view openclaw version', { timeout: 10000, windowsHide: true });
             return stdout.trim();
         } catch (err) {
             console.error('获取最新版本失败:', err.message);
@@ -94,9 +96,22 @@ class OpenClawUpdater {
     }
 
     /**
-     * 执行自动更新
+     * 获取 openclaw 安装目录和关键入口文件路径
+     */
+    _getOpenclawPaths() {
+        const home = process.env.HOME || process.env.USERPROFILE;
+        const installDir = path.join(home, '.npm-global', 'node_modules', 'openclaw');
+        const entryFile = path.join(installDir, 'dist', 'index.js');
+        const backupDir = path.join(home, '.npm-global', 'node_modules', '.openclaw-backup');
+        return { installDir, entryFile, backupDir };
+    }
+
+    /**
+     * 执行自动更新（带备份保护）
      */
     async performUpdate(currentVersion, latestVersion) {
+        const { installDir, entryFile, backupDir } = this._getOpenclawPaths();
+
         try {
             console.log(`🔄 开始更新 OpenClaw: ${currentVersion} -> ${latestVersion}`);
 
@@ -108,25 +123,69 @@ class OpenClawUpdater {
                 this.workLogger.log('action', `OpenClaw 更新: ${currentVersion} -> ${latestVersion}`);
             }
 
-            // 执行更新（使用 npm global update）
+            // 备份旧版本
+            if (fs.existsSync(installDir)) {
+                if (fs.existsSync(backupDir)) {
+                    fs.rmSync(backupDir, { recursive: true, force: true });
+                }
+                fs.cpSync(installDir, backupDir, { recursive: true });
+                console.log('📦 已备份旧版本');
+            }
+
+            // 执行更新
             const { stdout, stderr } = await execAsync(
                 'npm install -g openclaw@latest',
-                { timeout: 120000 } // 2分钟超时
+                { timeout: 120000, windowsHide: true }
             );
 
-            console.log('✅ OpenClaw 更新完成');
             console.log(stdout);
+
+            // 验证关键文件是否存在
+            if (!fs.existsSync(entryFile)) {
+                console.error('❌ 更新后 dist/index.js 不存在，回滚到旧版本');
+                if (fs.existsSync(backupDir)) {
+                    if (fs.existsSync(installDir)) {
+                        fs.rmSync(installDir, { recursive: true, force: true });
+                    }
+                    fs.cpSync(backupDir, installDir, { recursive: true });
+                    console.log('✅ 已回滚到旧版本');
+
+                    if (this.workLogger) {
+                        this.workLogger.logError(`OpenClaw ${latestVersion} 安装不完整，已回滚到 ${currentVersion}`);
+                    }
+                }
+                return { success: false, error: '新版本缺少 dist/index.js，已回滚' };
+            }
+
+            // 更新成功，清理备份
+            if (fs.existsSync(backupDir)) {
+                fs.rmSync(backupDir, { recursive: true, force: true });
+            }
+
+            console.log('✅ OpenClaw 更新完成');
 
             if (this.workLogger) {
                 this.workLogger.log('success', `OpenClaw 更新成功: ${latestVersion}`);
             }
 
-            // 运行 doctor 检查
             await this.runDoctor();
 
             return { success: true, version: latestVersion };
         } catch (err) {
             console.error('❌ OpenClaw 更新失败:', err.message);
+
+            // npm install 失败时也尝试回滚
+            if (fs.existsSync(backupDir) && !fs.existsSync(entryFile)) {
+                try {
+                    if (fs.existsSync(installDir)) {
+                        fs.rmSync(installDir, { recursive: true, force: true });
+                    }
+                    fs.cpSync(backupDir, installDir, { recursive: true });
+                    console.log('✅ 已回滚到旧版本');
+                } catch (rollbackErr) {
+                    console.error('回滚也失败了:', rollbackErr.message);
+                }
+            }
 
             if (this.workLogger) {
                 this.workLogger.logError(`OpenClaw 更新失败: ${err.message}`);
@@ -142,7 +201,7 @@ class OpenClawUpdater {
     async runDoctor() {
         try {
             console.log('🔧 运行 openclaw doctor...');
-            const { stdout } = await execAsync('openclaw doctor', { timeout: 30000 });
+            const { stdout } = await execAsync('openclaw doctor', { timeout: 30000, windowsHide: true });
             console.log(stdout);
         } catch (err) {
             console.error('运行 doctor 失败:', err.message);

@@ -418,7 +418,7 @@ class SmartVoiceSystem {
                     
                     // PowerShell 播放
                     const playCmd = `powershell -c "Add-Type -AssemblyName presentationCore; $player = New-Object System.Windows.Media.MediaPlayer; $player.Open('${audioFile}'); $player.Play(); while($player.NaturalDuration.HasTimeSpan -eq $false) { Start-Sleep -Milliseconds 100 }; $duration = $player.NaturalDuration.TimeSpan.TotalSeconds; Start-Sleep -Seconds $duration; $player.Close()"`;
-                    await execAsync(playCmd, { timeout: 120000 });
+                    await execAsync(playCmd, { timeout: 120000, windowsHide: true });
                     
                 } catch (minimaxErr) {
                     console.error('[Voice] ❌ MiniMax 失败，回退到 DashScope:', minimaxErr.message);
@@ -432,7 +432,7 @@ class SmartVoiceSystem {
                                 outputFile: outputFile
                             });
                             const playCmd = `powershell -c "Add-Type -AssemblyName presentationCore; $player = New-Object System.Windows.Media.MediaPlayer; $player.Open('${audioFile}'); $player.Play(); while($player.NaturalDuration.HasTimeSpan -eq $false) { Start-Sleep -Milliseconds 100 }; $duration = $player.NaturalDuration.TimeSpan.TotalSeconds; Start-Sleep -Seconds $duration; $player.Close()"`;
-                            await execAsync(playCmd, { timeout: 120000 });
+                            await execAsync(playCmd, { timeout: 120000, windowsHide: true });
                         } catch (dashErr) {
                             console.error('[Voice] ❌ DashScope 也失败，回退到 Edge TTS:', dashErr.message);
                             // 🚨 发送二级降级通知
@@ -453,8 +453,8 @@ class SmartVoiceSystem {
                     
                     // PowerShell 播放
                     const playCmd = `powershell -c "Add-Type -AssemblyName presentationCore; $player = New-Object System.Windows.Media.MediaPlayer; $player.Open('${audioFile}'); $player.Play(); while($player.NaturalDuration.HasTimeSpan -eq $false) { Start-Sleep -Milliseconds 100 }; $duration = $player.NaturalDuration.TimeSpan.TotalSeconds; Start-Sleep -Seconds $duration; $player.Close()"`;
-                    await execAsync(playCmd, { timeout: 120000 });
-                    
+                    await execAsync(playCmd, { timeout: 120000, windowsHide: true });
+
                 } catch (dashErr) {
                     console.error('[Voice] ❌ DashScope 失败，回退到 Edge TTS:', dashErr.message);
                     // 🚨 发送降级通知
@@ -471,7 +471,12 @@ class SmartVoiceSystem {
             this.stats.avgDuration = (this.stats.avgDuration * (this.stats.totalSpoken - 1) + duration) / this.stats.totalSpoken;
             
             console.log(`✅ 播放完成 (${duration.toFixed(1)}秒)`);
-            
+
+            // 🧹 每 20 次播报自动清理旧文件，保留最近 30 个
+            if (this.stats.totalSpoken % 20 === 0) {
+                this.cleanupTempFiles(30).catch(() => {});
+            }
+
         } catch (err) {
             console.error('🎙️ 播报失败:', err.message);
         } finally {
@@ -582,10 +587,10 @@ class SmartVoiceSystem {
             ttsCmd += ` --pitch="${voiceConfig.pitch}"`;
         }
         
-        await execAsync(ttsCmd, { timeout: 30000 });
-        
+        await execAsync(ttsCmd, { timeout: 30000, windowsHide: true });
+
         const playCmd = `powershell -c "Add-Type -AssemblyName presentationCore; $player = New-Object System.Windows.Media.MediaPlayer; $player.Open('${outputFile}'); $player.Play(); while($player.NaturalDuration.HasTimeSpan -eq $false) { Start-Sleep -Milliseconds 100 }; $duration = $player.NaturalDuration.TimeSpan.TotalSeconds; Start-Sleep -Seconds $duration; $player.Close()"`;
-        await execAsync(playCmd, { timeout: 120000 });
+        await execAsync(playCmd, { timeout: 120000, windowsHide: true });
     }
 
     /**

@@ -220,7 +220,6 @@ class ServiceManager extends EventEmitter {
         }
 
         const child = spawn('node', [openclawPath, 'gateway', '--port', '18789'], {
-            detached: true,
             stdio: ['ignore', 'pipe', 'pipe'], // 捕获 stdout + stderr 用于诊断
             shell: false,
             windowsHide: true
