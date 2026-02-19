@@ -16,7 +16,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows_|_macOS-0078D6?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/kk43994/kkclaw)
 
-[🎥 **在线演示**](https://kk43994.github.io/kkclaw/) | [📦 **下载最新版**](https://github.com/kk43994/kkclaw/releases) | [📖 **文档**](#-文档) | [💬 **加入社群**](#-社群)
+[🎥 **在线演示**](https://kk43994.github.io/kkclaw/) | [📦 **下载最新版**](https://github.com/kk43994/kkclaw/releases) | [📖 **配置教程**](docs/CONFIGURATION-GUIDE.md) | [💬 **加入社群**](#-社群)
 
 </div>
 
@@ -345,6 +345,10 @@ function createColorTransition(fromColor, toColor) {
 
 ## 🚀 快速开始
 
+> 📖 **完整配置教程请看 → [CONFIGURATION-GUIDE.md](docs/CONFIGURATION-GUIDE.md)**
+> 
+> 从环境准备到语音配置到飞书接入，一步步手把手教学，小白也能看懂！
+
 ### 前置要求
 
 - **Node.js** ≥ 18.x ([下载](https://nodejs.org))
@@ -403,6 +407,7 @@ npm start
 
 ### 项目文档
 
+- [📖 **完整配置教程**](docs/CONFIGURATION-GUIDE.md) — ⭐ 新手必看！从零开始配置
 - [📂 项目结构](PROJECT-STRUCTURE.md) — 目录组织、命名规范
 - [🎙️ 智能语音系统](docs-dev/SMART-VOICE.md) — 三级降级、情感识别
 - [🔁 KKClaw Switch](docs-dev/SYNC-GUIDE.md) — 模型热切换配置
