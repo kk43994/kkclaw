@@ -10,8 +10,8 @@
 
 *OpenClaw Core + Desktop Embodiment = A living interface with emotion, voice, and presence*
 
-[![Version](https://img.shields.io/badge/version-2.2.0-FF6B4A?style=for-the-badge&logo=github)](https://github.com/kk43994/kkclaw/releases)
-[![Updated](https://img.shields.io/badge/updated-2026--02--15-34D399?style=for-the-badge)](https://github.com/kk43994/kkclaw)
+[![Version](https://img.shields.io/badge/version-2.2.1-FF6B4A?style=for-the-badge&logo=github)](https://github.com/kk43994/kkclaw/releases)
+[![Updated](https://img.shields.io/badge/updated-2026--02--19-34D399?style=for-the-badge)](https://github.com/kk43994/kkclaw)
 [![Build](https://img.shields.io/github/actions/workflow/status/kk43994/kkclaw/build-release.yml?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/kk43994/kkclaw/actions)
 [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows_|_macOS-0078D6?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/kk43994/kkclaw)
@@ -34,7 +34,15 @@
 - 🎯 **7×24 稳定** — 自动重启、日志轮转、错误恢复
 - 🍎 **跨平台支持** — Windows 10/11 + macOS (Intel & Apple Silicon)
 
-### 🆕 v2.2.0 新特性
+### 🆕 v2.2.1 新特性
+
+- 🔧 **诊断工具箱** — 全新独立窗口，一键查看 Gateway 状态、日志、连接信息
+- 🔇 **CMD 屏闪修复** — 全面添加 `windowsHide: true`，彻底消除 Windows 命令行窗口闪烁
+- 🎤 **语音引擎优化** — smart-voice 播放命令全部静默化，体验更流畅
+- 🔄 **自动更新增强** — openclaw-updater 版本检查、安装、doctor 全流程静默执行
+- 📸 **截图系统改进** — 截图进程隐藏，不再弹出黑框
+
+### v2.2.0 特性
 
 - 🛡️ **Gateway 错误诊断链路** — 捕获 stdout/stderr，桌面通知显示具体崩溃原因
 - 🔄 **安全模型切换 + 自动回滚** — 切换失败 5 秒内自动恢复上一个模型
@@ -66,15 +74,15 @@
 
 ## 📦 下载安装
 
-### 最新版本：v2.2.0
+### 最新版本：v2.2.1
 
 <div align="center">
 
 | 平台 | 架构 | 下载链接 | 大小 |
 |------|------|----------|------|
-| 🪟 **Windows** | x64 | [KKClaw-Desktop-Pet-2.2.0-Setup.exe](https://github.com/kk43994/kkclaw/releases/download/v2.2.0/KKClaw-Desktop-Pet-2.2.0-Setup.exe) | ~150MB |
-| 🍎 **macOS** | Intel | [KKClaw-Desktop-Pet-2.2.0-x64.dmg](https://github.com/kk43994/kkclaw/releases/download/v2.2.0/KKClaw-Desktop-Pet-2.2.0-x64.dmg) | ~160MB |
-| 🍎 **macOS** | Apple Silicon | [KKClaw-Desktop-Pet-2.2.0-arm64.dmg](https://github.com/kk43994/kkclaw/releases/download/v2.2.0/KKClaw-Desktop-Pet-2.2.0-arm64.dmg) | ~160MB |
+| 🪟 **Windows** | x64 | [KKClaw-Desktop-Pet-2.2.1-Setup.exe](https://github.com/kk43994/kkclaw/releases/download/v2.2.1/KKClaw-Desktop-Pet-2.2.1-Setup.exe) | ~150MB |
+| 🍎 **macOS** | Intel | [KKClaw-Desktop-Pet-2.2.1-x64.dmg](https://github.com/kk43994/kkclaw/releases/download/v2.2.1/KKClaw-Desktop-Pet-2.2.1-x64.dmg) | ~160MB |
+| 🍎 **macOS** | Apple Silicon | [KKClaw-Desktop-Pet-2.2.1-arm64.dmg](https://github.com/kk43994/kkclaw/releases/download/v2.2.1/KKClaw-Desktop-Pet-2.2.1-arm64.dmg) | ~160MB |
 
 [📦 查看所有版本](https://github.com/kk43994/kkclaw/releases) | [🎥 在线演示](https://kk43994.github.io/kkclaw/)
 
@@ -610,6 +618,21 @@ node kkclaw-hotswitch.js --restart
 ---
 
 ## 📝 更新日志
+
+### [2.2.1] - 2026-02-19
+
+#### 新增
+- 🔧 **诊断工具箱** — 独立窗口，一键查看 Gateway 状态、日志、连接诊断
+- 🔇 **CMD 屏闪彻底修复** — 全部 exec/spawn 调用添加 `windowsHide: true` + `shell: false`
+
+#### 优化
+- 🎤 smart-voice 所有 PowerShell 播放命令静默化
+- 🔄 openclaw-updater 全流程（版本检查/安装/doctor）静默执行
+- 📸 截图系统进程隐藏
+- 🔔 auto-notify 桌面通知静默化
+- 🛡️ service-manager Gateway 进程管理改用 `shell: false`
+
+---
 
 ### [2.1.0] - 2026-02-13
 
