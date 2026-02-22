@@ -79,6 +79,21 @@ class SetupWizard {
       return this._cloneVoice(cloneConfig);
     });
 
+    // Step 4: TTS — 保存 voice_id
+    ipcMain.handle('wizard-save-voice-id', async (event, { voiceId }) => {
+      const engine = this.petConfig.get('ttsEngine') || 'edge';
+      if (engine === 'minimax') {
+        const minimaxConfig = this.petConfig.get('minimax') || {};
+        minimaxConfig.voiceId = voiceId;
+        this.petConfig.set('minimax', minimaxConfig);
+      } else if (engine === 'dashscope') {
+        const dsConfig = this.petConfig.get('dashscope') || {};
+        dsConfig.voice = voiceId;
+        this.petConfig.set('dashscope', dsConfig);
+      }
+      return { success: true };
+    });
+
     // Step 5: Voice — 配置 Agent 语音播报
     ipcMain.handle('wizard-setup-agent-voice', async (event, workspaceDir) => {
       return this._setupAgentVoice(workspaceDir);
@@ -349,7 +364,7 @@ class SetupWizard {
       await fsPromises.mkdir(tempDir, { recursive: true });
       const outputFile = path.join(tempDir, `wizard_test_${Date.now()}.mp3`);
 
-      const { engine, apiKey } = engineConfig;
+      const { engine, apiKey, voiceId } = engineConfig;
 
       if ((engine === 'minimax-hd' || engine === 'minimax') && apiKey) {
         const MiniMaxTTS = require('./voice/minimax-tts');
@@ -359,7 +374,7 @@ class SetupWizard {
         const tts = new MiniMaxTTS({
           apiKey,
           model,
-          voiceId: existingConfig.voiceId || 'xiaotuantuan_minimax',
+          voiceId: voiceId || existingConfig.voiceId || 'female-tianmei', // 优先用传入的 voiceId
           speed: existingConfig.speed || 1.1,
           vol: existingConfig.vol || 3.0,
           emotion: 'happy',

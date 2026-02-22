@@ -27,7 +27,7 @@ class SmartVoiceSystem {
         
         // 🔑 MiniMax 配置
         this.minimax = null;
-        this.minimaxVoiceId = 'xiaotuantuan_minimax';  // 🎤 小团团克隆音色
+        this.minimaxVoiceId = 'xiaotuantuan_minimax';  // 🎤 小团团克隆音色 (KK的默认)
         this.minimaxModel = 'speech-2.5-turbo-preview';
         this.minimaxEmotion = 'happy';  // 默认开心
         this.initMiniMax();

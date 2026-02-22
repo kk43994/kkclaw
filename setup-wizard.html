@@ -1501,29 +1501,64 @@ async function renderStep3() {
     </div>
 
     <div id="voice-clone-area" class="${stepData.ttsEngine === 'edge' ? 'hidden' : ''}" style="margin-top: 14px; border-top: 2px dashed var(--parchment-dark); padding-top: 12px;">
-      <h3 style="font-size: 12px; margin-bottom: 8px;">🎤 自定义音色（可选）</h3>
-      <div class="note-box">💡 上传30秒以上的清晰录音，系统会自动克隆你的专属音色。不上传则使用默认音色。</div>
+      <h3 style="font-size: 12px; margin-bottom: 8px;">🎤 音色选择</h3>
+      
+      <!-- 当前音色显示 -->
+      <div id="current-voice-display" class="note-box" style="background: #e8f5e9; border-color: var(--grass-light);">
+        <strong>当前音色:</strong> <span id="current-voice-name">female-tianmei (甜美女性)</span>
+      </div>
+
+      <!-- 预设音色选择 -->
       <div class="form-group">
-        <label>上传录音文件</label>
-        <div class="upload-area" id="voice-upload-area"
-          onclick="document.getElementById('voice-file-input').click()"
-          ondragover="event.preventDefault(); this.classList.add('dragover')"
-          ondragleave="this.classList.remove('dragover')"
-          ondrop="handleVoiceDrop(event)">
-          <div class="upload-icon">🎙️</div>
-          <div class="upload-text" id="upload-text">点击选择或拖拽音频文件</div>
-          <div class="upload-hint">支持 MP3、WAV、M4A，建议30秒以上</div>
+        <label>选择预设音色（免费，无需克隆）</label>
+        <select class="form-input" id="preset-voice-select" onchange="onPresetVoiceChange(this.value)">
+          <option value="female-tianmei">甜美女性音色</option>
+          <option value="female-shaonv">少女音色</option>
+          <option value="diadia_xuemei">嗲嗲学妹</option>
+          <option value="qiaopi_mengmei">俏皮萌妹</option>
+          <option value="tianxin_xiaoling">甜心小玲</option>
+          <option value="lovely_girl">萌萌女童</option>
+          <option value="Sweet_Girl">Sweet Girl</option>
+          <option value="Cute_Elf">Cute Elf</option>
+          <option value="custom">自定义 Voice ID...</option>
+        </select>
+      </div>
+
+      <!-- 自定义 Voice ID 输入框 -->
+      <div class="form-group hidden" id="custom-voice-input-area">
+        <label>自定义 Voice ID</label>
+        <input type="text" class="form-input" id="custom-voice-id" placeholder="输入你的 voice_id (例如: my_voice_123)" oninput="onCustomVoiceIdInput()">
+        <div style="font-size: 11px; color: var(--text-medium); margin-top: 4px;">
+          💡 如果你在 MiniMax 控制台已经克隆了音色，可以在这里填入 voice_id
         </div>
-        <input type="file" id="voice-file-input" accept="audio/*" style="display:none" onchange="handleVoiceFile(this)">
       </div>
-      <div class="form-group">
-        <label>音色名称</label>
-        <input type="text" class="form-input" id="voice-clone-name" placeholder="例如：我的声音">
+
+      <!-- 自定义克隆（可选） -->
+      <div style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--parchment-dark);">
+        <h3 style="font-size: 11px; margin-bottom: 6px; color: var(--text-medium);">🎙️ 高级：克隆你的专属音色（可选）</h3>
+        <div class="note-box">💡 上传30秒以上的清晰录音，系统会自动克隆你的专属音色。</div>
+        <div class="form-group">
+          <label>上传录音文件</label>
+          <div class="upload-area" id="voice-upload-area"
+            onclick="document.getElementById('voice-file-input').click()"
+            ondragover="event.preventDefault(); this.classList.add('dragover')"
+            ondragleave="this.classList.remove('dragover')"
+            ondrop="handleVoiceDrop(event)">
+            <div class="upload-icon">🎙️</div>
+            <div class="upload-text" id="upload-text">点击选择或拖拽音频文件</div>
+            <div class="upload-hint">支持 MP3、WAV、M4A，建议30秒以上</div>
+          </div>
+          <input type="file" id="voice-file-input" accept="audio/*" style="display:none" onchange="handleVoiceFile(this)">
+        </div>
+        <div class="form-group">
+          <label>音色名称</label>
+          <input type="text" class="form-input" id="voice-clone-name" placeholder="例如：我的声音">
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary btn-small" onclick="startVoiceClone()" id="btn-clone">开始克隆</button>
+        </div>
+        <div id="clone-status"></div>
       </div>
-      <div class="btn-row">
-        <button class="btn btn-primary btn-small" onclick="startVoiceClone()" id="btn-clone">开始克隆</button>
-      </div>
-      <div id="clone-status"></div>
     </div>
 
     <div class="btn-row" style="margin-top: 12px;">
@@ -1533,6 +1568,43 @@ async function renderStep3() {
 
   // Check Python environment
   checkPythonEnv();
+
+  // 回显已保存的音色
+  try {
+    const config = await wizardAPI.invoke('wizard-get-config');
+    let savedVoiceId = '';
+    if (stepData.ttsEngine === 'minimax' || stepData.ttsEngine === 'minimax-hd') {
+      savedVoiceId = config.minimax?.voiceId || 'female-tianmei';
+    } else if (stepData.ttsEngine === 'cosyvoice') {
+      savedVoiceId = config.dashscope?.voice || 'longxiaochun';
+    }
+    if (savedVoiceId) {
+      currentVoiceId = savedVoiceId;
+      const select = document.getElementById('preset-voice-select');
+      if (select) {
+        // 检查是否是预设音色
+        const isPreset = Array.from(select.options).some(opt => opt.value === savedVoiceId);
+        if (isPreset) {
+          select.value = savedVoiceId;
+          onPresetVoiceChange(savedVoiceId);
+        } else {
+          // 自定义音色 - 选中"自定义"选项并填入 voice_id
+          select.value = 'custom';
+          const customInput = document.getElementById('custom-voice-id');
+          const customInputArea = document.getElementById('custom-voice-input-area');
+          if (customInput && customInputArea) {
+            customInput.value = savedVoiceId;
+            customInputArea.classList.remove('hidden');
+            document.getElementById('current-voice-name').textContent = `${savedVoiceId} (自定义)`;
+          }
+          // 如果是别人的克隆音色，提示切换
+          if (savedVoiceId.includes('xiaotuantuan') || savedVoiceId.includes('tuantuan')) {
+            await addBubble('检测到你使用的是别人的克隆音色，可能没有权限访问。建议切换到预设音色或上传自己的录音克隆~ (^_^)');
+          }
+        }
+      }
+    }
+  } catch {}
 }
 
 function selectEngine(engine, cardEl) {
@@ -1596,6 +1668,49 @@ async function checkPythonEnv() {
 
 // ─── Voice Clone Functions ───────────────────────
 let selectedVoiceFile = null;
+let currentVoiceId = 'female-tianmei'; // 默认音色
+
+function onPresetVoiceChange(voiceId) {
+  const customInputArea = document.getElementById('custom-voice-input-area');
+  const customInput = document.getElementById('custom-voice-id');
+  
+  if (voiceId === 'custom') {
+    // 显示自定义输入框
+    customInputArea.classList.remove('hidden');
+    currentVoiceId = customInput.value.trim() || 'female-tianmei';
+    document.getElementById('current-voice-name').textContent = `${currentVoiceId} (自定义)`;
+  } else {
+    // 隐藏自定义输入框
+    customInputArea.classList.add('hidden');
+    currentVoiceId = voiceId;
+    const voiceNames = {
+      'female-tianmei': '甜美女性音色',
+      'female-shaonv': '少女音色',
+      'diadia_xuemei': '嗲嗲学妹',
+      'qiaopi_mengmei': '俏皮萌妹',
+      'tianxin_xiaoling': '甜心小玲',
+      'lovely_girl': '萌萌女童',
+      'Sweet_Girl': 'Sweet Girl',
+      'Cute_Elf': 'Cute Elf'
+    };
+    const displayName = voiceNames[voiceId] || voiceId;
+    document.getElementById('current-voice-name').textContent = `${voiceId} (${displayName})`;
+  }
+  
+  // 保存到配置
+  wizardAPI.invoke('wizard-save-voice-id', { voiceId: currentVoiceId }).catch(() => {});
+}
+
+// 监听自定义 voice_id 输入
+function onCustomVoiceIdInput() {
+  const customInput = document.getElementById('custom-voice-id');
+  const voiceId = customInput.value.trim();
+  if (voiceId) {
+    currentVoiceId = voiceId;
+    document.getElementById('current-voice-name').textContent = `${voiceId} (自定义)`;
+    wizardAPI.invoke('wizard-save-voice-id', { voiceId }).catch(() => {});
+  }
+}
 
 function handleVoiceFile(input) {
   if (input.files && input.files[0]) {
@@ -1654,6 +1769,9 @@ async function startVoiceClone() {
     if (result.success) {
       statusEl.innerHTML = '<div class="status-item"><div class="status-icon success">✓</div><span>音色克隆成功！ID: ' + escapeHtml(result.voiceId) + '</span></div>';
       stepData.clonedVoiceId = result.voiceId;
+      currentVoiceId = result.voiceId;
+      // 更新当前音色显示
+      document.getElementById('current-voice-name').textContent = `${result.voiceId} (自定义克隆)`;
       await addBubble('音色克隆成功啦！(^_^) 试听一下新音色...');
       // Auto-test with new voice
       try { await testTTS(); } catch {}
@@ -1689,7 +1807,8 @@ async function testTTS() {
   try {
     const result = await wizardAPI.invoke('wizard-test-tts', {
       engine: stepData.ttsEngine,
-      apiKey: stepData.ttsApiKey
+      apiKey: stepData.ttsApiKey,
+      voiceId: currentVoiceId  // 传入当前选中的 voice_id
     });
     if (result.success) {
       await addBubble('听到了吗？效果怎么样~ (o^_^o)');

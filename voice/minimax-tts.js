@@ -9,7 +9,7 @@ class MiniMaxTTS {
     constructor(options = {}) {
         this.apiKey = options.apiKey || process.env.MINIMAX_API_KEY || '';
         this.model = options.model || 'speech-2.5-turbo-preview';
-        this.voiceId = options.voiceId || 'xiaotuantuan_minimax';
+        this.voiceId = options.voiceId || 'female-tianmei'; // 默认用官方预设音色
         this.speed = options.speed || 1.1;
         this.vol = options.vol || 3.0;
         this.pitch = options.pitch || 0;
