@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog, and this project loosely follows semantic versioning.
 
 
+## [3.0.0] - 2026-02-22
+
+### 🎤 Setup Wizard Voice Configuration Improvements
+
+#### New Features
+- ✨ **Preset voice selection**: 8 official MiniMax voices (female-tianmei, female-shaonv, diadia_xuemei, qiaopi_mengmei, tianxin_xiaoling, lovely_girl, Sweet_Girl, Cute_Elf)
+- ✨ **Custom voice_id input**: Manual input field for users who cloned voices in MiniMax console
+- ✨ **Current voice display**: Real-time display of selected voice_id in UI
+- ✨ **Permission detection**: Auto-detect and warn if using someone else's cloned voice
+
+#### Bug Fixes
+- 🐛 **Fixed error 2042**: Test playback now uses current selected voice_id instead of old config
+- 🐛 **Fixed default voice**: New users default to official preset voices, avoiding permission errors
+- 🐛 **Fixed voice priority**: Configuration file voice_id takes precedence over defaults
+
+#### Improvements
+- 💡 **3 configuration methods**: Preset selection / Custom input / Upload & clone
+- 💡 **Smart fallback**: If no voice_id configured, uses official preset instead of unavailable cloned voice
+- 💡 **Better UX**: Voice selection dropdown with descriptions, custom input for advanced users
+
+---
+
 ## [2.2.0] - 2026-02-15
 
 ### 🛡️ Gateway Error Diagnosis Chain
