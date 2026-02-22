@@ -1435,8 +1435,12 @@ ipcMain.handle('take-screenshot', async (event, reason = 'manual') => {
 });
 
 app.whenReady().then(async () => {
-  // 直接启动主程序，新手引导可通过托盘菜单手动打开
-  createWindow();
+  await createWindow();
+
+  // 🧙 首次运行自动弹出配置向导
+  if (!petConfig.get('setupComplete')) {
+    reopenSetupWizard();
+  }
 });
 
 // 🔧 服务通知
