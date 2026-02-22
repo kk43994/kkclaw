@@ -61,44 +61,31 @@
     .glass-shell {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         border-radius: 50%; z-index: 2;
-        /* 🔮 升级琉璃感：更强的渐变高光 */
-        background: 
-            radial-gradient(circle at 25% 25%, rgba(255,255,255,0.35), transparent 30%),
-            radial-gradient(circle at 80% 80%, rgba(255,255,255,0.08), transparent 40%),
-            radial-gradient(circle at 50% 50%, rgba(255,255,255,0.03), transparent);
+        /* 🔮 琉璃感：匹配Landing Page通透效果 */
+        background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.12), rgba(255,255,255,0.03));
         box-shadow:
-            /* 内部高光更强 */
-            inset -3px -3px 12px rgba(255,255,255,0.15),
-            inset 3px 3px 12px rgba(255,255,255,0.45),
-            /* 外部光晕 */
-            0px 4px 12px rgba(220,80,80,0.15),
-            0px 0px 20px rgba(255,255,255,0.1);
-        backdrop-filter: blur(2px);
-        border: 1.5px solid rgba(255,255,255,0.4);
-        /* 🎨 过渡也要平滑（1秒） */
+            inset -2px -2px 8px rgba(255,255,255,0.08),
+            inset 2px 2px 8px rgba(255,255,255,0.35),
+            0px 2px 6px rgba(220,80,80,0.08);
+        border: 1px solid rgba(255,255,255,0.25);
         transition: box-shadow 1.0s cubic-bezier(0.4, 0.0, 0.2, 1), border 1.0s cubic-bezier(0.4, 0.0, 0.2, 1);
     }
     .glass-shell::before {
         content: '';
-        /* 🌟 主高光更大更亮 */
-        position: absolute; top: 10%; left: 15%; width: 35%; height: 18%;
+        position: absolute; top: 12%; left: 18%; width: 28%; height: 14%;
         border-radius: 50%; 
-        background: 
-            radial-gradient(ellipse at center, rgba(255,255,255,0.8), rgba(255,255,255,0.3) 60%, transparent);
-        filter: blur(2px); 
+        background: rgba(255,255,255,0.55);
+        filter: blur(1px); 
         transform: rotate(-40deg);
-        /* 高光也要过渡（1秒） */
         transition: opacity 1.0s cubic-bezier(0.4, 0.0, 0.2, 1);
     }
-    /* 🔮 新增���第二高光 */
     .glass-shell::after {
         content: '';
-        position: absolute; bottom: 20%; right: 18%; width: 20%; height: 12%;
+        position: absolute; bottom: 22%; right: 20%; width: 16%; height: 10%;
         border-radius: 50%;
-        background: radial-gradient(ellipse at center, rgba(255,255,255,0.4), transparent 70%);
-        filter: blur(2px);
+        background: rgba(255,255,255,0.2);
+        filter: blur(1px);
         transform: rotate(25deg);
-        /* 高光也要过渡（1秒） */
         transition: opacity 1.0s cubic-bezier(0.4, 0.0, 0.2, 1);
     }
 
@@ -304,9 +291,6 @@
 </div>
 
 <script>
-let ipcRenderer;
-try { ipcRenderer = require('electron').ipcRenderer; } catch(e) {}
-
 const pet = document.getElementById('pet');
 const eyeL = document.getElementById('eyeL');
 const eyeR = document.getElementById('eyeR');
@@ -317,6 +301,7 @@ let _moodTimer = null;
 const blushL = document.getElementById('blushL');
 const blushR = document.getElementById('blushR');
 const particlesEl = document.getElementById('particles');
+const glassShell = document.querySelector('.glass-shell');
 const inputBar = document.getElementById('inputBar');
 const inputEl = document.getElementById('input');
 const btnVoice = document.getElementById('btnVoice');
@@ -580,9 +565,9 @@ document.addEventListener('mousemove', e => {
     if (startX !== undefined) {
         if (Math.abs(e.screenX - startX) > 3 || Math.abs(e.screenY - startY) > 3) isDrag = true;
     }
-    if (isDrag && ipcRenderer) {
+    if (isDrag && electronAPI) {
         // 用鼠标位置减去相对偏移，精确定位窗口
-        ipcRenderer.send('drag-pet', { 
+        electronAPI.send('drag-pet', {
             x: e.screenX, 
             y: e.screenY,
             offsetX: dragOffsetX,
@@ -623,7 +608,7 @@ pet.addEventListener('click', () => {
         eyeR.style.transform = 'scale(1.15)';
         
         // 三击打开历史消息
-        if (ipcRenderer) ipcRenderer.invoke('show-history');
+        if (electronAPI) electronAPI.invoke('show-history');
         setTimeout(() => { 
             resetClick(); 
             clickCount = 0;
@@ -684,51 +669,107 @@ function spawnParticles() {
 
 // ===== 情绪 =====
 const MOODS = {
-    // 🔮 升级配色：更鲜明的对比、更丰富的琉璃渐变
+    // 🔮 配色来自 Landing Page 风格 + 扩展情绪色系
     offline:   { 
-        fluid:'linear-gradient(135deg,#a8a8a8,#c5c5c5)', 
-        b1:'radial-gradient(circle at 30% 30%,rgba(120,120,120,0.7),transparent 45%),radial-gradient(circle at 70% 65%,rgba(145,145,145,0.6),transparent 45%)', 
-        b2:'radial-gradient(circle at 60% 30%,rgba(160,160,160,0.35),transparent 40%),radial-gradient(circle at 35% 70%,rgba(110,110,110,0.25),transparent 40%)', 
+        fluid:'linear-gradient(135deg,#ccc,#ddd)', 
+        b1:'radial-gradient(circle at 30% 30%,rgba(160,160,160,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(180,180,180,0.8),transparent 40%)', 
+        b2:'radial-gradient(circle at 60% 30%,rgba(200,200,200,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(140,140,140,0.3),transparent 35%)', 
+        glow:'0 0 20px rgba(160,160,160,0.15), 0 0 40px rgba(160,160,160,0.05)',
         eyes:'sleepy', scale:0.93, bounce:0, speed:'20s' 
     },
     idle:      { 
-        fluid:'linear-gradient(135deg,#ffb3ba,#ffe5e9)', 
-        b1:'radial-gradient(circle at 30% 30%,rgba(255,90,90,0.9),transparent 45%),radial-gradient(circle at 70% 65%,rgba(255,140,100,0.85),transparent 45%)', 
-        b2:'radial-gradient(circle at 60% 30%,rgba(255,190,140,0.45),transparent 40%),radial-gradient(circle at 35% 70%,rgba(235,70,70,0.35),transparent 40%)', 
+        fluid:'linear-gradient(135deg,#ffb3b3,#fed6e3)', 
+        b1:'radial-gradient(circle at 30% 30%,rgba(235,87,87,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(255,154,108,0.8),transparent 40%)', 
+        b2:'radial-gradient(circle at 60% 30%,rgba(255,200,150,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(220,60,60,0.3),transparent 35%)', 
+        glow:'0 0 40px rgba(255,107,74,0.25), 0 0 80px rgba(255,107,74,0.1)',
         eyes:'normal', scale:1, bounce:0, speed:'8s' 
     },
     happy:     { 
-        fluid:'linear-gradient(135deg,#ffdd99,#ffe0cc)', 
-        b1:'radial-gradient(circle at 30% 30%,rgba(255,180,50,0.95),transparent 45%),radial-gradient(circle at 70% 65%,rgba(255,110,110,0.9),transparent 45%)', 
-        b2:'radial-gradient(circle at 50% 50%,rgba(255,220,0,0.5),transparent 45%),radial-gradient(circle at 35% 70%,rgba(255,130,0,0.4),transparent 40%)', 
+        fluid:'linear-gradient(135deg,#ffe0b2,#fff3e0)', 
+        b1:'radial-gradient(circle at 30% 30%,rgba(255,193,7,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(255,152,0,0.8),transparent 40%)', 
+        b2:'radial-gradient(circle at 60% 30%,rgba(255,235,59,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(255,183,77,0.3),transparent 35%)', 
+        glow:'0 0 40px rgba(255,193,7,0.3), 0 0 80px rgba(255,152,0,0.15)',
         eyes:'happy', scale:1.05, bounce:0.02, speed:'5s' 
     },
     talking:   { 
-        fluid:'linear-gradient(135deg,#ffaab3,#ffd5e0)', 
-        b1:'radial-gradient(circle at 30% 30%,rgba(255,95,95,0.95),transparent 45%),radial-gradient(circle at 70% 65%,rgba(255,125,85,0.9),transparent 45%)', 
-        b2:'radial-gradient(circle at 60% 30%,rgba(255,170,120,0.55),transparent 40%),radial-gradient(circle at 35% 70%,rgba(240,80,80,0.4),transparent 40%)', 
+        fluid:'linear-gradient(135deg,#f8bbd0,#fce4ec)', 
+        b1:'radial-gradient(circle at 30% 30%,rgba(233,30,99,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(255,105,180,0.8),transparent 40%)', 
+        b2:'radial-gradient(circle at 60% 30%,rgba(255,182,193,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(219,68,85,0.3),transparent 35%)', 
+        glow:'0 0 40px rgba(255,105,180,0.3), 0 0 80px rgba(233,30,99,0.15)',
         eyes:'talking', scale:1, bounce:0.015, speed:'4s' 
     },
     thinking:  { 
-        fluid:'linear-gradient(135deg,#b8d8ff,#e8ddff)', 
-        b1:'radial-gradient(circle at 30% 30%,rgba(90,140,245,0.9),transparent 45%),radial-gradient(circle at 70% 65%,rgba(140,90,230,0.85),transparent 45%)', 
-        b2:'radial-gradient(circle at 60% 30%,rgba(170,190,255,0.5),transparent 40%),radial-gradient(circle at 35% 70%,rgba(110,70,210,0.4),transparent 40%)', 
+        fluid:'linear-gradient(135deg,#d1c4e9,#ede7f6)', 
+        b1:'radial-gradient(circle at 30% 30%,rgba(103,58,183,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(123,104,238,0.8),transparent 40%)', 
+        b2:'radial-gradient(circle at 60% 30%,rgba(179,157,219,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(94,53,177,0.3),transparent 35%)', 
+        glow:'0 0 40px rgba(123,104,238,0.3), 0 0 80px rgba(103,58,183,0.15)',
         eyes:'thinking', scale:1, bounce:0, speed:'12s' 
     },
     sleepy:    { 
-        fluid:'linear-gradient(135deg,#d0bebe,#e5d8d8)', 
-        b1:'radial-gradient(circle at 30% 30%,rgba(170,130,130,0.7),transparent 45%),radial-gradient(circle at 70% 65%,rgba(190,150,130,0.6),transparent 45%)', 
-        b2:'radial-gradient(circle at 60% 30%,rgba(195,170,160,0.4),transparent 40%),radial-gradient(circle at 35% 70%,rgba(160,120,120,0.3),transparent 40%)', 
+        fluid:'linear-gradient(135deg,#e8d5e0,#f0e6ef)', 
+        b1:'radial-gradient(circle at 30% 30%,rgba(186,147,170,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(200,170,190,0.8),transparent 40%)', 
+        b2:'radial-gradient(circle at 60% 30%,rgba(220,200,215,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(170,130,160,0.3),transparent 35%)', 
+        glow:'0 0 30px rgba(186,147,170,0.2), 0 0 60px rgba(186,147,170,0.08)',
         eyes:'sleepy', scale:0.97, bounce:0, speed:'16s' 
     },
     surprised: { 
-        fluid:'linear-gradient(135deg,#ffe8b0,#ffddc8)', 
-        b1:'radial-gradient(circle at 30% 30%,rgba(255,195,40,0.95),transparent 45%),radial-gradient(circle at 70% 65%,rgba(255,115,75,0.9),transparent 45%)', 
-        b2:'radial-gradient(circle at 50% 50%,rgba(255,225,90,0.5),transparent 45%),radial-gradient(circle at 35% 70%,rgba(255,145,45,0.4),transparent 40%)', 
+        fluid:'linear-gradient(135deg,#fff9c4,#fff3e0)', 
+        b1:'radial-gradient(circle at 30% 30%,rgba(255,215,0,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(255,165,0,0.8),transparent 40%)', 
+        b2:'radial-gradient(circle at 60% 30%,rgba(255,235,59,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(255,87,34,0.3),transparent 35%)', 
+        glow:'0 0 50px rgba(255,215,0,0.35), 0 0 100px rgba(255,165,0,0.15)',
         eyes:'surprised', scale:1.06, bounce:0, speed:'6s' 
     },
+    // 🆕 新增情绪 — 同样鲜艳的配色
+    sad:       {
+        fluid:'linear-gradient(135deg,#90caf9,#bbdefb)',
+        b1:'radial-gradient(circle at 30% 30%,rgba(30,136,229,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(66,165,245,0.8),transparent 40%)',
+        b2:'radial-gradient(circle at 60% 30%,rgba(144,202,249,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(21,101,192,0.3),transparent 35%)',
+        glow:'0 0 40px rgba(66,165,245,0.3), 0 0 80px rgba(30,136,229,0.15)',
+        eyes:'sad', scale:0.96, bounce:0, speed:'14s'
+    },
+    angry:     {
+        fluid:'linear-gradient(135deg,#ef5350,#e53935)',
+        b1:'radial-gradient(circle at 30% 30%,rgba(211,47,47,0.9),transparent 40%),radial-gradient(circle at 70% 65%,rgba(244,67,54,0.85),transparent 40%)',
+        b2:'radial-gradient(circle at 50% 50%,rgba(255,82,82,0.45),transparent 35%),radial-gradient(circle at 35% 70%,rgba(183,28,28,0.35),transparent 35%)',
+        glow:'0 0 50px rgba(244,67,54,0.4), 0 0 100px rgba(211,47,47,0.2)',
+        eyes:'angry', scale:1.04, bounce:0.01, speed:'3s'
+    },
+    fearful:   {
+        fluid:'linear-gradient(135deg,#ce93d8,#e1bee7)',
+        b1:'radial-gradient(circle at 30% 30%,rgba(156,39,176,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(186,104,200,0.8),transparent 40%)',
+        b2:'radial-gradient(circle at 60% 30%,rgba(206,147,216,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(123,31,162,0.3),transparent 35%)',
+        glow:'0 0 40px rgba(156,39,176,0.3), 0 0 80px rgba(123,31,162,0.15)',
+        eyes:'nervous', scale:0.97, bounce:0, speed:'5s'
+    },
+    calm:      {
+        fluid:'linear-gradient(135deg,#b2dfdb,#e0f2f1)',
+        b1:'radial-gradient(circle at 30% 30%,rgba(77,182,172,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(128,203,196,0.8),transparent 40%)',
+        b2:'radial-gradient(circle at 60% 30%,rgba(178,223,219,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(0,137,123,0.3),transparent 35%)',
+        glow:'0 0 40px rgba(77,182,172,0.25), 0 0 80px rgba(0,137,123,0.1)',
+        eyes:'softSmile', scale:1, bounce:0, speed:'10s'
+    },
+    excited:   {
+        fluid:'linear-gradient(135deg,#f48fb1,#f8bbd0)',
+        b1:'radial-gradient(circle at 30% 30%,rgba(233,30,99,0.9),transparent 40%),radial-gradient(circle at 70% 65%,rgba(255,64,129,0.85),transparent 40%)',
+        b2:'radial-gradient(circle at 50% 50%,rgba(248,187,208,0.45),transparent 35%),radial-gradient(circle at 35% 70%,rgba(194,24,91,0.35),transparent 35%)',
+        glow:'0 0 55px rgba(233,30,99,0.4), 0 0 110px rgba(255,64,129,0.2)',
+        eyes:'superHappy', scale:1.08, bounce:0.025, speed:'3s'
+    },
+    love:      {
+        fluid:'linear-gradient(135deg,#ff8a80,#ffcdd2)',
+        b1:'radial-gradient(circle at 30% 30%,rgba(229,57,53,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(255,82,82,0.8),transparent 40%)',
+        b2:'radial-gradient(circle at 50% 50%,rgba(255,138,128,0.45),transparent 35%),radial-gradient(circle at 35% 70%,rgba(198,40,40,0.3),transparent 35%)',
+        glow:'0 0 45px rgba(229,57,53,0.35), 0 0 90px rgba(255,82,82,0.15)',
+        eyes:'love', scale:1.05, bounce:0.015, speed:'6s'
+    },
+    focused:   {
+        fluid:'linear-gradient(135deg,#80deea,#b2ebf2)',
+        b1:'radial-gradient(circle at 30% 30%,rgba(0,151,167,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(38,166,154,0.8),transparent 40%)',
+        b2:'radial-gradient(circle at 60% 30%,rgba(128,222,234,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(0,131,143,0.3),transparent 35%)',
+        glow:'0 0 40px rgba(0,151,167,0.3), 0 0 80px rgba(38,166,154,0.15)',
+        eyes:'focus', scale:1.02, bounce:0, speed:'10s'
+    },
 };
-
 let currentMood = 'idle', talkInterval = null;
 
 function applyMoodEyes() {
@@ -758,6 +799,10 @@ function setMood(mood) {
             fluid.style.background = m.fluid;
             blob1.style.background = m.b1;
             blob2.style.background = m.b2;
+            // 🔮 应用情绪发光效果
+            if (m.glow && glassShell) {
+                glassShell.style.boxShadow = 'inset -2px -2px 8px rgba(255,255,255,0.08), inset 2px 2px 8px rgba(255,255,255,0.35), ' + m.glow;
+            }
             blob1.style.animation = 'fluid-spin ' + m.speed + ' linear infinite';
 
             // 淡出回正常
@@ -775,7 +820,7 @@ function setMood(mood) {
     currentMood = mood;
     blob1.style.animationDuration = m.speed;
 
-    if (mood === 'sleepy') {
+    if (mood === 'sleepy' || mood === 'sad') {
         blob1.style.transition = 'opacity 1.5s ease';
         blob1.style.opacity = '0.6';
     } else {
@@ -784,18 +829,18 @@ function setMood(mood) {
     }
 
     targetScale = m.scale; breathExtra = m.bounce;
-    mouseTracking = (mood !== 'sleepy' && mood !== 'happy');
+    mouseTracking = (mood !== 'sleepy' && mood !== 'happy' && mood !== 'sad');
     if (talkInterval) { clearInterval(talkInterval); talkInterval = null; }
     if (mood === 'talking') {
         let tog = false;
         talkInterval = setInterval(() => { tog=!tog; tog ? EXPR.talkBig() : EXPR.talking(); }, 250);
     } else { applyMoodEyes(); }
 
-    if (mood === 'happy') {
+    if (mood === 'happy' || mood === 'excited' || mood === 'love') {
         blushL.style.transition = 'background 0.8s ease, opacity 0.6s ease';
         blushR.style.transition = 'background 0.8s ease, opacity 0.6s ease';
-        blushL.style.background = 'rgba(255,120,120,0.4)';
-        blushR.style.background = 'rgba(255,120,120,0.4)';
+        blushL.style.background = mood === 'love' ? 'rgba(255,90,120,0.5)' : 'rgba(255,120,120,0.4)';
+        blushR.style.background = mood === 'love' ? 'rgba(255,90,120,0.5)' : 'rgba(255,120,120,0.4)';
     } else {
         blushL.style.transition = 'background 0.6s ease, opacity 0.4s ease';
         blushR.style.transition = 'background 0.6s ease, opacity 0.4s ease';
@@ -1187,7 +1232,7 @@ function toggleVoice() {
         ? '<svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'
         : '<svg viewBox="0 0 24 24"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2c0 .76-.12 1.5-.35 2.18"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
     btnVoice.classList.toggle('active', voiceOn);
-    if (ipcRenderer) ipcRenderer.invoke('set-voice-enabled', voiceOn);
+    if (electronAPI) electronAPI.invoke('set-voice-enabled', voiceOn);
     setMood('happy');
     setTimeout(() => setMood('idle'), 1500);
 }
@@ -1197,9 +1242,9 @@ const modelBadge = document.getElementById('modelBadge');
 let currentModelColor = '#E8A838';
 
 async function cycleModel() {
-    if (!ipcRenderer) return;
+    if (!electronAPI) return;
     setMood('thinking');
-    const model = await ipcRenderer.invoke('model-next');
+    const model = await electronAPI.invoke('model-next');
     if (model) {
         updateModelBadge(model);
         // 球体闪变动画
@@ -1230,22 +1275,22 @@ function flashModelSwitch(color) {
 }
 
 // 初始化时获取当前模型
-if (ipcRenderer) {
-    ipcRenderer.invoke('model-current').then(model => {
+if (electronAPI) {
+    electronAPI.invoke('model-current').then(model => {
         if (model) updateModelBadge(model);
     });
-    
+
     // 监听模型变更事件（来自托盘菜单切换）
-    ipcRenderer.on('model-changed', (e, model) => {
+    electronAPI.on('model-changed', (model) => {
         updateModelBadge(model);
         flashModelSwitch(model.color);
     });
 }
 
 async function screenshot() {
-    if (!ipcRenderer) return;
+    if (!electronAPI) return;
     setMood('thinking');
-    const result = await ipcRenderer.invoke('take-screenshot', 'manual');
+    const result = await electronAPI.invoke('take-screenshot', 'manual');
     if (result.success) {
         setMood('happy');
         setTimeout(() => setMood('idle'), 2000);
@@ -1254,26 +1299,43 @@ async function screenshot() {
 
 async function send() {
     const msg = inputEl.value.trim();
-    if (!msg || !ipcRenderer) return;
+    if (!msg || !electronAPI) return;
     inputEl.value = '';
     inputBar.classList.remove('show');
     setMood('thinking');
-    const reply = await ipcRenderer.invoke('openclaw-send', msg);
+    const reply = await electronAPI.invoke('openclaw-send', msg);
     if (reply) { setMood('happy'); setTimeout(() => setMood('idle'), 3000); }
 }
 
 // ===== IPC =====
-if (ipcRenderer) {
-    ipcRenderer.on('new-message', (e, msg) => {
+if (electronAPI) {
+    electronAPI.on('new-message', (msg) => {
         setMood('talking');
         setTimeout(() => setMood('idle'), 3000);
     });
-    ipcRenderer.on('agent-response', (e, res) => {
+    electronAPI.on('agent-response', (res) => {
         lastTone = detectTone(res.content);
-        setMood('happy');
-        setTimeout(() => setMood('idle'), 5000);
+        // 🎭 根据 emotion 直接切换对应的 mood（每种都有独立配色）
+        const emotionMoodMap = {
+            happy: 'happy',
+            surprised: 'surprised',
+            sad: 'sad',
+            fearful: 'fearful',
+            angry: 'angry',
+            thinking: 'thinking',
+            calm: 'calm',
+            disgusted: 'angry',
+            excited: 'excited',
+            love: 'love',
+            focused: 'focused'
+        };
+        const mood = emotionMoodMap[res.emotion] || 'calm';
+        setMood(mood);
+        // 根据情绪调整恢复时间
+        const recoveryTime = (mood === 'thinking') ? 8000 : (mood === 'sad') ? 7000 : (mood === 'fearful') ? 6000 : 5000;
+        setTimeout(() => setMood('idle'), recoveryTime);
     });
-    ipcRenderer.on('status-update', (e, s) => {
+    electronAPI.on('status-update', (s) => {
         const wasConnected = isConnected;
         isConnected = s.connected;
         if (!wasConnected && isConnected) {
@@ -1292,9 +1354,9 @@ if (ipcRenderer) {
 }
 
 // 状态检查
-if (ipcRenderer) {
+if (electronAPI) {
     setInterval(async () => {
-        const s = await ipcRenderer.invoke('openclaw-status');
+        const s = await electronAPI.invoke('openclaw-status');
         const wasConnected = isConnected;
         isConnected = s.connected;
         if (!wasConnected && isConnected && currentMood === 'offline') {
@@ -1314,9 +1376,9 @@ if (ipcRenderer) {
 
 // 初始化 — 先显示离线，等连接成功后复活
 setMood('offline');
-if (ipcRenderer) {
+if (electronAPI) {
     setTimeout(async () => {
-        const s = await ipcRenderer.invoke('openclaw-status');
+        const s = await electronAPI.invoke('openclaw-status');
         isConnected = s.connected;
         if (isConnected) {
             setMood('happy');

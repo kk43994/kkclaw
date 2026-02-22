@@ -489,9 +489,6 @@ body::after {
 <div class="toast" id="toast"></div>
 
 <script>
-let ipcRenderer;
-try { ipcRenderer = require('electron').ipcRenderer; } catch(e) {}
-
 let allModels = [], allProviders = [], currentModel = null, selectedPreset = null, editingProvider = null;
 
 // ===== i18n =====
@@ -558,8 +555,8 @@ function showTab(name) {
 }
 
 async function loadAll() {
-  if(!ipcRenderer) return;
-  const s=await ipcRenderer.invoke('model-full-status'); if(!s) return;
+  if(!electronAPI) return;
+  const s=await electronAPI.invoke('model-full-status'); if(!s) return;
   allModels=s.models||[]; allProviders=s.providers||[]; currentModel=s.current;
   renderCurrentIndicator(); renderProviderList();
 }
@@ -599,12 +596,12 @@ function renderSpeedBadge(s) {
   return `<div class="provider-speed ${cls}">${ms}ms</div>`;
 }
 
-async function speedTest(name) { if(!ipcRenderer) return; showToast(`${t('testing')}`,'info'); const r=await ipcRenderer.invoke('model-speed-test',name); showToast(r.status==='ok'?`${name}: ${r.latencyMs}ms`:`${name}: Error`,'success'); loadAll(); }
-async function speedTestAll() { if(!ipcRenderer) return; const btn=document.getElementById('speedTestAllBtn'); btn.classList.add('testing'); showToast(t('testing'),'info'); await ipcRenderer.invoke('model-speed-test-all'); btn.classList.remove('testing'); showToast(t('testComplete'),'success'); loadAll(); }
+async function speedTest(name) { if(!electronAPI) return; showToast(`${t('testing')}`,'info'); const r=await electronAPI.invoke('model-speed-test',name); showToast(r.status==='ok'?`${name}: ${r.latencyMs}ms`:`${name}: Error`,'success'); loadAll(); }
+async function speedTestAll() { if(!electronAPI) return; const btn=document.getElementById('speedTestAllBtn'); btn.classList.add('testing'); showToast(t('testing'),'info'); await electronAPI.invoke('model-speed-test-all'); btn.classList.remove('testing'); showToast(t('testComplete'),'success'); loadAll(); }
 
 async function loadModels() {
-  if(!ipcRenderer) return;
-  const s=await ipcRenderer.invoke('model-full-status'); if(!s) return;
+  if(!electronAPI) return;
+  const s=await electronAPI.invoke('model-full-status'); if(!s) return;
   allModels=s.models||[]; currentModel=s.current;
   const panel=document.getElementById('modelPanel'), groups={};
   for(const m of allModels){ if(!groups[m.provider]) groups[m.provider]=[]; groups[m.provider].push(m); }
@@ -623,18 +620,18 @@ async function loadModels() {
   panel.innerHTML=html;
 }
 
-async function switchModel(id) { if(!ipcRenderer) return; const r=await ipcRenderer.invoke('model-switch',id); if(r){ showToast(`${t('switched')} ${r.shortName}`,'success'); loadModels(); } }
+async function switchModel(id) { if(!electronAPI) return; const r=await electronAPI.invoke('model-switch',id); if(r){ showToast(`${t('switched')} ${r.shortName}`,'success'); loadModels(); } }
 
 async function switchProvider(name) {
-  if(!ipcRenderer) return;
+  if(!electronAPI) return;
   showToast(`切换到 ${name}...`,'info');
-  const r=await ipcRenderer.invoke('model-switch-provider',name);
+  const r=await electronAPI.invoke('model-switch-provider',name);
   if(r){ showToast(`${t('switched')} ${name} / ${r.shortName}`,'success'); loadAll(); }
   else { showToast(`切换失败`,'error'); }
 }
 
 async function editProvider(name) {
-  editingProvider=name; const s=await ipcRenderer.invoke('model-full-status');
+  editingProvider=name; const s=await electronAPI.invoke('model-full-status');
   const p=s.providers.find(x=>x.name===name); if(!p) return;
   const models=allModels.filter(m=>m.provider===name);
   const n=encArg(name);
@@ -668,32 +665,32 @@ async function editProvider(name) {
   document.getElementById('panel-edit').classList.add('active');
 }
 
-async function saveProviderEdit() { if(!editingProvider||!ipcRenderer) return; const b=document.getElementById('editBaseUrl').value.trim(),k=document.getElementById('editApiKey').value.trim(),u={}; if(b) u.baseUrl=b; if(k) u.apiKey=k; if(!Object.keys(u).length){showToast(t('noChanges'),'info');return;} const r=await ipcRenderer.invoke('model-update-provider',editingProvider,u); if(r.success){showToast(`${t('updated')} ${editingProvider}`,'success');showTab('main');}else showToast(r.error,'error'); }
-async function deleteProvider(name) { if(!confirm(`${t('confirmDelete')} "${name}"${t('confirmDeleteHint')}`)) return; const r=await ipcRenderer.invoke('model-remove-provider',name); if(r.success){showToast(`${t('deleted')} ${name}`,'success');showTab('main');}else showToast(r.error,'error'); }
-async function removeModel(prov,id) { if(!confirm(`${t('confirmRemove')} "${id}"?`)) return; const r=await ipcRenderer.invoke('model-remove-model',prov,id); if(r.success){showToast(t('removed'),'success');editProvider(prov);await loadAll();}else showToast(r.error,'error'); }
-async function addModelToProvider(prov) { const id=document.getElementById('newModelId').value.trim(),name=document.getElementById('newModelName').value.trim(); if(!id) return showToast(t('enterModelId'),'error'); const r=await ipcRenderer.invoke('model-add-model',prov,{id,name:name||id}); if(r.success){showToast(`${t('added')} ${id}`,'success');editProvider(prov);await loadAll();}else showToast(r.error,'error'); }
+async function saveProviderEdit() { if(!editingProvider||!electronAPI) return; const b=document.getElementById('editBaseUrl').value.trim(),k=document.getElementById('editApiKey').value.trim(),u={}; if(b) u.baseUrl=b; if(k) u.apiKey=k; if(!Object.keys(u).length){showToast(t('noChanges'),'info');return;} const r=await electronAPI.invoke('model-update-provider',editingProvider,u); if(r.success){showToast(`${t('updated')} ${editingProvider}`,'success');showTab('main');}else showToast(r.error,'error'); }
+async function deleteProvider(name) { if(!confirm(`${t('confirmDelete')} "${name}"${t('confirmDeleteHint')}`)) return; const r=await electronAPI.invoke('model-remove-provider',name); if(r.success){showToast(`${t('deleted')} ${name}`,'success');showTab('main');}else showToast(r.error,'error'); }
+async function removeModel(prov,id) { if(!confirm(`${t('confirmRemove')} "${id}"?`)) return; const r=await electronAPI.invoke('model-remove-model',prov,id); if(r.success){showToast(t('removed'),'success');editProvider(prov);await loadAll();}else showToast(r.error,'error'); }
+async function addModelToProvider(prov) { const id=document.getElementById('newModelId').value.trim(),name=document.getElementById('newModelName').value.trim(); if(!id) return showToast(t('enterModelId'),'error'); const r=await electronAPI.invoke('model-add-model',prov,{id,name:name||id}); if(r.success){showToast(`${t('added')} ${id}`,'success');editProvider(prov);await loadAll();}else showToast(r.error,'error'); }
 
 async function fetchProviderModels(prov) {
-  if(!ipcRenderer) return;
+  if(!electronAPI) return;
   showToast('正在获取模型列表...','info');
-  const r=await ipcRenderer.invoke('model-fetch-models',prov);
+  const r=await electronAPI.invoke('model-fetch-models',prov);
   if(!r.success){ showToast(`获取失败: ${r.error}`,'error'); return; }
   if(!r.models.length){ showToast('未获取到模型','info'); return; }
   let added=0;
   for(const m of r.models){
-    try{ await ipcRenderer.invoke('model-add-model',prov,{id:m.id,name:m.name||m.id}); added++; }catch(e){}
+    try{ await electronAPI.invoke('model-add-model',prov,{id:m.id,name:m.name||m.id}); added++; }catch(e){}
   }
   showToast(`获取到 ${r.models.length} 个模型，新增 ${added} 个`,'success');
   editProvider(prov);
   await loadAll();
 }
 
-async function loadPresets() { if(!ipcRenderer) return; const presets=await ipcRenderer.invoke('model-presets'); document.getElementById('presetGrid').innerHTML=presets.map(p=>`
+async function loadPresets() { if(!electronAPI) return; const presets=await electronAPI.invoke('model-presets'); document.getElementById('presetGrid').innerHTML=presets.map(p=>`
   <div class="preset-card ${selectedPreset===p.key?'selected':''}" onclick="selectPreset('${p.key}', event)">
   <div class="preset-card-count">${p.modelCount}</div><div class="preset-card-icon" style="background:${p.color}">${escHtml(p.icon)}</div>
   <div class="preset-card-name">${escHtml(p.name)}</div><div class="preset-card-desc">${escHtml(p.description||'')}</div></div>`).join(''); }
 
-function selectPreset(key, evt) { if(!ipcRenderer) return; ipcRenderer.invoke('model-presets').then(presets=>{ const p=presets.find(x=>x.key===key); if(!p) return; selectedPreset=key; document.getElementById('addName').value=p.name; document.getElementById('addBaseUrl').value=p.baseUrl; document.getElementById('addApiType').value=p.api; document.querySelectorAll('.preset-card').forEach(el=>el.classList.remove('selected')); evt?.target?.closest?.('.preset-card')?.classList.add('selected'); }); }
+function selectPreset(key, evt) { if(!electronAPI) return; electronAPI.invoke('model-presets').then(presets=>{ const p=presets.find(x=>x.key===key); if(!p) return; selectedPreset=key; document.getElementById('addName').value=p.name; document.getElementById('addBaseUrl').value=p.baseUrl; document.getElementById('addApiType').value=p.api; document.querySelectorAll('.preset-card').forEach(el=>el.classList.remove('selected')); evt?.target?.closest?.('.preset-card')?.classList.add('selected'); }); }
 
 function addModelRow() { const c=document.getElementById('addModelRows'),r=document.createElement('div'); r.className='form-row'; r.style.marginBottom='6px'; r.innerHTML=`<input class="form-input" placeholder="Model ID" data-field="id"><input class="form-input" placeholder="${t('displayName')}" data-field="name">`; c.appendChild(r); }
 
@@ -701,8 +698,8 @@ async function submitProvider() {
   const name=document.getElementById('addName').value.trim(),baseUrl=document.getElementById('addBaseUrl').value.trim(),apiKey=document.getElementById('addApiKey').value.trim(),api=document.getElementById('addApiType').value;
   if(!name) return showToast(t('enterName'),'error'); if(!apiKey) return showToast(t('enterKey'),'error');
   let result; const fi=document.querySelector('#addModelRows .form-row input[data-field="id"]'),hm=fi&&fi.value.trim();
-  if(selectedPreset&&!hm){ result=await ipcRenderer.invoke('model-add-from-preset',selectedPreset,apiKey,name,baseUrl||undefined); }
-  else { const rows=document.querySelectorAll('#addModelRows .form-row'),models=[]; rows.forEach(r=>{const id=r.querySelector('[data-field="id"]').value.trim(),n=r.querySelector('[data-field="name"]').value.trim();if(id) models.push({id,name:n||id});}); result=await ipcRenderer.invoke('model-add-provider',name,{baseUrl,apiKey,api,models}); }
+  if(selectedPreset&&!hm){ result=await electronAPI.invoke('model-add-from-preset',selectedPreset,apiKey,name,baseUrl||undefined); }
+  else { const rows=document.querySelectorAll('#addModelRows .form-row'),models=[]; rows.forEach(r=>{const id=r.querySelector('[data-field="id"]').value.trim(),n=r.querySelector('[data-field="name"]').value.trim();if(id) models.push({id,name:n||id});}); result=await electronAPI.invoke('model-add-provider',name,{baseUrl,apiKey,api,models}); }
   if(result.success){showToast(`${t('added')} "${name}"`,'success');document.getElementById('addName').value='';document.getElementById('addBaseUrl').value='https://api.kk666.online/v1';document.getElementById('addApiKey').value='';selectedPreset=null;showTab('main');}else showToast(result.error,'error');
 }
 
@@ -714,8 +711,8 @@ let currentLogFilter = null;
 let logEntries = [];
 
 async function loadLogs() {
-  if(!ipcRenderer) return;
-  logEntries = await ipcRenderer.invoke('switch-log-list', 200, currentLogFilter);
+  if(!electronAPI) return;
+  logEntries = await electronAPI.invoke('switch-log-list', 200, currentLogFilter);
   renderLogs();
 }
 
@@ -753,16 +750,16 @@ function filterLogs(level, btn) {
 function refreshLogs() { loadLogs(); }
 
 async function clearLogs() {
-  if(!ipcRenderer) return;
-  await ipcRenderer.invoke('switch-log-clear');
+  if(!electronAPI) return;
+  await electronAPI.invoke('switch-log-clear');
   logEntries = [];
   renderLogs();
   showToast(t('logCleared'), 'info');
 }
 
 // 实时接收新日志
-if(ipcRenderer) {
-  ipcRenderer.on('switch-log-entry', (event, entry) => {
+if(electronAPI) {
+  electronAPI.on('switch-log-entry', (entry) => {
     logEntries.push(entry);
     if(logEntries.length > 500) logEntries.splice(0, logEntries.length - 500);
     // 如果日志面板可见，实时更新
@@ -773,7 +770,7 @@ if(ipcRenderer) {
 }
 
 loadAll();
-if(ipcRenderer) { ipcRenderer.on('model-changed',()=>{loadAll();loadModels();}); }
+if(electronAPI) { electronAPI.on('model-changed',()=>{loadAll();loadModels();}); }
 </script>
 </body>
 </html>

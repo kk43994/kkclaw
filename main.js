@@ -17,6 +17,7 @@ const LogRotationManager = require('./log-rotation'); // 📝 日志轮转
 const GlobalErrorHandler = require('./global-error-handler'); // 🛡️ 全局错误处理
 const GatewayGuardian = require('./gateway-guardian'); // 🛡️ Gateway 进程守护
 const ModelSwitcher = require('./model-switcher'); // 🔄 模型切换器
+const SetupWizard = require('./setup-wizard'); // 🧙 首次运行向导
 
 // Windows透明窗口修复 — 禁用硬件加速彻底解决浅色背景矩形框
 app.disableHardwareAcceleration();
@@ -64,6 +65,7 @@ if (!gotTheLock) {
 
 let mainWindow;
 let lyricsWindow;
+let lyricsReady = false; // 歌词窗口是否加载完成
 let tray;
 let openclawClient;
 let voiceSystem;
@@ -75,12 +77,25 @@ let screenshotSystem; // 🔥 新增
 let larkUploader; // 🔥 新增
 let serviceManager; // 🔧 服务管理
 let cacheManager; // 🧹 缓存管理
+
+// 安全发送歌词到歌词窗口
+function sendLyric(data) {
+  if (lyricsWindow && !lyricsWindow.isDestroyed() && lyricsReady) {
+    try {
+      lyricsWindow.webContents.send('show-lyric', data);
+    } catch (err) {
+      console.warn('⚠️ 歌词发送失败:', err.message);
+    }
+  }
+}
 let restartHandler; // 🔄 自动重启处理器
 let performanceMonitor; // 📊 性能监控
 let logRotation; // 📝 日志轮转
 let errorHandler; // 🛡️ 全局错误处理
 let gatewayGuardian; // 🛡️ Gateway 进程守护
 let modelSwitcher; // 🔄 模型切换器
+let setupWizard; // 🧙 首次运行向导
+let setupWizardWindow; // 🧙 向导窗口
 
 // 🛡️ 初始化全局错误处理 (最优先)
 errorHandler = new GlobalErrorHandler({
@@ -161,6 +176,9 @@ if (process.env.RESTARTED_BY === 'auto-restart') {
 }
 
 async function createWindow() {
+  const pkg = require('./package.json');
+  console.log(`🦞 KKClaw v${pkg.version} | PID ${process.pid} | ${__dirname}`);
+
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   
   // 加载配置
@@ -169,11 +187,12 @@ async function createWindow() {
   
   // 初始化所有系统
   openclawClient = new OpenClawClient();
-  voiceSystem = new SmartVoiceSystem(); // 🎙️ 智能语音系统
+  voiceSystem = new SmartVoiceSystem(petConfig); // 🎙️ 智能语音系统
   workLogger = new WorkLogger();
   messageSync = new MessageSyncSystem(openclawClient);
   desktopNotifier = new DesktopNotifier(18788);
   await desktopNotifier.start(); // 异步启动，自动处理端口冲突
+  petConfig.set('notifierPort', desktopNotifier.getPort()); // 保存实际端口供 wizard/bridge 使用
   screenshotSystem = new ScreenshotSystem(); // 🔥 新增
   larkUploader = new LarkUploader(); // 🔥 新增
   serviceManager = new ServiceManager(); // 🔧 服务管理
@@ -193,7 +212,7 @@ async function createWindow() {
       modelSettingsWindow.webContents.send('model-changed', model);
     }
     if (lyricsWindow) {
-      lyricsWindow.webContents.send('show-lyric', {
+      sendLyric({
         text: `模型切换 → ${model.shortName}`,
         type: 'system',
         sender: '系统'
@@ -378,13 +397,11 @@ async function createWindow() {
         channel: 'lark'
       });
       // 歌词窗口显示
-      if (lyricsWindow) {
-        lyricsWindow.webContents.send('show-lyric', {
-          text: payload.content,
-          type: 'user',
-          sender: payload.sender || '用户'
-        });
-      }
+      sendLyric({
+        text: payload.content,
+        type: 'user',
+        sender: payload.sender || '用户'
+      });
       workLogger.logMessage(payload.sender || '用户', payload.content);
       
       // 🔔 Windows 系统通知
@@ -408,27 +425,29 @@ async function createWindow() {
   desktopNotifier.on('agent-response', (payload) => {
     console.log('🤖 AI回复:', payload);
     if (mainWindow) {
+      // 🧹 清理 TTS 停顿标记（<#0.3#> 等），只给 MiniMax 用，不显示
+      const displayContent = (payload.content || '').replace(/<#[\d.]+#>/g, '');
+      
       mainWindow.webContents.send('agent-response', {
-        content: payload.content
+        content: displayContent,
+        emotion: payload.emotion || 'happy'
       });
       // 歌词窗口显示（等语音播完后消失）
-      if (lyricsWindow) {
-        // 估算语音时长：中文约每字0.18秒，最少6秒
-        const estimatedDuration = Math.max(6000, (payload.content || '').length * 180 + 2000);
-        lyricsWindow.webContents.send('show-lyric', {
-          text: payload.content,
-          type: 'agent',
-          sender: '小K',
-          duration: estimatedDuration
-        });
-      }
-      // 直接在这里触发语音,完整播放(最多500字符)
+      const estimatedDuration = Math.max(6000, displayContent.length * 180 + 2000);
+      sendLyric({
+        text: displayContent,
+        type: 'agent',
+        sender: '小K',
+        duration: estimatedDuration
+      });
+      // 直接在这里触发语音,完整播放
+      // ⚠️ 语音用原始内容（保留 <#0.3#> 停顿标记给 MiniMax）
       if (payload.content && voiceSystem) {
-        const maxLength = 800; // 增加到800字,约2-3分钟 // 增加到500字符,约1-2分钟
+        const maxLength = 800;
         const voiceText = payload.content.substring(0, maxLength);
-        voiceSystem.speak(voiceText);
+        voiceSystem.speak(voiceText, { emotion: payload.emotion || 'calm' });
       }
-      workLogger.log('message', `我回复: ${payload.content}`);
+      workLogger.log('message', `我回复: ${displayContent}`);
     }
   });
   
@@ -442,11 +461,9 @@ async function createWindow() {
   messageSync.on('new_message', (msg) => {
     if (mainWindow) {
       mainWindow.webContents.send('new-message', msg);
-      if (lyricsWindow) {
-        lyricsWindow.webContents.send('show-lyric', {
-          text: msg.content, type: 'user', sender: msg.sender
-        });
-      }
+      sendLyric({
+        text: msg.content, type: 'user', sender: msg.sender
+      });
       workLogger.logMessage(msg.sender, msg.content);
       console.log('📩 新消息:', msg.sender, '-', msg.content.substring(0, 50));
       
@@ -469,12 +486,22 @@ async function createWindow() {
     resizable: false,
     hasShadow: false,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
     }
   });
 
   mainWindow.loadFile('index.html');
+
+  // 渲染进程错误转发到主进程日志（防止静默失败）
+  mainWindow.webContents.on('preload-error', (event, preloadPath, error) => {
+    console.error('❌ [preload-error]', preloadPath, error);
+  });
+  mainWindow.webContents.on('console-message', (event, level, message) => {
+    // level: 0=debug, 1=info, 2=warn, 3=error
+    if (level >= 2) console.warn(`⚠️ [renderer] ${message}`);
+  });
 
   // 注入CSS强制禁止滚动条
   mainWindow.webContents.on('did-finish-load', () => {
@@ -499,26 +526,35 @@ async function createWindow() {
     hasShadow: false,
     focusable: false,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
     }
   });
 
   lyricsWindow.loadFile('lyrics.html');
   lyricsWindow.setIgnoreMouseEvents(true); // 完全鼠标穿透！
   
+  // 歌词窗口加载完成标记
+  lyricsWindow.webContents.on('did-finish-load', () => {
+    console.log('🎵 歌词窗口加载完成');
+    lyricsReady = true;
+  });
+  lyricsWindow.on('closed', () => {
+    lyricsWindow = null;
+    lyricsReady = false;
+  });
+  
   // 窗口加载完成后发送测试通知
   mainWindow.webContents.on('did-finish-load', () => {
     console.log('🎉 精灵窗口加载完成');
     setTimeout(() => {
       // 在歌词窗口显示欢迎消息
-      if (lyricsWindow) {
-        lyricsWindow.webContents.send('show-lyric', {
-          text: '龙虾待命 🦞',
-          type: 'system',
-          sender: '系统'
-        });
-      }
+      sendLyric({
+        text: '龙虾待命 🦞',
+        type: 'system',
+        sender: '系统'
+      });
       mainWindow.webContents.send('new-message', {
         sender: '系统',
         content: '桌面应用已启动!',
@@ -828,15 +864,17 @@ async function createWindow() {
         // TODO: 打开设置窗口
       }
     },
+    {
+      label: '🧙 KKClaw 新手引导',
+      click: () => { reopenSetupWizard(); }
+    },
     { type: 'separator' },
     {
       label: '🔄 恢复 Session',
       click: async () => {
         showServiceNotification('正在恢复...', '清理飞书会话缓存');
         try {
-          const result = await mainWindow.webContents.executeJavaScript(
-            `require('electron').ipcRenderer.invoke('refresh-session')`
-          );
+          const result = await doRefreshSession();
           showServiceNotification('恢复成功', `已清理 ${result.sessions?.length || 0} 个会话`);
         } catch(e) {
           showServiceNotification('恢复失败', e.message);
@@ -1160,15 +1198,17 @@ function rebuildTrayMenu() {
       label: '设置',
       click: () => {}
     },
+    {
+      label: '🧙 KKClaw 新手引导',
+      click: () => { reopenSetupWizard(); }
+    },
     { type: 'separator' },
     {
       label: '🔄 恢复 Session',
       click: async () => {
         showServiceNotification('正在恢复...', '清理飞书会话缓存');
         try {
-          const result = await mainWindow.webContents.executeJavaScript(
-            `require('electron').ipcRenderer.invoke('refresh-session')`
-          );
+          const result = await doRefreshSession();
           showServiceNotification('恢复成功', `已清理 ${result.sessions?.length || 0} 个会话`);
         } catch(e) {
           showServiceNotification('恢复失败', e.message);
@@ -1204,11 +1244,12 @@ function openModelSettings() {
     autoHideMenuBar: true,
     backgroundColor: '#0f0f17',
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
     }
   });
-  
+
   modelSettingsWindow.setMenuBarVisibility(false);
   modelSettingsWindow.loadFile('model-settings.html');
   
@@ -1230,11 +1271,51 @@ function openDiagnosticToolbox() {
     width: 600, height: 700, title: '诊断工具箱',
     resizable: true, minimizable: true, maximizable: false,
     autoHideMenuBar: true, backgroundColor: '#0f0f17',
-    webPreferences: { nodeIntegration: true, contextIsolation: false }
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
+    }
   });
   diagnosticToolboxWindow.setMenuBarVisibility(false);
   diagnosticToolboxWindow.loadFile('diagnostic-toolbox.html');
   diagnosticToolboxWindow.on('closed', () => { diagnosticToolboxWindow = null; });
+}
+
+function reopenSetupWizard() {
+  if (setupWizardWindow && !setupWizardWindow.isDestroyed()) {
+    setupWizardWindow.focus();
+    return;
+  }
+  // Reset setupComplete so wizard can run
+  petConfig.set('setupComplete', false);
+
+  // Create wizard with current petConfig
+  if (!setupWizard) {
+    setupWizard = new SetupWizard(petConfig);
+  } else {
+    // Update config reference in case it was created with a different instance
+    setupWizard.petConfig = petConfig;
+  }
+
+  setupWizardWindow = new BrowserWindow({
+    width: 700,
+    height: 550,
+    title: 'KKClaw 新手引导',
+    resizable: false,
+    minimizable: true,
+    maximizable: false,
+    autoHideMenuBar: true,
+    backgroundColor: '#3a7d2a',
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'setup-preload.js')
+    }
+  });
+  setupWizardWindow.setMenuBarVisibility(false);
+  setupWizardWindow.loadFile('setup-wizard.html');
+  setupWizardWindow.on('closed', () => { setupWizardWindow = null; });
 }
 
 // 屏幕边界约束 — 防止球体跑到屏幕外
@@ -1277,11 +1358,11 @@ ipcMain.handle('show-history', async () => {
   try {
     const logs = workLogger.getRecentMessages ? workLogger.getRecentMessages(20) : [];
     // 在歌词窗口依次显示最近消息
-    if (lyricsWindow && logs.length > 0) {
+    if (lyricsReady && logs.length > 0) {
       const recent = logs.slice(-5); // 最近5条
       for (let i = 0; i < recent.length; i++) {
         setTimeout(() => {
-          lyricsWindow.webContents.send('show-lyric', {
+          sendLyric({
             text: recent[i].content || recent[i].message || '',
             type: recent[i].sender === '小K' ? 'agent' : 'user',
             sender: recent[i].sender || '',
@@ -1353,7 +1434,10 @@ ipcMain.handle('take-screenshot', async (event, reason = 'manual') => {
   }
 });
 
-app.whenReady().then(createWindow);
+app.whenReady().then(async () => {
+  // 直接启动主程序，新手引导可通过托盘菜单手动打开
+  createWindow();
+});
 
 // 🔧 服务通知
 function showServiceNotification(title, body) {
@@ -1555,12 +1639,267 @@ ipcMain.handle('diag-kill-port', async () => {
   }
 });
 
-// 🆘 刷新 Session - 清理损坏会话
-ipcMain.handle('refresh-session', async () => {
-  try {
-    const path = require('path');
-    const fs = require('fs');
+// 🩺 Doctor 自检
+ipcMain.handle('diag-doctor', async () => {
+  const checks = [];
 
+  // 1. 主窗口
+  checks.push({
+    name: '主窗口',
+    status: mainWindow && !mainWindow.isDestroyed() ? 'pass' : 'fail',
+    message: mainWindow && !mainWindow.isDestroyed() ? '正常运行' : '窗口已销毁',
+    fix: mainWindow ? null : '重启应用'
+  });
+
+  // 2. 歌词字幕窗口
+  checks.push({
+    name: '桌面字幕',
+    status: lyricsWindow && !lyricsWindow.isDestroyed() ? 'pass' : 'fail',
+    message: lyricsWindow && !lyricsWindow.isDestroyed() ? '正常运行' : '字幕窗口未创建或已销毁',
+    fix: lyricsWindow ? null : '重启应用以恢复字幕窗口'
+  });
+
+  // 3. 托盘图标
+  checks.push({
+    name: '系统托盘',
+    status: tray && !tray.isDestroyed() ? 'pass' : 'fail',
+    message: tray && !tray.isDestroyed() ? '托盘图标正常' : '托盘未创建',
+    fix: tray ? null : '重启应用'
+  });
+
+  // 4. Gateway 进程
+  try {
+    const gw = serviceManager ? serviceManager.getStatus() : null;
+    const running = gw?.gateway?.status === 'running';
+    checks.push({
+      name: 'Gateway 进程',
+      status: running ? 'pass' : 'fail',
+      message: running ? '运行中' : '未运行',
+      fix: running ? null : '尝试「重启 Gateway」或检查 OpenClaw CLI 是否安装'
+    });
+  } catch { checks.push({ name: 'Gateway 进程', status: 'fail', message: '检测异常', fix: '检查 service-manager 模块' }); }
+
+  // 5. Gateway 通信
+  try {
+    const connected = openclawClient ? await openclawClient.checkConnection() : false;
+    checks.push({
+      name: 'Gateway 通信',
+      status: connected ? 'pass' : 'fail',
+      message: connected ? '端口 18789 连接正常' : '无法连��� Gateway',
+      fix: connected ? null : '检查端口 18789 是否被占用，或尝试「清理端口」'
+    });
+  } catch { checks.push({ name: 'Gateway 通信', status: 'fail', message: '连接超时', fix: '检查网络或重启 Gateway' }); }
+
+  // 6. OpenClaw CLI
+  try {
+    const ocConfigPath = path.join(process.env.HOME || process.env.USERPROFILE, '.openclaw', 'openclaw.json');
+    const fs = require('fs');
+    if (fs.existsSync(ocConfigPath)) {
+      const ocConfig = JSON.parse(fs.readFileSync(ocConfigPath, 'utf-8'));
+      const hasToken = !!(ocConfig.gateway?.auth?.token);
+      checks.push({
+        name: 'OpenClaw CLI',
+        status: hasToken ? 'pass' : 'warn',
+        message: hasToken ? 'openclaw.json 已配置，Token 存在' : 'openclaw.json 存在但缺少 Token',
+        fix: hasToken ? null : '运行 openclaw 配置命令生成 Token'
+      });
+    } else {
+      checks.push({ name: 'OpenClaw CLI', status: 'fail', message: 'openclaw.json 不存在', fix: '安装并配置 OpenClaw CLI' });
+    }
+  } catch { checks.push({ name: 'OpenClaw CLI', status: 'fail', message: '检测异常' }); }
+
+  // 7. 通知服务
+  try {
+    const notifierUp = desktopNotifier && desktopNotifier.server !== null;
+    checks.push({
+      name: '通知服务',
+      status: notifierUp ? 'pass' : 'fail',
+      message: notifierUp ? `端口 ${desktopNotifier.getPort()} 运行中` : '未启动',
+      fix: notifierUp ? null : '端口 18788 可能被占用，重启应用'
+    });
+  } catch { checks.push({ name: '通知服务', status: 'fail', message: '检测异常' }); }
+
+  // 8. 语音引擎
+  try {
+    if (voiceSystem) {
+      const engine = voiceSystem.ttsEngine;
+      const hasMinimax = voiceSystem.minimax !== null;
+      const hasDashscope = voiceSystem.dashscope !== null;
+      const stats = voiceSystem.getStats();
+
+      let status = 'pass', message = '', fix = null;
+      if (engine === 'edge') {
+        status = 'warn';
+        message = '使用 Edge TTS 兜底';
+        fix = '检查 MiniMax / DashScope API Key 是否正确配置';
+      } else if (engine === 'dashscope') {
+        status = 'warn';
+        message = 'MiniMax 不可用，使用 DashScope';
+        fix = '检查 MiniMax API Key';
+      } else {
+        message = 'MiniMax 引擎正常';
+      }
+      message += ` | MiniMax: ${hasMinimax ? '✓' : '✗'} | DashScope: ${hasDashscope ? '✓' : '✗'}`;
+      if (!stats.enabled) { status = 'warn'; message += ' | 语音已关闭'; }
+
+      checks.push({ name: '语音引擎', status, message, fix });
+    } else {
+      checks.push({ name: '语音引擎', status: 'fail', message: '未初始化' });
+    }
+  } catch { checks.push({ name: '语音引擎', status: 'fail', message: '检测异常' }); }
+
+  // 9. API Key 解密状态
+  try {
+    if (petConfig) {
+      const issues = [];
+      const minimax = petConfig.get('minimax');
+      const dashscope = petConfig.get('dashscope');
+      if (minimax?.apiKey && String(minimax.apiKey).startsWith('enc:')) issues.push('MiniMax Key 未解密');
+      if (dashscope?.apiKey && String(dashscope.apiKey).startsWith('enc:')) issues.push('DashScope Key 未解密');
+      if (!minimax?.apiKey && !dashscope?.apiKey) issues.push('无任何 API Key');
+      checks.push({
+        name: 'API Key',
+        status: issues.length === 0 ? 'pass' : issues.some(i => i.includes('未解密')) ? 'fail' : 'warn',
+        message: issues.length === 0 ? 'API Key 状态正常' : issues.join(', '),
+        fix: issues.length > 0 ? '重新配置 API Key 或检查系统加密服务' : null
+      });
+    }
+  } catch { checks.push({ name: 'API Key', status: 'fail', message: '检测异常' }); }
+
+  // 10. 模型配置
+  try {
+    if (modelSwitcher) {
+      const current = modelSwitcher.getCurrent();
+      const full = modelSwitcher.getFullStatus();
+      const providerCount = full.providers?.length || 0;
+      const modelCount = full.models?.length || 0;
+      checks.push({
+        name: '模型配置',
+        status: current ? 'pass' : 'warn',
+        message: current ? `当前: ${current.shortName || current.id} | ${providerCount} 服务商, ${modelCount} 模型` : '未选择模型',
+        fix: current ? null : '在 KKClaw Switch 中选择一个模型'
+      });
+    } else {
+      checks.push({ name: '模型配置', status: 'fail', message: '模型切换器未初始化' });
+    }
+  } catch { checks.push({ name: '模型配置', status: 'fail', message: '检测异常' }); }
+
+  // 11. Guardian 守护
+  try {
+    if (gatewayGuardian) {
+      const gs = gatewayGuardian.getStats();
+      let status = 'pass', message = '守护运行中';
+      if (gs.consecutiveFailures > 0) {
+        status = gs.consecutiveFailures >= 3 ? 'fail' : 'warn';
+        message = `连续失败 ${gs.consecutiveFailures} 次`;
+      }
+      if (!gs.canRestart) {
+        status = 'warn';
+        message += ' | 重启次数已耗尽';
+      }
+      checks.push({ name: 'Guardian 守护', status, message, fix: status !== 'pass' ? '尝试手动重启 Gateway' : null });
+    } else {
+      checks.push({ name: 'Guardian 守护', status: 'warn', message: '未启动' });
+    }
+  } catch { checks.push({ name: 'Guardian 守护', status: 'fail', message: '检测异常' }); }
+
+  // 12. 截图系统
+  checks.push({
+    name: '截图系统',
+    status: screenshotSystem ? 'pass' : 'fail',
+    message: screenshotSystem ? '已初始化' : '未初始化',
+    fix: screenshotSystem ? null : '重启应用'
+  });
+
+  // 13. 飞书上传
+  try {
+    if (larkUploader) {
+      const hasCredentials = larkUploader.appId && larkUploader.appSecret;
+      checks.push({
+        name: '飞书上传',
+        status: hasCredentials ? 'pass' : 'warn',
+        message: hasCredentials ? '凭证已配置' : '未配置飞书应用凭证（截图上传不可用）',
+        fix: hasCredentials ? null : '在 OpenClaw 配置中设置飞书 appId / appSecret'
+      });
+    } else {
+      checks.push({ name: '飞书上传', status: 'warn', message: '未初始化' });
+    }
+  } catch { checks.push({ name: '飞书上传', status: 'warn', message: '检测异常' }); }
+
+  // 14. 系统健康
+  try {
+    if (performanceMonitor) {
+      const h = performanceMonitor.calculateHealthScore();
+      checks.push({
+        name: '系统健康',
+        status: h.score >= 70 ? 'pass' : h.score >= 40 ? 'warn' : 'fail',
+        message: `评分 ${h.score}/100 (${h.status})` + (h.issues.length ? ` | ${h.issues.join(', ')}` : ''),
+        fix: h.score < 70 ? '考虑清理缓存或重启应用' : null
+      });
+    }
+  } catch { checks.push({ name: '系统健康', status: 'fail', message: '检测异常' }); }
+
+  // 15. 临时目录
+  try {
+    const fs = require('fs');
+    const tempDir = path.join(__dirname, 'temp');
+    if (fs.existsSync(tempDir)) {
+      const files = fs.readdirSync(tempDir);
+      const sizeMB = files.reduce((sum, f) => {
+        try { return sum + fs.statSync(path.join(tempDir, f)).size; } catch { return sum; }
+      }, 0) / (1024 * 1024);
+      checks.push({
+        name: '临时目录',
+        status: sizeMB < 100 ? 'pass' : sizeMB < 500 ? 'warn' : 'fail',
+        message: `${files.length} 个文件, ${sizeMB.toFixed(1)}MB`,
+        fix: sizeMB >= 100 ? '使用「清理缓存」释放空间' : null
+      });
+    } else {
+      checks.push({ name: '临时目录', status: 'pass', message: '目录不存在（无缓存）' });
+    }
+  } catch { checks.push({ name: '临时目录', status: 'warn', message: '检测异常' }); }
+
+  // 16. 配置文件
+  try {
+    const fs = require('fs');
+    const configPath = path.join(__dirname, 'pet-config.json');
+    if (fs.existsSync(configPath)) {
+      const raw = fs.readFileSync(configPath, 'utf-8');
+      JSON.parse(raw);
+      checks.push({ name: '配置文件', status: 'pass', message: 'pet-config.json 正常' });
+    } else {
+      checks.push({ name: '配置文件', status: 'warn', message: '配置文件不存在，使用默认配置' });
+    }
+  } catch (e) {
+    checks.push({ name: '配置文件', status: 'fail', message: `配置文件损坏: ${e.message}`, fix: '删除 pet-config.json 让应用重新生成' });
+  }
+
+  // 17. 错误处理器
+  try {
+    if (errorHandler) {
+      const recentErrors = errorHandler.getRecentErrors ? errorHandler.getRecentErrors() : [];
+      const criticalCount = Array.isArray(recentErrors) ? recentErrors.filter(e => e.critical).length : 0;
+      checks.push({
+        name: '错误处理',
+        status: criticalCount === 0 ? 'pass' : 'warn',
+        message: criticalCount === 0 ? '无严重错误' : `${criticalCount} 个严重错误`,
+        fix: criticalCount > 0 ? '查看历史记录中的错误详情' : null
+      });
+    } else {
+      checks.push({ name: '错误处理', status: 'warn', message: '未初始化' });
+    }
+  } catch { checks.push({ name: '错误处理', status: 'pass', message: '运行中' }); }
+
+  const passed = checks.filter(c => c.status === 'pass').length;
+  const warned = checks.filter(c => c.status === 'warn').length;
+  const failed = checks.filter(c => c.status === 'fail').length;
+
+  return { checks, summary: { total: checks.length, passed, warned, failed } };
+});
+
+// 🆘 刷新 Session - 清理损坏会话
+async function doRefreshSession() {
+  try {
     const sessionDir = path.join(process.env.HOME || process.env.USERPROFILE, '.openclaw', 'agents', 'main', 'sessions');
     const sessionFile = path.join(sessionDir, 'sessions.json');
 
@@ -1618,6 +1957,10 @@ ipcMain.handle('refresh-session', async () => {
       error: err.message
     };
   }
+}
+
+ipcMain.handle('refresh-session', async () => {
+  return doRefreshSession();
 });
 
 app.on('before-quit', () => {

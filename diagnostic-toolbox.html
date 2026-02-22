@@ -152,6 +152,33 @@ body::after {
 .action-btn.loading .spinner { display: block; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* === Doctor === */
+.doctor-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.doctor-btn {
+  padding: 6px 16px; border-radius: 8px; border: 1px solid rgba(124,107,240,0.3);
+  background: linear-gradient(135deg, rgba(124,107,240,0.15), rgba(78,205,196,0.1));
+  color: #a78bfa; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s;
+}
+.doctor-btn:hover { background: linear-gradient(135deg, rgba(124,107,240,0.25), rgba(78,205,196,0.15)); border-color: rgba(124,107,240,0.5); }
+.doctor-btn:active { transform: scale(0.97); }
+.doctor-btn.running { pointer-events: none; opacity: 0.6; }
+.doctor-summary { display: flex; gap: 12px; margin-bottom: 10px; }
+.doctor-summary-item { font-size: 12px; font-weight: 600; }
+.doctor-summary-item.pass { color: #22c55e; }
+.doctor-summary-item.warn { color: #fbbf24; }
+.doctor-summary-item.fail { color: #ef4444; }
+.doctor-list { display: flex; flex-direction: column; gap: 6px; }
+.doctor-item {
+  display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px;
+  border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);
+}
+.doctor-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.doctor-info { flex: 1; min-width: 0; }
+.doctor-name { font-size: 12px; font-weight: 600; color: #ccc; }
+.doctor-msg { font-size: 11px; color: #888; margin-top: 2px; word-break: break-all; }
+.doctor-fix { font-size: 10px; color: #fbbf24; margin-top: 4px; padding: 4px 8px; border-radius: 4px; background: rgba(251,191,36,0.08); }
+.doctor-placeholder { text-align: center; color: #444; font-size: 12px; padding: 24px; }
+
 /* === History Tabs === */
 .history-section { padding: 14px; }
 .history-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
@@ -288,7 +315,21 @@ body::after {
     </div>
   </div>
 
-  <!-- 5. Actions -->
+  <!-- 5. Doctor 自检 -->
+  <div>
+    <div class="section-label">Doctor 自检</div>
+    <div class="glass-card" style="padding: 14px;">
+      <div class="doctor-header">
+        <div class="doctor-summary" id="doctorSummary"></div>
+        <button class="doctor-btn" id="doctorBtn" onclick="runDoctor()">运行检查</button>
+      </div>
+      <div id="doctorResults">
+        <div class="doctor-placeholder">点击「运行检查」开始自检</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Actions -->
   <div>
     <div class="section-label">急救操作</div>
     <div class="glass-card">
@@ -313,13 +354,14 @@ body::after {
     </div>
   </div>
 
-  <!-- 6. History -->
+  <!-- 7. History -->
   <div>
     <div class="section-label">历史记录</div>
     <div class="glass-card history-section">
       <div class="history-tabs">
         <div class="history-tab active" onclick="switchTab('errors', this)">错误</div>
         <div class="history-tab" onclick="switchTab('requests', this)">请求</div>
+        <div class="history-tab" onclick="switchTab('doctor', this)">Doctor</div>
       </div>
       <div class="history-list" id="historyList">
         <div class="history-empty">加载中...</div>
@@ -331,10 +373,9 @@ body::after {
 <div class="toast" id="toast"></div>
 
 <script>
-const { ipcRenderer } = require('electron');
-
 let currentTab = 'errors';
 let lastData = null;
+let lastDoctorResult = null;
 let countdownTimer = null;
 let countdown = 5;
 
@@ -406,7 +447,7 @@ function updateUI(data) {
 
   const uptime = stats.uptime || {};
   document.getElementById('vProcValue').textContent = uptime.formatted || '--';
-  document.getElementById('vProcSub').textContent = `PID ${data.gateway?.pid || process.pid}`;
+  document.getElementById('vProcSub').textContent = `PID ${data.gateway?.pid || electronAPI.pid}`;
 
   // Gateway
   const gw = data.gateway || {};
@@ -453,7 +494,19 @@ function renderHistory(data) {
   const list = document.getElementById('historyList');
   let items = [];
 
-  if (currentTab === 'errors') {
+  if (currentTab === 'doctor') {
+    // Doctor 标签页：显示最近一次检查结果
+    if (!lastDoctorResult) {
+      list.innerHTML = '<div class="history-empty">尚未运行 Doctor 检查</div>';
+      return;
+    }
+    const icons = { pass: '✅', warn: '⚠️', fail: '❌' };
+    items = lastDoctorResult.checks.map(c => ({
+      time: icons[c.status],
+      msg: `${c.name}: ${c.message}${c.fix ? ' → ' + c.fix : ''}`,
+      type: c.status === 'fail' ? 'error' : c.status === 'warn' ? 'error' : 'success'
+    }));
+  } else if (currentTab === 'errors') {
     const ocErrors = (data.errors?.openclaw || []).map(e => ({
       time: e.timestamp ? new Date(e.timestamp).toLocaleTimeString('zh-CN') : '',
       msg: `[Req#${e.requestId || '?'}] ${e.error || e.message || '未知错误'}`,
@@ -496,7 +549,7 @@ function switchTab(tab, el) {
 async function doAction(channel, btn) {
   btn.classList.add('loading');
   try {
-    const result = await ipcRenderer.invoke(channel);
+    const result = await electronAPI.invoke(channel);
     if (result?.success !== false) {
       showToast(result?.message || '操作成功', 'success');
       setTimeout(fetchData, 1000);
@@ -517,10 +570,50 @@ function showToast(msg, type) {
   setTimeout(() => { toast.className = 'toast'; }, 2500);
 }
 
+// Doctor
+async function runDoctor() {
+  const btn = document.getElementById('doctorBtn');
+  btn.classList.add('running');
+  btn.textContent = '检查中...';
+  try {
+    const result = await electronAPI.invoke('diag-doctor');
+    lastDoctorResult = result;
+    renderDoctor(result);
+  } catch (err) {
+    document.getElementById('doctorResults').innerHTML = `<div class="doctor-placeholder" style="color:#ef4444;">检查失败: ${err.message}</div>`;
+  } finally {
+    btn.classList.remove('running');
+    btn.textContent = '运行检查';
+  }
+}
+
+function renderDoctor(result) {
+  const { checks, summary } = result;
+  const summaryEl = document.getElementById('doctorSummary');
+  summaryEl.innerHTML = `
+    <span class="doctor-summary-item pass">✓ ${summary.passed}</span>
+    <span class="doctor-summary-item warn">⚠ ${summary.warned}</span>
+    <span class="doctor-summary-item fail">✗ ${summary.failed}</span>
+  `;
+
+  const icons = { pass: '✅', warn: '⚠️', fail: '❌' };
+  const container = document.getElementById('doctorResults');
+  container.innerHTML = `<div class="doctor-list">${checks.map(c => `
+    <div class="doctor-item">
+      <span class="doctor-icon">${icons[c.status]}</span>
+      <div class="doctor-info">
+        <div class="doctor-name">${c.name}</div>
+        <div class="doctor-msg">${c.message}</div>
+        ${c.fix ? `<div class="doctor-fix">💡 ${c.fix}</div>` : ''}
+      </div>
+    </div>
+  `).join('')}</div>`;
+}
+
 // Data fetching
 async function fetchData() {
   try {
-    const data = await ipcRenderer.invoke('diag-full-status');
+    const data = await electronAPI.invoke('diag-full-status');
     updateUI(data);
   } catch (err) {
     console.error('Fetch failed:', err);

@@ -8,7 +8,8 @@ const DashScopeTTS = require('./voice/dashscope-tts');
 const MiniMaxTTS = require('./voice/minimax-tts');
 
 class SmartVoiceSystem {
-    constructor() {
+    constructor(petConfig) {
+        this.petConfig = petConfig || null;
         this.isSpeaking = false;
         this.tempDir = path.join(__dirname, 'temp');
         this.voice = 'zh-CN-XiaoxiaoNeural';  // Edge TTS 默认晓晓
@@ -82,9 +83,18 @@ class SmartVoiceSystem {
     }
 
     /**
-     * 📄 加载配置文件
+     * 📄 加载配置（优先使用 petConfig 实例获取已解密的值）
      */
     loadConfig() {
+        if (this.petConfig) {
+            return {
+                minimax: this.petConfig.get('minimax') || {},
+                dashscope: this.petConfig.get('dashscope') || {},
+                ttsEngine: this.petConfig.get('ttsEngine'),
+                voiceEnabled: this.petConfig.get('voiceEnabled'),
+            };
+        }
+        // Fallback: 直接读文件（无法解密）
         try {
             const configPath = path.join(__dirname, 'pet-config.json');
             const fsSync = require('fs');
@@ -121,9 +131,14 @@ class SmartVoiceSystem {
     }
 
     /**
-     * 📄 从配置文件加载 API Key
+     * 📄 从配置加载 DashScope API Key
      */
     loadApiKeyFromConfig() {
+        if (this.petConfig) {
+            const dashscope = this.petConfig.get('dashscope') || {};
+            return dashscope.apiKey || '';
+        }
+        // Fallback: 直接读文件（无法解密）
         try {
             const configPath = path.join(__dirname, 'pet-config.json');
             const fsSync = require('fs');
@@ -154,6 +169,12 @@ class SmartVoiceSystem {
         
         // 🎯 智能内容分析和优化
         const analysis = this.analyzeContent(text);
+        
+        // 🎭 如果外部传入了 emotion，优先使用（比自动检测更准）
+        if (options.emotion) {
+            analysis.emotion = options.emotion;
+            console.log(`[Voice] 🎭 使用外部情绪: ${options.emotion}`);
+        }
         
         if (analysis.skip) {
             this.stats.totalSkipped++;
@@ -348,22 +369,37 @@ class SmartVoiceSystem {
         // 根据情境调整语音特性
         switch (analysis.emotion) {
             case 'excited':
-                config.rate = '+20%';   // 快一点
-                config.pitch = '+50Hz'; // 超兴奋 - 最高 (保持不变)
+            case 'happy':
+                config.rate = '+10%';   // 稍快
+                config.pitch = '+30Hz'; // 开心
+                break;
+            case 'surprised':
+                config.rate = '+15%';   // 更快
+                config.pitch = '+40Hz'; // 惊讶语调高
                 break;
             case 'urgent':
+            case 'fearful':
                 config.rate = '+10%';
                 config.voice = 'zh-CN-YunxiNeural';  // 换男声，更有力
                 break;
-            case 'calm':
-                config.rate = '-10%';   // 慢一点
-                config.pitch = '+20Hz'; // 平静也提高一点
+            case 'sad':
+                config.rate = '-5%';    // 稍慢
+                config.pitch = '-10Hz'; // 低沉一点
                 break;
-            case 'happy':
-                config.pitch = '+30Hz'; // 开心 (保持不变)
+            case 'thinking':
+                config.rate = '-5%';    // 思考时慢一点
+                config.pitch = '+10Hz';
+                break;
+            case 'calm':
+                config.rate = '-5%';    // 平静舒缓
+                config.pitch = '+15Hz';
+                break;
+            case 'angry':
+                config.rate = '+5%';
+                config.pitch = '+20Hz';
                 break;
             default:
-                config.pitch = '+20Hz'; // 默认普通消息 - 提高20Hz
+                config.pitch = '+15Hz';
                 break;
         }
         
@@ -409,7 +445,11 @@ class SmartVoiceSystem {
             if (this.ttsEngine === 'minimax' && this.minimax) {
                 // MiniMax Speech 2.5 (带情感控制)
                 try {
-                    const emotion = MiniMaxTTS.detectEmotion(cleanText);
+                    // 优先用 analysis 传入的 emotion，否则自动检测
+                    const emotion = (['happy','sad','angry','fearful','disgusted','surprised','calm'].includes(analysis.emotion))
+                        ? analysis.emotion 
+                        : MiniMaxTTS.detectEmotion(cleanText);
+                    console.log(`[Voice] 🎭 TTS情绪: ${emotion} (来源: ${analysis.emotion === emotion ? '外部指定' : '自动检测'})`);
                     const audioFile = await this.minimax.synthesize(cleanText, {
                         voiceId: this.minimaxVoiceId,
                         emotion: emotion,
@@ -523,8 +563,10 @@ class SmartVoiceSystem {
                          .replace(/`(.*?)`/g, '$1')
                          .replace(/\[(.*?)\]\(.*?\)/g, '$1');
         
-        // 特殊符号清理
+        // 特殊符号清理（保留 MiniMax TTS 停顿标记 <#X#>）
+        cleaned = cleaned.replace(/<#([\d.]+)#>/g, 'TPAUSE$1TEND');  // 暂存停顿标记
         cleaned = cleaned.replace(/[【】\[\]{}「」_~#@]/g, '');
+        cleaned = cleaned.replace(/TPAUSE([\d.]+)TEND/g, '<#$1#>');  // 恢复停顿标记
         
         // 长度限制
         if (cleaned.length > 800) {

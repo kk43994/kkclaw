@@ -39,7 +39,8 @@
       "Bash(cleanmgr /verylowdisk /d C:)",
       "Bash(npm cache clean:*)",
       "Bash(tee:*)",
-      "Bash(cmd //c:*)"
+      "Bash(cmd //c:*)",
+      "Bash(true:*)"
     ]
   }
 }

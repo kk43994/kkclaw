@@ -8,6 +8,8 @@ class LarkUploader {
         this.uploadDir = path.join(__dirname, 'screenshots');
         // 从 OpenClaw 配置读取飞书凭证
         this.config = this.loadConfig();
+        this.appId = this.config.appId;
+        this.appSecret = this.config.appSecret;
         this.accessToken = null;
         this.tokenExpiry = 0;
     }
@@ -16,9 +18,11 @@ class LarkUploader {
         try {
             const configPath = path.join(process.env.HOME || process.env.USERPROFILE, '.openclaw', 'openclaw.json');
             const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            const lark = config.channels?.lark || {};
+            const feishu = config.channels?.feishu || {};
             return {
-                appId: config.channels?.lark?.appId,
-                appSecret: config.channels?.lark?.appSecret
+                appId: lark.appId || feishu.appId,
+                appSecret: lark.appSecret || feishu.appSecret
             };
         } catch (err) {
             console.error('❌ 读取飞书配置失败:', err.message);

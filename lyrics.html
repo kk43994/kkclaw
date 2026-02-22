@@ -92,9 +92,6 @@
 <div class="lyrics-container" id="container"></div>
 
 <script>
-    let ipcRenderer;
-    try { ipcRenderer = require('electron').ipcRenderer; } catch(e) {}
-
     const container = document.getElementById('container');
     const MAX_LINES = 3;
     let activeLines = [];
@@ -185,8 +182,8 @@
     }
 
     // IPC 监听
-    if (ipcRenderer) {
-        ipcRenderer.on('show-lyric', (e, data) => {
+    if (electronAPI) {
+        electronAPI.on('show-lyric', (data) => {
             // duration: 语音播报时长（毫秒），歌词等语音播完后再消失
             showMessage(data.text, data.type || 'user', data.sender || '', data.duration || 0);
         });
