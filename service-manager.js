@@ -117,7 +117,10 @@ class ServiceManager extends EventEmitter {
     // 查找占用指定端口的进程 PID（排除 Electron 自身）
     _findPortPids(port) {
         return new Promise((resolve) => {
-            exec(`netstat -ano | findstr :${port} | findstr LISTENING`, { windowsHide: true }, (err, stdout) => {
+            const cmd = process.platform === 'win32'
+                ? `netstat -ano | findstr :${port} | findstr LISTENING`
+                : `lsof -ti :${port}`;
+            exec(cmd, { windowsHide: true }, (err, stdout) => {
                 if (err || !stdout) {
                     resolve([]);
                     return;
@@ -149,7 +152,10 @@ class ServiceManager extends EventEmitter {
         this.log('info', `强制终止占用端口 ${port} 的进程: ${pids.join(', ')}`, 'gateway');
 
         const killPromises = pids.map(pid => new Promise((resolve) => {
-            exec(`taskkill /PID ${pid} /F /T`, { windowsHide: true }, (err) => {
+            const cmd = process.platform === 'win32'
+                ? `taskkill /PID ${pid} /F /T`
+                : `kill -9 ${pid}`;
+            exec(cmd, { windowsHide: true }, (err) => {
                 if (err) {
                     this.log('warn', `终止 PID ${pid} 失败: ${err.message}`, 'gateway');
                 }
@@ -211,9 +217,22 @@ class ServiceManager extends EventEmitter {
             }
         }
 
-        const openclawPath = path.join(process.env.HOME || process.env.USERPROFILE, '.npm-global', 'node_modules', 'openclaw', 'dist', 'index.js');
+        const home = process.env.HOME || process.env.USERPROFILE;
+        let openclawPath = path.join(home, '.npm-global', 'node_modules', 'openclaw', 'dist', 'index.js');
 
         const fs = require('fs');
+        // Cross-platform: try common npm global paths
+        if (!fs.existsSync(openclawPath)) {
+            const altPaths = [
+                path.join('/usr/local/lib/node_modules/openclaw/dist/index.js'),
+                path.join('/usr/lib/node_modules/openclaw/dist/index.js'),
+                path.join(home, '.nvm/versions/node', process.version, 'lib/node_modules/openclaw/dist/index.js'),
+            ];
+            for (const alt of altPaths) {
+                if (fs.existsSync(alt)) { openclawPath = alt; break; }
+            }
+        }
+
         if (!fs.existsSync(openclawPath)) {
             this.log('error', `openclaw 不存在: ${openclawPath}`, 'gateway');
             return { success: false, error: `openclaw 不存在: ${openclawPath}` };

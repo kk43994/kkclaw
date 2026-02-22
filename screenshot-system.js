@@ -44,7 +44,8 @@ print('SUCCESS')
             const tempPy = path.join(__dirname, 'temp_screenshot.py');
             await fs.writeFile(tempPy, pythonScript);
             
-            const { stdout, stderr } = await execAsync(`python "${tempPy}"`, {
+            const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
+            const { stdout, stderr } = await execAsync(`${pythonCmd} "${tempPy}"`, {
                 timeout: 10000,
                 windowsHide: true
             });
@@ -58,11 +59,27 @@ print('SUCCESS')
                 throw new Error(stderr || '截图失败');
             }
         } catch (err) {
-            console.error('❌ Python截图失败,尝试PowerShell方案:', err.message);
+            console.error('❌ Python截图失败,尝试备用方案:', err.message);
             
-            // 方案2: 使用 PowerShell (备用)
+            // 方案2: 平台原生截图
+            if (process.platform === 'darwin') {
+                return await this.captureMacOS(filepath);
+            }
             return await this.capturePowerShell(filepath);
         }
+    }
+
+    /**
+     * 使用 screencapture 截图 (macOS)
+     */
+    async captureMacOS(filepath) {
+        await execAsync(`screencapture -x "${filepath}"`, { timeout: 10000 });
+        const exists = await fs.access(filepath).then(() => true).catch(() => false);
+        if (exists) {
+            console.log('✅ macOS截图成功:', filepath);
+            return filepath;
+        }
+        throw new Error('macOS screencapture 失败');
     }
 
     /**
