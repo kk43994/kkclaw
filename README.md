@@ -1,8 +1,8 @@
 ﻿# 🦞 openclaw-kkclaw
 
-**Desktop visualization companion for OpenClaw - Fluid glass orb pet, 7-emotion system, voice cloning (MiniMax/CosyVoice), and real-time WebSocket sync**
+**Desktop visualization companion for OpenClaw - Fluid glass orb pet, 14-emotion system, voice cloning (MiniMax/CosyVoice), Setup Wizard, and real-time WebSocket sync**
 
-**OpenClaw 桌面可视化伴侣 — 流体玻璃球宠物、7情绪系统、声音克隆（MiniMax/CosyVoice）、实时 WebSocket 同步**
+**OpenClaw 桌面可视化伴侣 — 流体玻璃球宠物、14情绪系统、声音克隆（MiniMax/CosyVoice）、一键配置向导、实时 WebSocket 同步**
 
 <div align="center">
 
@@ -10,8 +10,8 @@
 
 *OpenClaw Core + Desktop Embodiment = A living interface with emotion, voice, and presence*
 
-[![Version](https://img.shields.io/badge/version-2.2.1-FF6B4A?style=for-the-badge&logo=github)](https://github.com/kk43994/kkclaw/releases)
-[![Updated](https://img.shields.io/badge/updated-2026--02--19-34D399?style=for-the-badge)](https://github.com/kk43994/kkclaw)
+[![Version](https://img.shields.io/badge/version-3.0.0-FF6B4A?style=for-the-badge&logo=github)](https://github.com/kk43994/kkclaw/releases)
+[![Updated](https://img.shields.io/badge/updated-2026--02--22-34D399?style=for-the-badge)](https://github.com/kk43994/kkclaw)
 [![Build](https://img.shields.io/github/actions/workflow/status/kk43994/kkclaw/build-release.yml?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/kk43994/kkclaw/actions)
 [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows_|_macOS-0078D6?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/kk43994/kkclaw)
@@ -27,20 +27,49 @@
 一个**不一样**的桌面AI助手：
 
 - 🎨 **空气感UI** — 像桌面歌词，不妨碍操作，却始终陪伴
-- 🦞 **67px 龙虾球** — 流体动画 + 琉璃质感 + 7种情绪色系
+- 🦞 **67px 龙虾球** — 流体动画 + 琉璃质感 + 14种情绪色系
 - 👀 **38个待机表情** — 眨眼、歪头、星星眼、打盹...自然随机
-- 🎙️ **克隆音色TTS** — MiniMax 2.5 Turbo，小团团音色，7种情感
+- 🎙️ **克隆音色TTS** — MiniMax 2.8 HD / 2.5 Turbo，7种情感
+- 🧙 **Setup Wizard** — RPG风格配置向导，零基础5分钟搞定
+- 🔐 **API Key 加密** — Electron safeStorage，密钥不明文存盘
 - 🔁 **KKClaw Switch** — 3秒热切换AI模型，无需重启
 - 🎯 **7×24 稳定** — 自动重启、日志轮转、错误恢复
 - 🍎 **跨平台支持** — Windows 10/11 + macOS (Intel & Apple Silicon)
 
-### 🆕 v2.2.1 新特性
+### 🆕 v3.0.0 — 一键配置 & 个性定制
+
+> ⚡ **KKClaw 历史最大更新！** 全新 Setup Wizard + 语音克隆 + 人设定制 + API Key 加密
+
+#### 🧙 Setup Wizard 配置向导（全新）
+- 🎮 **RPG 游戏风格** — 木质边框 + 羊皮纸背景 + 龙虾向导角色
+- 📋 **7 步引导流程** — Gateway → 模型 → 渠道 → TTS → 语音播报 → 显示 → 测试
+- 🎤 **一键音色克隆** — 上传30秒录音，自动调 MiniMax/CosyVoice API 创建专属音色
+- 🎭 **人设定制系统** — 5种预设风格（甜妹/专业/幽默/酷帅/自定义）
+- 📝 **全套文件生成** — 一键生成 `AGENTS.md` + `SOUL.md` + `USER.md` + `HEARTBEAT.md` + `desktop-bridge.js`
+- 🔗 **完整 AGENTS.md 模板** — 对齐生产级配置（记忆系统 + 安全规则 + 群聊规则 + 心跳检查 + 语音播报）
+- 💡 **模型兼容性提示** — 推荐 Claude Sonnet 4+ 旗舰模型获得最佳播报体验
+- ✅ **7 项全链路测试** — Gateway / 模型 / TTS / 播报 / 歌词 / Agent文件 / 音色
+
+#### ���� 情绪系统升级
+- 🌈 **7 → 14 种情绪** — 新增 sad、angry、fearful、calm、excited、love、focused
+- ✨ **动态外发光** — 每种情绪有专属 glow 光效
+- 🎭 **情绪文本检测** — `desktop-bridge.js` 自动分析内容情绪，10种匹配规则
+
+#### 🔐 安全与稳定性
+- 🔑 **API Key 加密存储** — `safeStorage` 加密，密钥不再明文写入磁盘
+- 🎵 **歌词窗口 Ready 守卫** — `lyricsReady` 标志位，防止加载未完成时崩溃
+- 🔧 **sendLyric 封装** — 统一歌词推送，自动检查窗口状态
+- 📡 **端口持久化** — 通知端口写入配置，wizard/bridge 可动态获取
+
+#### 🎙️ 语音系统增强
+- 🆕 **MiniMax Speech 2.8 HD** — 新增高清语音引擎选项
+- 🔄 **SmartVoice 配置统一** — 直接读 petConfig，不用重复读文件
+- 🎤 **完整版 desktop-bridge.js** — cleanForTTS + detectEmotion + addTTSPauseMarkers
+
+### v2.2.1 特性
 
 - 🔧 **诊断工具箱** — 全新独立窗口，一键查看 Gateway 状态、日志、连接信息
 - 🔇 **CMD 屏闪修复** — 全面添加 `windowsHide: true`，彻底消除 Windows 命令行窗口闪烁
-- 🎤 **语音引擎优化** — smart-voice 播放命令全部静默化，体验更流畅
-- 🔄 **自动更新增强** — openclaw-updater 版本检查、安装、doctor 全流程静默执行
-- 📸 **截图系统改进** — 截图进程隐藏，不再弹出黑框
 
 ### v2.2.0 特性
 
@@ -74,15 +103,15 @@
 
 ## 📦 下载安装
 
-### 最新版本：v2.2.1
+### 最新版本：v3.0.0
 
 <div align="center">
 
 | 平台 | 架构 | 下载链接 | 大小 |
 |------|------|----------|------|
-| 🪟 **Windows** | x64 | [KKClaw-Desktop-Pet-2.2.1-Setup.exe](https://github.com/kk43994/kkclaw/releases/download/v2.2.1/KKClaw-Desktop-Pet-2.2.1-Setup.exe) | ~150MB |
-| 🍎 **macOS** | Intel | [KKClaw-Desktop-Pet-2.2.1-x64.dmg](https://github.com/kk43994/kkclaw/releases/download/v2.2.1/KKClaw-Desktop-Pet-2.2.1-x64.dmg) | ~160MB |
-| 🍎 **macOS** | Apple Silicon | [KKClaw-Desktop-Pet-2.2.1-arm64.dmg](https://github.com/kk43994/kkclaw/releases/download/v2.2.1/KKClaw-Desktop-Pet-2.2.1-arm64.dmg) | ~160MB |
+| 🪟 **Windows** | x64 | [KKClaw-Desktop-Pet-3.0.0-Setup.exe](https://github.com/kk43994/kkclaw/releases/download/v3.0.0/KKClaw-Desktop-Pet-3.0.0-Setup.exe) | ~150MB |
+| 🍎 **macOS** | Intel | [KKClaw-Desktop-Pet-3.0.0-x64.dmg](https://github.com/kk43994/kkclaw/releases/download/v3.0.0/KKClaw-Desktop-Pet-3.0.0-x64.dmg) | ~160MB |
+| 🍎 **macOS** | Apple Silicon | [KKClaw-Desktop-Pet-3.0.0-arm64.dmg](https://github.com/kk43994/kkclaw/releases/download/v3.0.0/KKClaw-Desktop-Pet-3.0.0-arm64.dmg) | ~160MB |
 
 [📦 查看所有版本](https://github.com/kk43994/kkclaw/releases) | [🎥 在线演示](https://kk43994.github.io/kkclaw/)
 
@@ -499,11 +528,17 @@ desktop-pet/
 ├── main.js                  # Electron主进程
 ├── index.html              # 精灵窗口UI
 ├── lyrics.html             # 歌词窗口UI
+├── setup-wizard.html       # 🧙 Setup Wizard UI（RPG风格）
+├── setup-wizard.js         # 🧙 Setup Wizard 后端逻辑
+├── setup-preload.js        # 🧙 Wizard IPC 安全桥接
 ├── smart-voice.js          # 智能语音调度
+├── pet-config.js           # 🔐 配置管理（含 safeStorage 加密）
 ├── voice/                  # TTS引擎目录
 │   ├── minimax-tts.js
 │   ├── dashscope-tts.js
 │   └── cosyvoice-tts.py
+├── templates/              # 🧙 向导模板文件
+│   └── desktop-bridge.js   # 语音播报桥接模板
 ├── utils/                  # 辅助工具目录
 ├── scripts/                # 工具脚本
 ├── tests/                  # 测试文件
@@ -623,6 +658,46 @@ node kkclaw-hotswitch.js --restart
 ---
 
 ## 📝 更新日志
+
+### [3.0.0] - 2026-02-22
+
+#### 🧙 Setup Wizard — 一键配置向导（全新）
+- ✨ **RPG 游戏风格引导界面** — 木质边框 + 羊皮纸背景 + 龙虾向导 + 打字机文字效果
+- ✨ **7 步引导流程** — Gateway 连接 → AI 模型 → 消息渠道 → TTS 引擎 → Agent 语音 → 显示 → 全链路测试
+- ✨ **一键音色克隆** — 拖拽上传录音文件，自动调用 MiniMax / CosyVoice API 克隆音色
+- ✨ **人设定制系统** — 宠物昵称 + 用户称呼 + 5 种说话风格预设（甜妹/专业/幽默/酷帅/自定义）
+- ✨ **全套 Agent 配置文件自动生成**：
+  - `AGENTS.md` — 完整工作手册（记忆系统 + 安全规则 + 群聊规则 + 心跳检查 + 语音播报规则）
+  - `SOUL.md` — Agent 人设文件（根据选择的风格自动生成）
+  - `USER.md` — 用户信息框架
+  - `HEARTBEAT.md` — 心跳检查配置
+  - `desktop-bridge.js` — 语音播报桥接脚本（完整版，含 cleanForTTS + detectEmotion + addTTSPauseMarkers）
+- ✨ **7 项全链路测试** — Gateway / AI模型 / TTS引擎 / 语音播报 / 桌面歌词 / Agent配置文件 / 自定义音色
+- ✨ **模型兼容性提示** — 注明不同模型的指令遵循度差异，推荐 Claude Sonnet 4+
+- ✨ **preload 安全白名单** — 所有 IPC 通道经白名单校验，防止恶意调用
+
+#### 🌈 情绪系统大升级
+- ✨ **14 种情绪色系** — 原有 7 种 + 新增 sad(天蓝)、angry(烈焰红)、fearful(紫罗兰)、calm(薄荷青)、excited(热粉)、love(珊瑚)、focused(青蓝)
+- ✨ **动态外发光 (glow)** — 每种情绪有专属外发光效果
+- ✨ **10 种文本情绪检测规则** — 自动分析内容情绪：thinking → surprised → fearful → sad → angry → calm → excited → happy
+
+#### 🔐 安全与稳定性
+- ✨ **API Key 加密存储** — 使用 Electron `safeStorage` 加密 MiniMax/DashScope 密钥，磁盘上不再明文
+- ✨ **歌词窗口 Ready 守卫** — `lyricsReady` 标志位，歌词窗口未加载完不发消息，防崩溃
+- ✨ **sendLyric() 封装** — 统一歌词推送逻辑，自动检查窗口是否已销毁
+- ✨ **通知端口持久化** — 实际端口写入 petConfig，wizard / bridge 可动态读取
+
+#### 🎙️ 语音系统增强
+- ✨ **MiniMax Speech 2.8 HD 引擎** — 新增高清语音选项
+- 🔧 **SmartVoiceSystem 配置统一** — 接受 petConfig 参数，直接读内存配置，不再重复读文件
+- 🔧 **desktop-bridge.js 完整版** — TTS 停顿标记、文本清理、情绪检测三合一
+
+#### 🔧 修复
+- 🐛 修复 `_testAgentVoice` 协议不匹配（`{action,text}` → `{type,payload:{content}}`）
+- 🐛 修复 `wizard-clone-voice` 未加入 preload 白名单导致克隆报错
+- 🐛 修复 Step 6 Agent 文件检测路径错误（`~/.openclaw` → 实际工作目录）
+- 🐛 修复 Footer 初始文本 `Step 1/6` → `Step 1/7`
+- 🐛 修复 `desktop-bridge.js` 模板字符串嵌套导致正则表达式转义错误（改为读取 `templates/` 文件）
 
 ### [2.2.1] - 2026-02-19
 
