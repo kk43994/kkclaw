@@ -63,14 +63,31 @@
 
 #### 🔐 安全与稳定性
 - 🔑 **API Key 加密存储** — `safeStorage` 加密，密钥不再明文写入磁盘
+- 🔒 **preload 安全沙箱** — 主窗口/歌词/诊断/模型设置全部走 IPC 白名单，渲染进程不再直接 require Node
 - 🎵 **歌词窗口 Ready 守卫** — `lyricsReady` 标志位，防止加载未完成时崩溃
 - 🔧 **sendLyric 封装** — 统一歌词推送，自动检查窗口状态
 - 📡 **端口持久化** — 通知端口写入配置，wizard/bridge 可动态获取
+- 📡 **渲染进程错误转发** — `preload-error` + `console-message` 转发到主进程日志，防止静默失败
+
+#### 🩺 诊断与运维
+- 🆕 **Doctor 自检系统** — 10 项全自动诊断（Gateway / 托盘 / TTS配置 / 模型 / 端口 / 健康度 / 缓存 / 歌词 / 日志），每项带修复建议
+- 🆕 **会话刷新** — 损坏会话一键清理重连（`doRefreshSession`）
+- 🔧 **诊断工具箱 UI 升级** — Doctor 面板新增 summary 统计 + 修复建议 + 分级状态（pass/warn/fail）
+
+#### 🎛️ 模型管理升级
+- 🆕 **延迟测速** — 单模型测速 + 全量批量测速（`speedTest` / `speedTestAll`）
+- 🆕 **Provider CRUD** — 新增/编辑/删除服务商，编辑 baseUrl 和 API Key
+- 🆕 **模型增删** — Provider 内添加/移除模型
+- 🆕 **预设快速添加** — 内置主流 Provider 预设模板，一键填入配置
 
 #### 🎙️ 语音系统增强
 - 🆕 **MiniMax Speech 2.8 HD** — 新增高清语音引擎选项
 - 🔄 **SmartVoice 配置统一** — 直接读 petConfig，不用重复读文件
 - 🎤 **完整版 desktop-bridge.js** — cleanForTTS + detectEmotion + addTTSPauseMarkers
+- 🎵 **歌词 TTS 标记过滤** — `<#0.3#>` 停顿标记不显示在字幕中，只给语音引擎用
+
+#### 📖 文档
+- 🆕 **完整配置教程** — [CONFIGURATION-GUIDE.md](docs/CONFIGURATION-GUIDE.md)（863行），从零开始手把手教学
 
 ### v2.2.1 特性
 
@@ -693,14 +710,31 @@ node kkclaw-hotswitch.js --restart
 
 #### 🔐 安全与稳定性
 - ✨ **API Key 加密存储** — 使用 Electron `safeStorage` 加密 MiniMax/DashScope 密钥，磁盘上不再明文
+- ✨ **preload 安全沙箱** — 新增 `preload.js`，主窗口/歌词/诊断/模型设置全部走 IPC 白名单校验
 - ✨ **歌词窗口 Ready 守卫** — `lyricsReady` 标志位，歌词窗口未加载完不发消息，防崩溃
 - ✨ **sendLyric() 封装** — 统一歌词推送逻辑，自动检查窗口是否已销毁
 - ✨ **通知端口持久化** — 实际端口写入 petConfig，wizard / bridge 可动态读取
+- ✨ **渲染进程错误转发** — `preload-error` + `console-message` 事件转发到主进程日志
+
+#### 🩺 诊断与运维
+- ✨ **Doctor 自检系统** — `diag-doctor` IPC，10 项全自动诊断（Gateway / 系统托盘 / TTS 配置 / API Key / 模型配置 / 端口占用 / 健康评分 / 缓存大小 / 歌词窗口 / 日志目录），每项带修复建议
+- ✨ **会话刷��** — `doRefreshSession()` 一键清理损坏会话并重连
+- ✨ **诊断工具箱 UI 升级** — Doctor 面板新增 summary 统计条 + 修复建议 + pass/warn/fail 分级显示
+
+#### 🎛️ 模型管理升级
+- ✨ **延迟测速** — 单模型测速 `speedTest()` + 全量批量测速 `speedTestAll()`
+- ✨ **Provider CRUD** — 新增/编辑/删除服务商（`model-update-provider` / `model-remove-provider`）
+- ✨ **模型增删** — Provider 内添加/移除模型（`model-add-model` / `model-remove-model`）
+- ✨ **预设快速添加** — 内置主流 Provider 预设模板（`model-presets`），一键填入配置
 
 #### 🎙️ 语音系统增强
 - ✨ **MiniMax Speech 2.8 HD 引擎** — 新增高清语音选项
 - 🔧 **SmartVoiceSystem 配置统一** — 接受 petConfig 参数，直接读内存配置，不再重复读文件
 - 🔧 **desktop-bridge.js 完整版** — TTS 停顿标记、文本清理、情绪检测三合一
+- 🔧 **歌词 TTS 标记过滤** — `<#0.3#>` 停顿标记不显示在字幕中，只给语音引擎用
+
+#### 📖 文档
+- ✨ **完整配置教程** — 新增 [CONFIGURATION-GUIDE.md](docs/CONFIGURATION-GUIDE.md)（863行），从环境准备到语音配置到飞书接入，手把手教学
 
 #### 🔧 修复
 - 🐛 修复 `_testAgentVoice` 协议不匹配（`{action,text}` → `{type,payload:{content}}`）
@@ -852,12 +886,29 @@ A **different kind** of desktop AI assistant:
 
 #### 🔐 Security & Stability
 - 🔑 **Encrypted API Keys** — `safeStorage` encryption for MiniMax/DashScope keys
+- 🔒 **Preload Security Sandbox** — All windows use IPC whitelist validation via `preload.js`
 - 🎵 **Lyrics Window Ready Guard** — Prevents crash when lyrics window hasn't loaded
 - 📡 **Port Persistence** — Notification port saved to config for dynamic lookup
+- 📡 **Renderer Error Forwarding** — `preload-error` + `console-message` forwarded to main process logs
+
+#### 🩺 Diagnostics & Ops
+- 🆕 **Doctor Self-Check** — 10-item auto-diagnosis (Gateway / Tray / TTS / API Keys / Model / Port / Health / Cache / Lyrics / Logs), each with fix suggestions
+- 🆕 **Session Refresh** — One-click cleanup for corrupted sessions
+- 🔧 **Diagnostics UI Upgrade** — Doctor panel with summary stats + fix recommendations
+
+#### 🎛️ Model Management Upgrade
+- 🆕 **Latency Testing** — Single model + batch speed test
+- 🆕 **Provider CRUD** — Add/edit/delete providers with baseUrl and API key
+- 🆕 **Model Add/Remove** — Manage models within each provider
+- 🆕 **Preset Templates** — Built-in mainstream provider presets for quick setup
 
 #### 🎙️ Voice Enhancements
 - 🆕 **MiniMax Speech 2.8 HD** — New high-definition voice engine option
 - 🔄 **Unified Config Source** — SmartVoiceSystem reads petConfig directly
+- 🔧 **Lyrics TTS Marker Filtering** — `<#0.3#>` pause markers hidden from subtitles
+
+#### 📖 Documentation
+- 🆕 **Complete Configuration Guide** — [CONFIGURATION-GUIDE.md](docs/CONFIGURATION-GUIDE.md) (863 lines), step-by-step from zero to fully configured
 
 ### 🚀 Quick Start
 
