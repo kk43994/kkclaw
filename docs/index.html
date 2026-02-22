@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>openclaw-kkclaw — Desktop Visualization Companion for OpenClaw</title>
-    <meta name="description" content="openclaw-kkclaw: Desktop visualization companion for OpenClaw with fluid glass orb pet, 7-emotion system, voice cloning (MiniMax/CosyVoice), and real-time WebSocket sync. 7×24 stable operation.">
+    <title>KKClaw — Desktop Visualization Companion for OpenClaw</title>
+    <meta name="description" content="KKClaw: Desktop visualization companion for OpenClaw with fluid glass orb pet, 14-emotion system, voice cloning (MiniMax/CosyVoice), Setup Wizard, and real-time WebSocket sync.">
     <meta name="keywords" content="openclaw, desktop pet, AI assistant, OpenClaw extension, Electron, TTS, voice cloning, desktop companion, AI coding">
     <meta property="og:title" content="openclaw-kkclaw — Desktop Visualization Companion for OpenClaw">
     <meta property="og:description" content="Desktop visualization companion for OpenClaw - Fluid glass orb pet, 7-emotion system, voice cloning, and real-time WebSocket sync.">
@@ -861,10 +861,11 @@
         </a>
         <div class="nav-right">
             <a href="#features" class="nav-link"><span class="en-inline">Features</span><span class="zh-inline">特性</span></a>
+            <a href="#wizard-demo" class="nav-link"><span class="en-inline">Demo</span><span class="zh-inline">演示</span></a>
             <a href="#architecture" class="nav-link"><span class="en-inline">Architecture</span><span class="zh-inline">架构</span></a>
             <a href="#voice" class="nav-link"><span class="en-inline">Voice</span><span class="zh-inline">语音</span></a>
             <a href="#install" class="nav-link"><span class="en-inline">Install</span><span class="zh-inline">安装</span></a>
-            <span class="nav-version">v2.2.0</span>
+            <span class="nav-version">v3.0.0</span>
             <div class="lang-switch">
                 <button class="lang-btn active" onclick="setLang('en')">EN</button>
                 <button class="lang-btn" onclick="setLang('zh')">中文</button>
@@ -903,8 +904,8 @@
             <!-- 7 Mood Spheres - Outside demo-ball-container -->
             <div style="margin-top: 2rem; margin-bottom: 3rem; text-align: center;">
                     <div style="font-size: 0.9rem; color: var(--text-dim); margin-bottom: 0.5rem;">
-                        <span class="en-inline">🎨 7 Emotional States</span>
-                        <span class="zh-inline">🎨 7种情绪状态</span>
+                        <span class="en-inline">🎨 14 Emotional States</span>
+                        <span class="zh-inline">🎨 14种情绪状态</span>
                     </div>
                     <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2rem;">
                         <span class="en-inline">Click any mood icon to see the ball change color.</span>
@@ -1060,67 +1061,92 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
                     <span class="en-inline">WHAT'S NEW</span><span class="zh-inline">新版亮点</span>
                 </div>
-                <h2 class="section-title en">v2.2.0 — Reliability Update</h2>
-                <h2 class="section-title zh">v2.2.0 — 可靠性升级</h2>
-                <p class="section-subtitle en">Smarter error handling, safer model switching, and full session awareness.</p>
-                <p class="section-subtitle zh">更智能的错误处理、更安全的模型切换、完整的会话感知。</p>
+                <h2 class="section-title en">v3.0.0 — Setup Wizard & 14 Emotions</h2>
+                <h2 class="section-title zh">v3.0.0 — 配置向导 & 14 种情绪</h2>
+                <p class="section-subtitle en">One-click setup wizard, voice cloning, persona customization, Doctor self-check, and cross-platform support.</p>
+                <p class="section-subtitle zh">一键配置向导、音色克隆、人设定制、Doctor 自检系统、macOS 全面适配。</p>
             </div>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 2.5rem;">
                 <div class="feature-card reveal" style="border-left: 3px solid var(--primary);">
                     <div class="feature-icon" style="background:rgba(255,107,74,0.08)">
-                        <svg viewBox="0 0 24 24" stroke="var(--primary)"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        <svg viewBox="0 0 24 24" stroke="var(--primary)"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                     </div>
-                    <h3 class="en">Error Diagnosis Chain</h3><h3 class="zh">错误诊断链路</h3>
-                    <p class="en">Gateway Guardian now captures stdout/stderr, extracts error reasons, and shows specific failure causes in desktop notifications. No more guessing why Gateway crashed.</p>
-                    <p class="zh">Gateway Guardian 现在捕获 stdout/stderr，提取错误原因，在桌面通知中显示具体失败原因。不再猜测 Gateway 为什么崩溃。</p>
+                    <h3 class="en">7-Step Setup Wizard</h3><h3 class="zh">7 步配置向导</h3>
+                    <p class="en">RPG-themed guided setup: Gateway detection, AI model config (9 providers), channel control, TTS engine selection, voice cloning, persona customization, and full-chain testing.</p>
+                    <p class="zh">RPG 风格引导式配置：Gateway 检测、AI 模型配置（9 大服务商）、渠道控制、TTS 引擎选择、音色克隆、人设定制、全链路测试。</p>
                 </div>
 
                 <div class="feature-card reveal reveal-delay-1" style="border-left: 3px solid var(--accent-purple);">
                     <div class="feature-icon" style="background:rgba(168,85,247,0.08)">
-                        <svg viewBox="0 0 24 24" stroke="var(--accent-purple)"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                        <svg viewBox="0 0 24 24" stroke="var(--accent-purple)"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
                     </div>
-                    <h3 class="en">Safe Model Switch + Rollback</h3><h3 class="zh">安全模型切换 + 回滚</h3>
-                    <p class="en">Model switching now verifies gateway reload and auto-rolls back if the new model fails to load within 5 seconds. Your pet never gets stuck on a broken config.</p>
-                    <p class="zh">模型切换现在会验证 Gateway 重载，如果新模型 5 秒内加载失败则自动回滚。宠物永远不会卡在错误配置上。</p>
+                    <h3 class="en">Voice Cloning</h3><h3 class="zh">音色克隆</h3>
+                    <p class="en">Upload 30s of audio to clone your own voice. Supports MiniMax Speech 2.8 HD and CosyVoice engines. Your AI companion speaks in any voice you want.</p>
+                    <p class="zh">上传 30 秒录音即可克隆专属音色。支持 MiniMax Speech 2.8 HD 和 CosyVoice 引擎。让你的 AI 伙伴用任何声音说话。</p>
                 </div>
 
                 <div class="feature-card reveal reveal-delay-2" style="border-left: 3px solid var(--accent-green);">
                     <div class="feature-icon" style="background:rgba(52,211,153,0.08)">
-                        <svg viewBox="0 0 24 24" stroke="var(--accent-green)"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        <svg viewBox="0 0 24 24" stroke="var(--accent-green)"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                     </div>
-                    <h3 class="en">Session Management</h3><h3 class="zh">会话管理</h3>
-                    <p class="en">New tray menu for session control — check context usage percentage, estimated tokens, and one-click session cleanup. Stay aware of your AI's memory state.</p>
-                    <p class="zh">新增托盘菜单会话控制 — 查看上下文使用百分比、估算 token 数、一键清理会话。随时掌握 AI 的记忆状态。</p>
+                    <h3 class="en">Doctor Self-Check</h3><h3 class="zh">Doctor 自检系统</h3>
+                    <p class="en">10-item automated diagnosis: Gateway, tray, TTS config, API keys, model config, port conflicts, health score, cache size, lyrics window, and log directory. Each with fix suggestions.</p>
+                    <p class="zh">10 项全自动诊断：Gateway、系统托盘、TTS 配置、API Key、模型配置、端口占用、健康评分、缓存大小、歌词窗口、日志目录。每项附修复建议。</p>
                 </div>
 
                 <div class="feature-card reveal" style="border-left: 3px solid var(--accent-blue);">
                     <div class="feature-icon" style="background:rgba(107,138,255,0.08)">
-                        <svg viewBox="0 0 24 24" stroke="var(--accent-blue)"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        <svg viewBox="0 0 24 24" stroke="var(--accent-blue)"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     </div>
-                    <h3 class="en">Request Tracking</h3><h3 class="zh">请求追踪</h3>
-                    <p class="en">Every API request gets a sequential ID with timing data. Error history (last 50) and request logs (last 20) for debugging. 30s timeout warnings with diagnostic hints.</p>
-                    <p class="zh">每个 API 请求获得序列 ID 和计时数据。错误历史（最近 50 条）和请求日志（最近 20 条）用于调试。30 秒超时警告附带诊断提示。</p>
+                    <h3 class="en">Encrypted API Keys</h3><h3 class="zh">API Key 加密存储</h3>
+                    <p class="en">All API keys encrypted with Electron safeStorage. Preload security sandbox with IPC whitelist for all windows. Zero plaintext secrets on disk.</p>
+                    <p class="zh">所有 API Key 使用 Electron safeStorage 加密。Preload 安全沙箱对所有窗口实施 IPC 白名单校验。磁盘上零明文密钥。</p>
                 </div>
 
                 <div class="feature-card reveal reveal-delay-1" style="border-left: 3px solid var(--accent-pink);">
                     <div class="feature-icon" style="background:rgba(255,107,157,0.08)">
-                        <svg viewBox="0 0 24 24" stroke="var(--accent-pink)"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <svg viewBox="0 0 24 24" stroke="var(--accent-pink)"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
                     </div>
-                    <h3 class="en">Startup Grace Period</h3><h3 class="zh">启动宽限期</h3>
-                    <p class="en">Gateway Guardian waits 60 seconds for slow gateway initialization before triggering restarts. Prevents false-positive restart loops on cold starts.</p>
-                    <p class="zh">Gateway Guardian 在触发重启前等待 60 秒让 Gateway 完成初始化。防止冷启动时的误判重启循环。</p>
+                    <h3 class="en">Persona Customization</h3><h3 class="zh">人设定制</h3>
+                    <p class="en">Name your AI, choose its speaking style (sweet / professional / funny / cool / custom), auto-generate AGENTS.md + SOUL.md + USER.md + HEARTBEAT.md.</p>
+                    <p class="zh">给 AI 起名、选说话风格（甜妹 / 专业 / 幽默 / 酷帅 / 自定义），自动生成 AGENTS.md + SOUL.md + USER.md + HEARTBEAT.md 全套配置。</p>
                 </div>
 
                 <div class="feature-card reveal reveal-delay-2" style="border-left: 3px solid var(--accent-yellow);">
                     <div class="feature-icon" style="background:rgba(251,191,36,0.08)">
-                        <svg viewBox="0 0 24 24" stroke="var(--accent-yellow)"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <svg viewBox="0 0 24 24" stroke="var(--accent-yellow)"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                     </div>
-                    <h3 class="en">Context Awareness</h3><h3 class="zh">上下文感知</h3>
-                    <p class="en">Token estimation for Chinese (~2/char) and English (~1.3/word). Warns when approaching model context limits. Smart degradation with actionable suggestions.</p>
-                    <p class="zh">中文（~2 token/字）和英文（~1.3 token/词）的 token 估算。接近模型上下文限制时发出警告。智能降级并提供可操作建议。</p>
+                    <h3 class="en">Cross-Platform</h3><h3 class="zh">跨平台支持</h3>
+                    <p class="en">Full macOS support: native screencapture, afplay audio, lsof port detection. Windows + macOS (x64 & ARM64) builds via GitHub Actions.</p>
+                    <p class="zh">完整 macOS 适配：原生 screencapture 截图、afplay 音频播放、lsof 端口检测。Windows + macOS (x64 & ARM64) 双平台自动构建。</p>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- Setup Wizard Demo -->
+    <section id="wizard-demo" style="padding: 5rem 2rem; background: linear-gradient(180deg, rgba(92,138,47,0.06) 0%, transparent 100%);">
+        <div style="max-width:1100px; margin:0 auto;">
+            <div class="section-header reveal">
+                <div class="section-label" style="background: rgba(92,138,47,0.15); color: #5c8a2f;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    <span class="en-inline">INTERACTIVE DEMO</span><span class="zh-inline">交互式演示</span>
+                </div>
+                <h2 class="section-title en">Try the Setup Wizard</h2>
+                <h2 class="section-title zh">体验配置向导</h2>
+                <p class="section-subtitle en">Click through all 7 steps — Gateway, Model, Channels, TTS, Voice, Display, and Full Test.</p>
+                <p class="section-subtitle zh">点击体验全部 7 个步骤 — Gateway、模型、渠道、TTS、语音、显示、全链路测试。</p>
+            </div>
+            <div class="reveal" style="margin-top: 2.5rem; display: flex; justify-content: center;">
+                <div style="width: 480px; height: 640px; border-radius: 12px; overflow: hidden; border: 2px solid var(--card-border); box-shadow: 0 20px 60px rgba(0,0,0,0.4); position: relative;">
+                    <iframe src="demo.html" style="width: 100%; height: 100%; border: none;"></iframe>
+                </div>
+            </div>
+            <p style="text-align: center; margin-top: 1.2rem; color: var(--text-dim); font-size: 0.85rem;">
+                <span class="en-inline">This is a live interactive demo. The actual wizard runs inside the Electron app.</span>
+                <span class="zh-inline">这是可交互的在线演示。实际向导在 Electron 应用内运行。</span>
+            </p>
         </div>
     </section>
 
@@ -1144,7 +1170,7 @@
                 </div>
                 <h3 class="en">Air-Feel UI</h3><h3 class="zh">空气感 UI</h3>
                 <p class="en">67px fluid glass ball with 7 mood-based color themes. No clunky windows — just a floating orb on your desktop.</p>
-                <p class="zh">67px 流体玻璃球，7 种情绪色系。没有笨重窗口，只有一个漂浮的光球。</p>
+                <p class="zh">67px 流体玻璃球，14 种情绪色系。没有笨重窗口，只有一个漂浮的光球。</p>
             </div>
             <div class="feature-card reveal reveal-delay-1">
                 <div class="feature-icon" style="background:rgba(168,85,247,0.08)">
@@ -1160,7 +1186,7 @@
                 </div>
                 <h3 class="en">Emotional TTS</h3><h3 class="zh">情感语音</h3>
                 <p class="en">MiniMax Speech 2.5 Turbo with voice cloning + 7 emotion modes. 3-tier fallback: MiniMax → CosyVoice → Edge TTS.</p>
-                <p class="zh">MiniMax Speech 2.5 Turbo 声音克隆 + 7 种情绪。三级降级：MiniMax → CosyVoice → Edge TTS。</p>
+                <p class="zh">MiniMax Speech 2.5 Turbo 声音克隆 + 14 种情绪。三级降级：MiniMax → CosyVoice → Edge TTS。</p>
             </div>
             <div class="feature-card reveal">
                 <div class="feature-icon" style="background:rgba(107,138,255,0.08)">
@@ -1412,8 +1438,8 @@ node kkclaw-hotswitch.js --restart</code></pre>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
                 <span class="en-inline">MOOD SYSTEM</span><span class="zh-inline">情绪系统</span>
             </div>
-            <h2 class="section-title en">7 Emotional States</h2>
-            <h2 class="section-title zh">7 种情绪状态</h2>
+            <h2 class="section-title en">14 Emotional States</h2>
+            <h2 class="section-title zh">14 种情绪状态</h2>
             <p class="section-subtitle en">Click a mood to see the ball transform in real-time</p>
             <p class="section-subtitle zh">点击情绪查看球体实时变化</p>
         </div>

@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KKClaw Setup Wizard — Interactive Demo</title>
+<style>
+  :root {
+    --wood-dark: #5a3a1a;
+    --wood-medium: #8b6238;
+    --wood-light: #b8905a;
+    --parchment: #faebd7;
+    --parchment-dark: #e8d5b0;
+    --grass: #5c8a2f;
+    --grass-light: #7cb342;
+    --text-dark: #3d2610;
+    --text-medium: #6d5030;
+    --gold: #ffc107;
+    --gold-dark: #f9a825;
+    --red: #c0392b;
+    --green: #27ae60;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  *::-webkit-scrollbar { width: 8px; }
+  *::-webkit-scrollbar-track { background: var(--parchment-dark); }
+  *::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--wood-light), var(--wood-medium)); border-radius: 4px; }
+
+  body {
+    font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    color: var(--text-dark);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: #3a7d2a;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(circle at 20% 80%, #4a8d32 0%, transparent 40%),
+      radial-gradient(circle at 80% 20%, #2d6b1a 0%, transparent 40%),
+      linear-gradient(180deg, #5a9d3a 0%, #3a7d2a 30%, #2d6b1a 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  body > * { position: relative; z-index: 1; }
+
+  .wizard-header {
+    padding: 10px 16px 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; position: relative;
+    background: linear-gradient(180deg, var(--wood-dark) 0%, var(--wood-medium) 60%, var(--wood-light) 100%);
+    border-bottom: 3px solid var(--wood-dark);
+    box-shadow: 0 3px 0 0 rgba(0,0,0,0.2);
+  }
+  .wizard-header h1 {
+    font-size: 16px; color: var(--gold); font-weight: 700;
+    letter-spacing: 2px;
+    text-shadow: 1px 1px 0 var(--wood-dark), 2px 2px 0 rgba(0,0,0,0.3);
+    font-family: 'Courier New', monospace;
+  }
+  .demo-badge {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    padding: 3px 10px; border: 2px solid var(--gold); border-radius: 2px;
+    background: rgba(255,193,7,0.15); color: var(--gold);
+    font-size: 11px; font-family: 'Courier New', monospace; font-weight: 700;
+  }
+
+  .progress-bar {
+    display: flex; justify-content: center; gap: 6px;
+    padding: 10px 12px 8px; flex-shrink: 0;
+    background: linear-gradient(180deg, var(--wood-medium), var(--wood-light) 40%, var(--parchment-dark));
+    border-bottom: 2px solid var(--wood-medium);
+  }
+  .progress-dot {
+    width: 18px; height: 18px;
+    background: var(--parchment-dark); border: 2px solid var(--wood-medium);
+    transition: all 0.3s; cursor: pointer; position: relative;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  }
+  .progress-dot.active {
+    background: var(--gold); border-color: var(--gold-dark);
+    transform: scale(1.3); filter: drop-shadow(0 0 4px rgba(255,193,7,0.6));
+  }
+  .progress-dot.done { background: var(--grass-light); border-color: var(--grass); }
+  .progress-dot::after {
+    content: attr(data-label);
+    position: absolute; top: 22px; left: 50%; transform: translateX(-50%);
+    font-size: 9px; color: var(--text-medium); white-space: nowrap;
+    font-family: 'Courier New', monospace; font-weight: 600;
+  }
+
+  .chat-area {
+    flex: 1; overflow-y: auto; padding: 12px 16px;
+    display: flex; flex-direction: column; gap: 10px;
+    background: var(--parchment);
+    border-left: 4px solid var(--wood-medium);
+    border-right: 4px solid var(--wood-medium);
+    box-shadow: inset 0 0 20px rgba(90,58,26,0.08);
+  }
+
+  .bubble-row { display: flex; gap: 8px; align-items: flex-start; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .avatar {
+    width: 34px; height: 34px; border-radius: 2px;
+    background: linear-gradient(135deg, #e8b068, #d49040);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+    border: 2px solid var(--wood-dark); box-shadow: 1px 1px 0 var(--wood-dark);
+  }
+  .bubble {
+    background: #fffdf5; border: 2px solid var(--wood-medium); border-radius: 2px;
+    padding: 8px 12px; max-width: 85%;
+    box-shadow: 2px 2px 0 rgba(90,58,26,0.15);
+    line-height: 1.6; font-size: 13px; color: var(--text-dark); position: relative;
+  }
+  .bubble::before {
+    content: ''; position: absolute; left: -7px; top: 8px;
+    border: 5px solid transparent; border-right-color: var(--wood-medium);
+    border-left: 0; width: 0; height: 0;
+  }
+  .bubble::after {
+    content: ''; position: absolute; left: -4px; top: 9px;
+    border: 4px solid transparent; border-right-color: #fffdf5;
+    border-left: 0; width: 0; height: 0;
+  }
+  .typing-cursor {
+    display: inline-block; width: 2px; height: 13px;
+    background: var(--wood-dark); animation: blink 0.5s step-end infinite;
+    vertical-align: middle; margin-left: 1px;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .card {
+    background: #fffdf5; border: 2px solid var(--wood-medium); border-radius: 2px;
+    padding: 12px 14px; margin: 4px 0;
+    box-shadow: 2px 2px 0 rgba(90,58,26,0.15); animation: fadeIn 0.3s ease;
+  }
+  .card h3 { font-size: 13px; color: var(--wood-dark); margin-bottom: 10px; font-weight: 700; }
+
+  .status-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+  .status-icon {
+    width: 22px; height: 22px; border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  .status-icon.loading { background: var(--parchment-dark); border: 2px solid var(--wood-light); animation: pulse 1s infinite; }
+  .status-icon.success { background: var(--grass-light); border: 2px solid var(--grass); color: #fff; }
+  .status-icon.fail { background: var(--red); border: 2px solid #a93226; color: #fff; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  .engine-list, .engine-grid { display: flex; flex-direction: column; gap: 6px; }
+  .provider-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .engine-card {
+    padding: 8px 12px; border: 2px solid var(--parchment-dark); border-radius: 2px;
+    background: var(--parchment); cursor: pointer; transition: all 0.2s; position: relative;
+  }
+  .engine-card:hover { border-color: var(--wood-light); background: #fffdf5; }
+  .engine-card.selected { border-color: var(--gold); background: #fff8e1; box-shadow: 0 0 0 1px var(--gold); }
+  .engine-card .engine-name { font-size: 12px; font-weight: 700; color: var(--text-dark); }
+  .engine-card .engine-desc { font-size: 10px; color: var(--text-medium); margin-top: 2px; }
+  .engine-badge {
+    position: absolute; top: 6px; right: 8px;
+    font-size: 9px; padding: 1px 6px; border-radius: 2px; font-weight: 700;
+  }
+  .engine-badge.recommend { background: #e8f5e9; color: var(--grass); border: 1px solid var(--grass-light); }
+  .engine-badge.best { background: #fff3e0; color: #e65100; border: 1px solid #ffb74d; }
+  .engine-badge.free { background: #e3f2fd; color: #1565c0; border: 1px solid #64b5f6; }
+  .provider-grid .engine-card.full-width { grid-column: 1 / -1; }
+
+  .form-group { margin-bottom: 10px; }
+  .form-group label { display: block; font-size: 11px; font-weight: 600; color: var(--text-medium); margin-bottom: 4px; }
+  .form-input {
+    width: 100%; padding: 6px 10px; border: 2px solid var(--parchment-dark);
+    border-radius: 2px; background: #fffdf5; font-size: 12px; color: var(--text-dark);
+    font-family: inherit; transition: border-color 0.2s;
+  }
+  .form-input:focus { outline: none; border-color: var(--gold); }
+  select.form-input { cursor: pointer; }
+
+  .input-wrap { display: flex; gap: 4px; }
+  .input-wrap .form-input { flex: 1; }
+  .eye-btn {
+    padding: 4px 8px; border: 2px solid var(--parchment-dark); border-radius: 2px;
+    background: var(--parchment); cursor: pointer; font-size: 14px;
+  }
+
+  .toggle-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid var(--parchment-dark);
+  }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-label { font-size: 12px; font-weight: 600; display: flex; gap: 6px; align-items: center; }
+  .toggle-sublabel { font-size: 10px; color: var(--text-medium); }
+  .toggle-controls { display: flex; align-items: center; gap: 6px; }
+  .toggle-tag { font-size: 10px; color: var(--text-medium); }
+
+  .switch { position: relative; display: inline-block; width: 36px; height: 20px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; cursor: pointer; inset: 0;
+    background: var(--parchment-dark); border: 2px solid var(--wood-light);
+    border-radius: 2px; transition: 0.3s;
+  }
+  .slider::before {
+    content: ''; position: absolute; height: 12px; width: 12px;
+    left: 2px; bottom: 2px; background: var(--wood-light);
+    border-radius: 1px; transition: 0.3s;
+  }
+  input:checked + .slider { background: var(--grass-light); border-color: var(--grass); }
+  input:checked + .slider::before { transform: translateX(16px); background: #fff; }
+
+  .btn-row { display: flex; gap: 8px; margin-top: 8px; }
+  .btn {
+    padding: 6px 16px; border: 2px solid; border-radius: 2px;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    font-family: 'Courier New', monospace; transition: all 0.2s;
+  }
+  .btn-primary { background: var(--gold); border-color: var(--gold-dark); color: var(--wood-dark); }
+  .btn-primary:hover { background: var(--gold-dark); }
+  .btn-test { background: var(--parchment); border-color: var(--wood-light); color: var(--text-dark); }
+  .btn-test:hover { border-color: var(--wood-medium); }
+  .btn-small { padding: 4px 12px; font-size: 11px; }
+
+  .note-box {
+    padding: 8px 10px; border: 2px solid var(--parchment-dark); border-radius: 2px;
+    background: rgba(255,253,240,0.6); font-size: 11px; color: var(--text-medium);
+    line-height: 1.5; margin-bottom: 10px;
+  }
+
+  .upload-area {
+    border: 2px dashed var(--wood-light); border-radius: 2px;
+    padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s;
+    background: rgba(255,253,240,0.4);
+  }
+  .upload-area:hover { border-color: var(--gold); background: rgba(255,248,225,0.4); }
+  .upload-icon { font-size: 24px; margin-bottom: 4px; }
+  .upload-text { font-size: 12px; color: var(--text-dark); font-weight: 600; }
+  .upload-hint { font-size: 10px; color: var(--text-medium); margin-top: 2px; }
+
+  .test-list { display: flex; flex-direction: column; gap: 6px; }
+  .test-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 2px; background: var(--parchment); }
+  .test-name { font-size: 12px; font-weight: 600; flex: 1; }
+  .test-msg { font-size: 11px; color: var(--text-medium); }
+
+  .wizard-footer {
+    padding: 8px 16px; display: flex; justify-content: space-between; align-items: center;
+    flex-shrink: 0;
+    background: linear-gradient(180deg, var(--parchment-dark), var(--wood-light) 60%, var(--wood-medium));
+    border-top: 2px solid var(--wood-medium);
+  }
+  .btn-secondary { background: var(--parchment); border-color: var(--wood-light); color: var(--text-dark); }
+  .btn-secondary:hover { border-color: var(--wood-medium); }
+  .step-label { font-size: 11px; color: var(--text-medium); font-family: 'Courier New', monospace; }
+
+  .env-check { font-size: 11px; padding: 6px 8px; border-radius: 2px; margin-top: 8px; }
+  .env-check.ok { background: #e8f5e9; color: var(--grass); }
+
+  .feature-desc {
+    background: linear-gradient(135deg, rgba(255,193,7,0.08), rgba(139,98,56,0.05));
+    border: 2px solid var(--gold); border-radius: 2px;
+    padding: 10px 14px; margin: 6px 0; font-size: 12px; line-height: 1.7;
+    color: var(--text-dark);
+  }
+  .feature-desc strong { color: var(--wood-dark); }
+  .feature-desc .tag {
+    display: inline-block; padding: 1px 6px; border-radius: 2px;
+    font-size: 10px; font-weight: 700; margin-right: 4px;
+  }
+  .feature-desc .tag-new { background: #e8f5e9; color: var(--grass); }
+  .feature-desc .tag-core { background: #fff3e0; color: #e65100; }
+
+  .hidden { display: none !important; }
+
+  /* Celebration */
+  .celebration {
+    position: fixed; inset: 0; z-index: 999;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  }
+  .celebration-content {
+    background: var(--parchment); border: 4px solid var(--gold);
+    border-radius: 4px; padding: 32px 40px; text-align: center;
+    box-shadow: 0 0 40px rgba(255,193,7,0.3);
+    animation: celebPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes celebPop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .celebration h2 { font-size: 20px; color: var(--gold-dark); margin-bottom: 8px; }
+  .celebration p { font-size: 13px; color: var(--text-medium); line-height: 1.6; }
+  .celebration .btn { margin-top: 16px; }
+</style>
+</head>
+<body>
+
+<div class="wizard-header">
+  <h1>KKClaw Setup Wizard</h1>
+  <span class="demo-badge">DEMO</span>
+</div>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="chat-area" id="chatArea"></div>
+
+<div class="wizard-footer">
+  <button class="btn btn-secondary" id="btnPrev" onclick="prevStep()" style="visibility:hidden">上一步</button>
+  <span class="step-label" id="stepLabel">Step 1/7</span>
+  <button class="btn btn-primary" id="btnNext" onclick="nextStep()">下一步</button>
+</div>
+
+<div class="celebration hidden" id="celebration"></div>
+
+<script>
+let currentStep = 0;
+const totalSteps = 7;
+const stepLabels = ['Gateway','Model','Channels','TTS','Voice','Display','Done'];
+
+// Step feature descriptions shown alongside the UI
+const stepFeatures = [
+  { tags: ['core'], title: 'Gateway 自动检测',
+    desc: '自动扫描本地 OpenClaw Gateway 连接状态，检测端口和 Token。连接失败时提供手动输入入口，支持一键测试。' },
+  { tags: ['core'], title: '多模型一键配置',
+    desc: '内置 9 大 AI 服务商预设（Anthropic / OpenAI / Google / DeepSeek / OpenRouter / 智谱 / 通义 / Kimi / MiniMax），支持自定义中转站。选择即配置，API Key 加密存储。' },
+  { tags: ['new'], title: '渠道独立控制',
+    desc: '飞书、Telegram、Discord、Web、企业微信 — 每个渠道独立开关语音播报和桌面歌词。一个宠物，多平台联动。' },
+  { tags: ['new'], title: '语音引擎 + 音色克隆',
+    desc: '4 种 TTS 引擎可选：MiniMax 2.8 HD（最佳音质）、MiniMax 2.5 Turbo（推荐）、CosyVoice（阿里云）、Edge TTS（免费）。支持上传录音一键克隆专属音色。' },
+  { tags: ['new'], title: 'Agent 人设定制',
+    desc: '给你的 AI 伙伴起名字、选说话风格（甜妹 / 专业 / 幽默 / 酷帅 / 自定义）。自动生成 AGENTS.md + SOUL.md + USER.md + HEARTBEAT.md 全套配置。' },
+  { tags: ['core'], title: '显示偏好设置',
+    desc: '桌面歌词开关、球体置顶、开机自启动 — 三个开关搞定桌面显示偏好。' },
+  { tags: ['core'], title: '全链路自动测试',
+    desc: '7 项自动化测试：Gateway → 模型 → TTS → 播报 → 歌词 → Agent 配置 → 自定义音色。逐项检测，失败可单独重试。' },
+];
+
+function initProgressBar() {
+  const bar = document.getElementById('progressBar');
+  bar.innerHTML = stepLabels.map((l, i) =>
+    `<div class="progress-dot ${i === 0 ? 'active' : ''}" data-step="${i}" data-label="${l}" onclick="jumpToStep(${i})"></div>`
+  ).join('');
+}
+
+function updateProgress() {
+  document.querySelectorAll('.progress-dot').forEach((dot, i) => {
+    dot.className = 'progress-dot' + (i === currentStep ? ' active' : i < currentStep ? ' done' : '');
+  });
+  document.getElementById('stepLabel').textContent = `Step ${currentStep + 1}/${totalSteps}`;
+  document.getElementById('btnPrev').style.visibility = currentStep > 0 ? 'visible' : 'hidden';
+  document.getElementById('btnNext').textContent = currentStep === totalSteps - 1 ? '完成 🎉' : '下一步';
+}
+
+function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function typewrite(el, text, speed = 25) {
+  return new Promise(resolve => {
+    el.innerHTML = '';
+    const cursor = document.createElement('span');
+    cursor.className = 'typing-cursor';
+    el.appendChild(cursor);
+    let i = 0;
+    const iv = setInterval(() => {
+      if (i < text.length) {
+        el.insertBefore(document.createTextNode(text[i]), cursor);
+        i++;
+        document.getElementById('chatArea').scrollTop = 999999;
+      } else { clearInterval(iv); cursor.remove(); resolve(); }
+    }, speed);
+  });
+}
+
+async function addBubble(text) {
+  const chat = document.getElementById('chatArea');
+  const row = document.createElement('div');
+  row.className = 'bubble-row';
+  row.innerHTML = `<div class="avatar">🦞</div><div class="bubble"></div>`;
+  chat.appendChild(row);
+  await typewrite(row.querySelector('.bubble'), text);
+}
+
+function addCard(html) {
+  const chat = document.getElementById('chatArea');
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = html;
+  chat.appendChild(card);
+  chat.scrollTop = 999999;
+  return card;
+}
+
+function addFeatureDesc(stepIdx) {
+  const f = stepFeatures[stepIdx];
+  if (!f) return;
+  const tagHtml = f.tags.map(t => `<span class="tag tag-${t}">${t === 'new' ? 'v3.0 NEW' : 'CORE'}</span>`).join('');
+  const chat = document.getElementById('chatArea');
+  const el = document.createElement('div');
+  el.className = 'feature-desc';
+  el.innerHTML = `${tagHtml}<strong>${f.title}</strong><br>${f.desc}`;
+  chat.appendChild(el);
+  chat.scrollTop = 999999;
+}
+
+// ─── Step Renderers ───────────────────────
+async function renderStep(step) {
+  document.getElementById('chatArea').innerHTML = '';
+  addFeatureDesc(step);
+  switch(step) {
+    case 0: await renderGateway(); break;
+    case 1: await renderModel(); break;
+    case 2: await renderChannels(); break;
+    case 3: await renderTTS(); break;
+    case 4: await renderVoice(); break;
+    case 5: await renderDisplay(); break;
+    case 6: await renderTest(); break;
+  }
+}
+
+async function renderGateway() {
+  await addBubble('你好呀~ 我是小K！(^_^) 欢迎使用 KKClaw 桌面宠物~');
+  await addBubble('让我先帮你检查一下 OpenClaw Gateway 的连接状态吧！');
+  addCard(`
+    <h3>OpenClaw Gateway 检测</h3>
+    <div class="status-item">
+      <div class="status-icon loading" id="gw-icon"></div>
+      <span id="gw-text">正在检测 Gateway...</span>
+    </div>
+  `);
+  // Simulate detection
+  await new Promise(r => setTimeout(r, 1200));
+  document.getElementById('gw-icon').className = 'status-icon success';
+  document.getElementById('gw-icon').textContent = '✓';
+  document.getElementById('gw-text').textContent = 'Gateway 连接成功 (端口 18789)';
+  await addBubble('找到啦！连接成功！✧*。(o^_^o)✧*。');
+}
+
+async function renderModel() {
+  await addBubble('接下来配置你的 AI 模型吧~ (^_^)');
+  const providers = [
+    { key:'anthropic', name:'Anthropic', desc:'Claude Opus 4 / Sonnet 4', badge:'recommend', badgeText:'推荐' },
+    { key:'openai', name:'OpenAI', desc:'GPT-4o / o3 / o4-mini' },
+    { key:'google', name:'Google AI', desc:'Gemini 2.5 Pro / 2.0 Flash' },
+    { key:'deepseek', name:'DeepSeek', desc:'DeepSeek V3 / R1' },
+    { key:'openrouter', name:'OpenRouter', desc:'多模型中转' },
+    { key:'zhipu', name:'智谱 GLM', desc:'GLM-4 Plus' },
+    { key:'qwen', name:'通义千问', desc:'Qwen Max / Turbo' },
+    { key:'kimi', name:'Kimi', desc:'Kimi K2' },
+    { key:'minimax', name:'MiniMax', desc:'MiniMax M1' },
+  ];
+  let cards = providers.map(p => {
+    const badge = p.badge ? `<span class="engine-badge ${p.badge}">${p.badgeText}</span>` : '';
+    return `<div class="engine-card" onclick="this.parentElement.querySelectorAll('.engine-card').forEach(c=>c.classList.remove('selected'));this.classList.add('selected');document.getElementById('model-cfg').classList.remove('hidden')">
+      <div class="engine-name">${p.name}</div><div class="engine-desc">${p.desc}</div>${badge}
+    </div>`;
+  }).join('');
+  cards += `<div class="engine-card full-width" onclick="this.parentElement.querySelectorAll('.engine-card').forEach(c=>c.classList.remove('selected'));this.classList.add('selected')">
+    <div class="engine-name">自定义中转站</div><div class="engine-desc">支持任意兼容 OpenAI / Anthropic 协议的服务</div>
+  </div>`;
+
+  addCard(`
+    <h3>AI 模型配置</h3>
+    <div class="provider-grid">${cards}</div>
+    <div id="model-cfg" class="hidden" style="margin-top:12px">
+      <div class="form-group"><label>模型选择</label>
+        <select class="form-input"><option>Claude Opus 4</option><option>Claude Sonnet 4</option><option>Claude Haiku 3.5</option></select>
+      </div>
+      <div class="form-group"><label>API Key</label>
+        <div class="input-wrap"><input type="password" class="form-input" placeholder="输入 API Key"><button class="eye-btn">👁</button></div>
+      </div>
+      <div class="btn-row"><button class="btn btn-test" onclick="this.textContent='✓ 配置有效';this.style.color='var(--grass)'">测试配置</button></div>
+    </div>
+  `);
+}
+
+async function renderChannels() {
+  await addBubble('接下来配置你的消息渠道吧~ (^_^)');
+  const channels = [
+    { icon:'🐦', name:'飞书 Feishu', v:true, l:true },
+    { icon:'✈️', name:'Telegram', v:true, l:true },
+    { icon:'💬', name:'Discord', v:false, l:true },
+    { icon:'🌐', name:'Web', v:false, l:false },
+    { icon:'💼', name:'企业微信 WeCom', v:true, l:true },
+  ];
+  const rows = channels.map(c => `
+    <div class="toggle-row">
+      <div class="toggle-label"><span>${c.icon}</span><span>${c.name}</span></div>
+      <div class="toggle-controls">
+        <span class="toggle-tag">Voice</span>
+        <label class="switch"><input type="checkbox" ${c.v?'checked':''}><span class="slider"></span></label>
+        <span class="toggle-tag">Lyrics</span>
+        <label class="switch"><input type="checkbox" ${c.l?'checked':''}><span class="slider"></span></label>
+      </div>
+    </div>
+  `).join('');
+  addCard(`<h3>消息渠道配置</h3>${rows}`);
+}
+
+async function renderTTS() {
+  await addBubble('现在来选择你的语音引擎吧~ (*^_^*)');
+  const engines = [
+    { id:'hd', name:'MiniMax Speech 2.8 HD', desc:'最佳音质，情感丰富', badge:'best', badgeText:'最佳音质' },
+    { id:'turbo', name:'MiniMax Speech 2.5 Turbo', desc:'性价比高，速度快', badge:'recommend', badgeText:'推荐', sel:true },
+    { id:'cosy', name:'CosyVoice (阿里云)', desc:'阿里云语音合成' },
+    { id:'edge', name:'Edge TTS', desc:'免费、无需配置', badge:'free', badgeText:'免费' },
+  ];
+  const list = engines.map(e => {
+    const badge = e.badge ? `<span class="engine-badge ${e.badge}">${e.badgeText}</span>` : '';
+    return `<div class="engine-card ${e.sel?'selected':''}" onclick="this.parentElement.querySelectorAll('.engine-card').forEach(c=>c.classList.remove('selected'));this.classList.add('selected')">
+      <div class="engine-name">${e.name}</div><div class="engine-desc">${e.desc}</div>${badge}
+    </div>`;
+  }).join('');
+
+  addCard(`
+    <h3>TTS 语音引擎选择</h3>
+    <div class="engine-list">${list}</div>
+    <div class="env-check ok" style="margin-top:8px">✓ Python 3.11 + edge-tts (所有引擎可用)</div>
+    <div style="margin-top:12px">
+      <div class="form-group"><label>API Key</label>
+        <div class="input-wrap"><input type="password" class="form-input" placeholder="输入 MiniMax API Key"><button class="eye-btn">👁</button></div>
+      </div>
+    </div>
+    <div style="margin-top:14px;border-top:2px dashed var(--parchment-dark);padding-top:12px">
+      <h3 style="font-size:12px;margin-bottom:8px">🎤 自定义音色（可选）</h3>
+      <div class="note-box">💡 上传30秒以上的清晰录音，系统会自动克隆你的专属音色。</div>
+      <div class="upload-area"><div class="upload-icon">🎙️</div><div class="upload-text">点击选择或拖拽音频文件</div><div class="upload-hint">支持 MP3、WAV、M4A</div></div>
+    </div>
+    <div class="btn-row" style="margin-top:12px"><button class="btn btn-test" onclick="this.textContent='🔊 播放中...';setTimeout(()=>this.textContent='试听一下',1500)">试听一下</button></div>
+  `);
+}
+
+async function renderVoice() {
+  await addBubble('现在来配置 Agent 语音播报吧！(^_^)');
+  addCard(`
+    <h3>Agent 语音播报配置</h3>
+    <div class="form-group"><label>OpenClaw 工作目录</label>
+      <input type="text" class="form-input" value="~/.openclaw/" placeholder="~/.openclaw/">
+    </div>
+    <div style="border-top:2px dashed var(--parchment-dark);padding-top:12px;margin-top:12px">
+      <h3 style="font-size:12px;margin-bottom:8px">🎭 Agent 人设定制</h3>
+      <div class="note-box">💡 定义你的 Agent 说话风格。人设可以和别人不一样，做你自己的 AI 伙伴！</div>
+      <div class="form-group"><label>宠物昵称</label><input type="text" class="form-input" placeholder="例如：小K、小助手、Claw"></div>
+      <div class="form-group"><label>你的称呼</label><input type="text" class="form-input" placeholder="例如：主人、Boss、KK"></div>
+      <div class="form-group"><label>说话风格</label>
+        <select class="form-input">
+          <option>甜妹风格 — 温柔可爱，偶尔撒娇</option>
+          <option>专业助手 — 高效严谨，条理清晰</option>
+          <option>幽默搞怪 — 爱开玩笑，轻松活泼</option>
+          <option>酷帅风格 — 简洁利落，不废话</option>
+          <option>自定义...</option>
+        </select>
+      </div>
+    </div>
+    <div class="note-box" style="margin-top:12px">💡 <strong>模型兼容性：</strong>Claude Sonnet 4 及以上旗舰模型效果最佳。轻量模型可能偶尔遗漏播报。</div>
+    <div class="btn-row"><button class="btn btn-primary btn-small" onclick="this.textContent='✓ 已配置';this.style.background='var(--grass-light)'">配置播报</button><button class="btn btn-test">测试播报</button></div>
+  `);
+}
+
+async function renderDisplay() {
+  await addBubble('快要完成啦！来设置一下显示选项吧~ (^_^)');
+  addCard(`
+    <h3>桌面显示设置</h3>
+    <div class="toggle-row"><div><div class="toggle-label">桌面歌词</div><div class="toggle-sublabel">在宠物上方显示消息字幕</div></div>
+      <label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+    <div class="toggle-row"><div><div class="toggle-label">球体置顶</div><div class="toggle-sublabel">宠物始终显示在最上层</div></div>
+      <label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+    <div class="toggle-row"><div><div class="toggle-label">开机自启动</div><div class="toggle-sublabel">系统启动时自动运行</div></div>
+      <label class="switch"><input type="checkbox"><span class="slider"></span></label></div>
+  `);
+}
+
+async function renderTest() {
+  await addBubble('最后一步！来做一个全链路测试吧~ (*^_^*)');
+  const tests = [
+    { id:'gw', name:'Gateway 连接' },
+    { id:'model', name:'AI 模型配置' },
+    { id:'tts', name:'TTS 语音引擎' },
+    { id:'voice', name:'语音播报链路' },
+    { id:'lyrics', name:'桌面歌词' },
+    { id:'agent', name:'Agent 配置文件' },
+    { id:'clone', name:'自定义音色' },
+  ];
+  const items = tests.map(t => `
+    <div class="test-item"><div class="status-icon loading" id="t-${t.id}-icon"></div>
+      <span class="test-name">${t.name}</span><span class="test-msg" id="t-${t.id}-msg">等待中...</span></div>
+  `).join('');
+  addCard(`<h3>全链路测试</h3><div class="test-list">${items}</div>`);
+
+  // Simulate sequential tests
+  for (const t of tests) {
+    document.getElementById(`t-${t.id}-msg`).textContent = '测试中...';
+    await new Promise(r => setTimeout(r, 600));
+    document.getElementById(`t-${t.id}-icon`).className = 'status-icon success';
+    document.getElementById(`t-${t.id}-icon`).textContent = '✓';
+    document.getElementById(`t-${t.id}-msg`).textContent = '通过';
+    document.getElementById(`t-${t.id}-msg`).style.color = 'var(--grass)';
+  }
+  await addBubble('全部通过！你的 KKClaw 已经准备就绪啦！✧*。ヾ(｡>﹏<｡)ﾉﾞ✧*。');
+}
+
+// ─── Navigation ───────────────────────
+function nextStep() {
+  if (currentStep === totalSteps - 1) {
+    showCelebration();
+    return;
+  }
+  currentStep++;
+  updateProgress();
+  renderStep(currentStep);
+}
+
+function prevStep() {
+  if (currentStep > 0) { currentStep--; updateProgress(); renderStep(currentStep); }
+}
+
+function jumpToStep(step) {
+  currentStep = step;
+  updateProgress();
+  renderStep(currentStep);
+}
+
+function showCelebration() {
+  const el = document.getElementById('celebration');
+  el.classList.remove('hidden');
+  el.innerHTML = `<div class="celebration-content">
+    <h2>🎉 配置完成！</h2>
+    <p>你的 KKClaw 桌面宠物已经准备就绪！<br>享受你的 AI 桌面伴侣吧~ ✧*。(o^_^o)✧*。</p>
+    <a href="https://github.com/kk43994/kkclaw/releases" target="_blank" class="btn btn-primary" style="display:inline-block;text-decoration:none;margin-top:16px">下载 KKClaw</a>
+  </div>`;
+}
+
+// ─── Init ───────────────────────
+initProgressBar();
+updateProgress();
+renderStep(0);
+</script>
+</body>
+</html>
