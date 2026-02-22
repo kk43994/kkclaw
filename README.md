@@ -1,6 +1,12 @@
-﻿# 🦞 openclaw-kkclaw
+# 🦞 KKClaw Desktop Pet
 
-**Desktop visualization companion for OpenClaw - Fluid glass orb pet, 14-emotion system, voice cloning (MiniMax/CosyVoice), Setup Wizard, and real-time WebSocket sync**
+**[English](#-english) | [中文](#-中文)**
+
+---
+
+<a id="-中文"></a>
+
+## 🇨🇳 中文
 
 **OpenClaw 桌面可视化伴侣 — 流体玻璃球宠物、14情绪系统、声音克隆（MiniMax/CosyVoice）、一键配置向导、实时 WebSocket 同步**
 
@@ -137,11 +143,11 @@
 
 <div align="center">
 
-### 🎨 7种情绪色系
+### 🎨 14种情绪色系
 
 ![Mood System](docs/images/mood-system.png)
 
-**丰富的情绪状态** — 7种���色 × 38种表情 = 超自然的情感表达
+**丰富的情绪状态** — 14种颜色 × 38种表情 = 超自然的情感表达
 
 ---
 
@@ -402,6 +408,10 @@ npm start
 ```
 
 ### 配置
+
+> 🧙 **v3.0 新增 Setup Wizard！** 首次启动会自动弹出配置向导，跟着引导走即可完成全部设置。
+> 
+> 如需手动配置，参考以下步骤：
 
 1. **复制配置模板**
    ```bash
@@ -791,11 +801,118 @@ node kkclaw-hotswitch.js --restart
 
 ---
 
+<a id="-english"></a>
+
+## 🇬🇧 English
+
+**Desktop visualization companion for OpenClaw — Fluid glass orb pet, 14-emotion system, voice cloning (MiniMax/CosyVoice), Setup Wizard, and real-time WebSocket sync**
+
+<div align="center">
+
+![Hero Banner](docs/images/hero-banner.png)
+
+[![Version](https://img.shields.io/badge/version-3.0.0-FF6B4A?style=for-the-badge&logo=github)](https://github.com/kk43994/kkclaw/releases)
+[![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows_|_macOS-0078D6?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/kk43994/kkclaw)
+
+[🎥 **Live Demo**](https://kk43994.github.io/kkclaw/) | [📦 **Download**](https://github.com/kk43994/kkclaw/releases) | [📖 **Docs**](docs/CONFIGURATION-GUIDE.md) | [💬 **Community**](#-社群)
+
+</div>
+
+### ✨ Highlights
+
+A **different kind** of desktop AI assistant:
+
+- 🎨 **Airy UI** — Like desktop lyrics, always present but never in the way
+- 🦞 **67px Lobster Orb** — Fluid animation + glass texture + 14 emotion colors
+- 👀 **38 Idle Animations** — Blink, tilt, sparkle eyes, doze off... naturally random
+- 🎙️ **Voice Cloning TTS** — MiniMax 2.8 HD / 2.5 Turbo, 7 emotions
+- 🧙 **Setup Wizard** — RPG-style onboarding, zero-to-running in 5 minutes
+- 🔐 **Encrypted API Keys** — Electron safeStorage, no plaintext on disk
+- 🔁 **KKClaw Switch** — Hot-swap AI models in 3 seconds, no restart needed
+- 🎯 **7×24 Stable** — Auto-restart, log rotation, error recovery
+- 🍎 **Cross-Platform** — Windows 10/11 + macOS (Intel & Apple Silicon)
+
+### 🆕 What's New in v3.0.0
+
+> ⚡ **Biggest update ever!** Setup Wizard + Voice Cloning + Persona Customization + API Key Encryption
+
+#### 🧙 Setup Wizard (New)
+- 🎮 **RPG Game Style** — Wooden frame + parchment background + lobster guide character
+- 📋 **7-Step Flow** — Gateway → Model → Channels → TTS → Agent Voice → Display → Full Test
+- 🎤 **One-Click Voice Clone** — Upload 30s recording, auto-clone via MiniMax/CosyVoice API
+- 🎭 **Persona System** — 5 preset styles (Sweet/Professional/Funny/Cool/Custom)
+- 📝 **Full Agent Config Generation** — Auto-creates `AGENTS.md` + `SOUL.md` + `USER.md` + `HEARTBEAT.md` + `desktop-bridge.js`
+- ✅ **7-Item Full Chain Test** — Gateway / Model / TTS / Voice Broadcast / Lyrics / Agent Files / Voice Clone
+
+#### 🌈 Emotion System Upgrade
+- 🌈 **7 → 14 Emotions** — Added sad, angry, fearful, calm, excited, love, focused
+- ✨ **Dynamic Glow Effects** — Each emotion has its own outer glow
+- 🎭 **Text Emotion Detection** — Auto-analyzes content mood with 10 matching rules
+
+#### 🔐 Security & Stability
+- 🔑 **Encrypted API Keys** — `safeStorage` encryption for MiniMax/DashScope keys
+- 🎵 **Lyrics Window Ready Guard** — Prevents crash when lyrics window hasn't loaded
+- 📡 **Port Persistence** — Notification port saved to config for dynamic lookup
+
+#### 🎙️ Voice Enhancements
+- 🆕 **MiniMax Speech 2.8 HD** — New high-definition voice engine option
+- 🔄 **Unified Config Source** — SmartVoiceSystem reads petConfig directly
+
+### 🚀 Quick Start
+
+#### Prerequisites
+
+- **Node.js** ≥ 18.x ([Download](https://nodejs.org))
+- **Windows** 10/11 or **macOS** 10.15+
+- **OpenClaw** ≥ 2026.x ([Community](https://clawd.org.cn) | [International](https://openclaw.ai))
+
+#### Install via ClawHub (Recommended)
+
+```bash
+npx clawhub@latest install kk43994/desktop-pet
+```
+
+#### Install from GitHub
+
+```bash
+git clone https://github.com/kk43994/kkclaw.git
+cd kkclaw
+npm install
+npm start
+```
+
+> 🧙 **Setup Wizard** will launch automatically on first run — just follow the guide!
+
+### 📦 Downloads
+
+| Platform | Arch | Download | Size |
+|----------|------|----------|------|
+| 🪟 **Windows** | x64 | [Setup.exe](https://github.com/kk43994/kkclaw/releases/download/v3.0.0/KKClaw-Desktop-Pet-3.0.0-Setup.exe) | ~150MB |
+| 🍎 **macOS** | Intel | [x64.dmg](https://github.com/kk43994/kkclaw/releases/download/v3.0.0/KKClaw-Desktop-Pet-3.0.0-x64.dmg) | ~160MB |
+| 🍎 **macOS** | Apple Silicon | [arm64.dmg](https://github.com/kk43994/kkclaw/releases/download/v3.0.0/KKClaw-Desktop-Pet-3.0.0-arm64.dmg) | ~160MB |
+
+[📦 All Releases](https://github.com/kk43994/kkclaw/releases)
+
+### 🤝 Contributing
+
+1. **Fork** this repo
+2. Create branch `git checkout -b feature/your-feature`
+3. Commit `git commit -m 'Add: feature description'`
+4. Push `git push origin feature/your-feature`
+5. Open a **Pull Request**
+
+### 📜 License
+
+[MIT License](LICENSE) © 2024-2026 KK
+
+---
+
 ## 🙏 致谢
 
 - [OpenClaw](https://openclaw.ai) — 强大的AI助手框架
 - [Electron](https://www.electronjs.org) — 跨平台桌面应用框架
-- [MiniMax](https://platform.deepseek.com) — 高质量语音克隆API
+- [MiniMax](https://www.minimaxi.com) — 高质量语音克隆API
 - [Nomi](https://nomi.ai) & [AIBI](https://aibi.com) — UI设计灵感
 - [Bunny Hole](https://bunnyhole.com) — 眼睛设计参考
 
@@ -803,8 +920,8 @@ node kkclaw-hotswitch.js --restart
 
 <div align="center">
 
-**用❤️打造 by 小K**
+**用❤️打造 by KK**
 
-[🔝 回到顶部](#-kkclaw)
+[🔝 回到顶部](#-kkclaw-desktop-pet)
 
 </div>
