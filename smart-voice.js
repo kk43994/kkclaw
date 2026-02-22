@@ -83,6 +83,22 @@ class SmartVoiceSystem {
     }
 
     /**
+     * 🔊 跨平台音频播放
+     */
+    async _playAudioFile(filePath) {
+        let cmd;
+        if (process.platform === 'darwin') {
+            cmd = `afplay "${filePath}"`;
+        } else if (process.platform === 'linux') {
+            cmd = `aplay "${filePath}" 2>/dev/null || paplay "${filePath}"`;
+        } else {
+            const safePath = filePath.replace(/'/g, "''");
+            cmd = `powershell -c "Add-Type -AssemblyName presentationCore; $player = New-Object System.Windows.Media.MediaPlayer; $player.Open('${safePath}'); $player.Play(); while($player.NaturalDuration.HasTimeSpan -eq $false) { Start-Sleep -Milliseconds 100 }; $duration = $player.NaturalDuration.TimeSpan.TotalSeconds; Start-Sleep -Seconds $duration; $player.Close()"`;
+        }
+        await execAsync(cmd, { timeout: 120000, windowsHide: true });
+    }
+
+    /**
      * 📄 加载配置（优先使用 petConfig 实例获取已解密的值）
      */
     loadConfig() {
@@ -456,9 +472,7 @@ class SmartVoiceSystem {
                         outputFile: outputFile
                     });
                     
-                    // PowerShell 播放
-                    const playCmd = `powershell -c "Add-Type -AssemblyName presentationCore; $player = New-Object System.Windows.Media.MediaPlayer; $player.Open('${audioFile}'); $player.Play(); while($player.NaturalDuration.HasTimeSpan -eq $false) { Start-Sleep -Milliseconds 100 }; $duration = $player.NaturalDuration.TimeSpan.TotalSeconds; Start-Sleep -Seconds $duration; $player.Close()"`;
-                    await execAsync(playCmd, { timeout: 120000, windowsHide: true });
+                    await this._playAudioFile(audioFile);
                     
                 } catch (minimaxErr) {
                     console.error('[Voice] ❌ MiniMax 失败，回退到 DashScope:', minimaxErr.message);
@@ -471,8 +485,7 @@ class SmartVoiceSystem {
                                 voice: this.dashscopeVoice,
                                 outputFile: outputFile
                             });
-                            const playCmd = `powershell -c "Add-Type -AssemblyName presentationCore; $player = New-Object System.Windows.Media.MediaPlayer; $player.Open('${audioFile}'); $player.Play(); while($player.NaturalDuration.HasTimeSpan -eq $false) { Start-Sleep -Milliseconds 100 }; $duration = $player.NaturalDuration.TimeSpan.TotalSeconds; Start-Sleep -Seconds $duration; $player.Close()"`;
-                            await execAsync(playCmd, { timeout: 120000, windowsHide: true });
+                            await this._playAudioFile(audioFile);
                         } catch (dashErr) {
                             console.error('[Voice] ❌ DashScope 也失败，回退到 Edge TTS:', dashErr.message);
                             // 🚨 发送二级降级通知
@@ -491,9 +504,7 @@ class SmartVoiceSystem {
                         outputFile: outputFile
                     });
                     
-                    // PowerShell 播放
-                    const playCmd = `powershell -c "Add-Type -AssemblyName presentationCore; $player = New-Object System.Windows.Media.MediaPlayer; $player.Open('${audioFile}'); $player.Play(); while($player.NaturalDuration.HasTimeSpan -eq $false) { Start-Sleep -Milliseconds 100 }; $duration = $player.NaturalDuration.TimeSpan.TotalSeconds; Start-Sleep -Seconds $duration; $player.Close()"`;
-                    await execAsync(playCmd, { timeout: 120000, windowsHide: true });
+                    await this._playAudioFile(audioFile);
 
                 } catch (dashErr) {
                     console.error('[Voice] ❌ DashScope 失败，回退到 Edge TTS:', dashErr.message);
@@ -620,7 +631,8 @@ class SmartVoiceSystem {
      * 🔊 使用 Edge TTS 播报（回退方案）
      */
     async speakWithEdgeTTS(cleanText, voiceConfig, outputFile) {
-        let ttsCmd = `python -m edge_tts --voice "${voiceConfig.voice}" --text "${cleanText.replace(/"/g, '').replace(/\n/g, ' ')}" --write-media "${outputFile}"`;
+        const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
+        let ttsCmd = `${pythonCmd} -m edge_tts --voice "${voiceConfig.voice}" --text "${cleanText.replace(/"/g, '').replace(/\n/g, ' ')}" --write-media "${outputFile}"`;
         
         if (voiceConfig.rate !== '+0%') {
             ttsCmd += ` --rate="${voiceConfig.rate}"`;
@@ -631,8 +643,7 @@ class SmartVoiceSystem {
         
         await execAsync(ttsCmd, { timeout: 30000, windowsHide: true });
 
-        const playCmd = `powershell -c "Add-Type -AssemblyName presentationCore; $player = New-Object System.Windows.Media.MediaPlayer; $player.Open('${outputFile}'); $player.Play(); while($player.NaturalDuration.HasTimeSpan -eq $false) { Start-Sleep -Milliseconds 100 }; $duration = $player.NaturalDuration.TimeSpan.TotalSeconds; Start-Sleep -Seconds $duration; $player.Close()"`;
-        await execAsync(playCmd, { timeout: 120000, windowsHide: true });
+        await this._playAudioFile(outputFile);
     }
 
     /**

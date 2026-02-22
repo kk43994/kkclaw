@@ -382,7 +382,8 @@ class SetupWizard {
         return { success: true };
       } else {
         // Edge TTS
-        const ttsCmd = `python -m edge_tts --voice "zh-CN-XiaoxiaoNeural" --text "${testText}" --write-media "${outputFile}"`;
+        const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
+        const ttsCmd = `${pythonCmd} -m edge_tts --voice "zh-CN-XiaoxiaoNeural" --text "${testText}" --write-media "${outputFile}"`;
         await execAsync(ttsCmd, { timeout: 30000, windowsHide: true });
         await this._playAudio(outputFile);
         return { success: true };
@@ -393,9 +394,16 @@ class SetupWizard {
   }
 
   async _playAudio(filePath) {
-    const safePath = filePath.replace(/'/g, "''");
-    const playCmd = `powershell -c "Add-Type -AssemblyName presentationCore; $player = New-Object System.Windows.Media.MediaPlayer; $player.Open('${safePath}'); $player.Play(); while($player.NaturalDuration.HasTimeSpan -eq $false) { Start-Sleep -Milliseconds 100 }; $duration = $player.NaturalDuration.TimeSpan.TotalSeconds; Start-Sleep -Seconds $duration; $player.Close()"`;
-    await execAsync(playCmd, { timeout: 30000, windowsHide: true });
+    let cmd;
+    if (process.platform === 'darwin') {
+      cmd = `afplay "${filePath}"`;
+    } else if (process.platform === 'linux') {
+      cmd = `aplay "${filePath}" 2>/dev/null || paplay "${filePath}"`;
+    } else {
+      const safePath = filePath.replace(/'/g, "''");
+      cmd = `powershell -c "Add-Type -AssemblyName presentationCore; $player = New-Object System.Windows.Media.MediaPlayer; $player.Open('${safePath}'); $player.Play(); while($player.NaturalDuration.HasTimeSpan -eq $false) { Start-Sleep -Milliseconds 100 }; $duration = $player.NaturalDuration.TimeSpan.TotalSeconds; Start-Sleep -Seconds $duration; $player.Close()"`;
+    }
+    await execAsync(cmd, { timeout: 30000, windowsHide: true });
   }
 
   // ─── Step 4: Agent 语音播报配置 ──────────────────────
