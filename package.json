@@ -1,7 +1,7 @@
-{
+﻿{
   "name": "openclaw-kkclaw",
   "version": "3.0.0",
-  "description": "🦞 openclaw-kkclaw - Desktop visualization companion for OpenClaw with fluid glass orb, 7-emotion system, and voice cloning",
+  "description": "🦞 openclaw-kkclaw - Desktop visualization companion for OpenClaw with fluid glass orb, 14-emotion system, and voice cloning",
   "main": "main.js",
   "scripts": {
     "start": "electron .",

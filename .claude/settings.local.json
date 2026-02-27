@@ -40,7 +40,13 @@
       "Bash(npm cache clean:*)",
       "Bash(tee:*)",
       "Bash(cmd //c:*)",
-      "Bash(true:*)"
+      "Bash(true:*)",
+      "mcp__chrome-devtools__press_key",
+      "mcp__chrome-devtools__evaluate_script",
+      "Bash(head:*)",
+      "Bash(gh api:*)",
+      "mcp__chrome-devtools__navigate_page",
+      "Bash(python:*)"
     ]
   }
 }

@@ -83,15 +83,23 @@ def main():
             print("ERROR: 合成结果为空", file=sys.stderr)
             sys.exit(1)
         
-        # 确保输出目录存在
-        output_dir = os.path.dirname(os.path.abspath(args.output))
+        # 确保输出目录存在（修复 ENOTDIR 错误）
+        output_path = os.path.abspath(args.output)
+        output_dir = os.path.dirname(output_path)
+        
+        # 如果 output_dir 是文件，删除它
+        if os.path.exists(output_dir) and os.path.isfile(output_dir):
+            print(f"WARNING: {output_dir} 是文件而非目录，正在删除", file=sys.stderr)
+            os.remove(output_dir)
+        
+        # 创建目录
         os.makedirs(output_dir, exist_ok=True)
         
-        with open(args.output, 'wb') as f:
+        with open(output_path, 'wb') as f:
             f.write(audio)
         
         # 输出文件路径（供 Node.js 捕获）
-        print(os.path.abspath(args.output))
+        print(output_path)
         
     except Exception as e:
         print(f"ERROR: {e}", file=sys.stderr)

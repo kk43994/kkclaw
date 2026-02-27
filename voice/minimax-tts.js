@@ -21,6 +21,13 @@ class MiniMaxTTS {
 
     initTempDir() {
         try {
+            // 如果 tempDir 是文件，删除它
+            if (fs.existsSync(this.tempDir) && fs.statSync(this.tempDir).isFile()) {
+                console.warn(`[MiniMax TTS] ⚠️ ${this.tempDir} 是文件而非目录，正在删除`);
+                fs.unlinkSync(this.tempDir);
+            }
+            
+            // 创建目录
             if (!fs.existsSync(this.tempDir)) {
                 fs.mkdirSync(this.tempDir, { recursive: true });
             }

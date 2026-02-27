@@ -7,7 +7,7 @@
     <meta name="description" content="KKClaw: Desktop visualization companion for OpenClaw with fluid glass orb pet, 14-emotion system, voice cloning (MiniMax/CosyVoice), Setup Wizard, and real-time WebSocket sync.">
     <meta name="keywords" content="openclaw, desktop pet, AI assistant, OpenClaw extension, Electron, TTS, voice cloning, desktop companion, AI coding">
     <meta property="og:title" content="openclaw-kkclaw — Desktop Visualization Companion for OpenClaw">
-    <meta property="og:description" content="Desktop visualization companion for OpenClaw - Fluid glass orb pet, 7-emotion system, voice cloning, and real-time WebSocket sync.">
+    <meta property="og:description" content="Desktop visualization companion for OpenClaw - Fluid glass orb pet, 14-emotion system, voice cloning, and real-time WebSocket sync.">
     <meta property="og:image" content="images/v2-preview.jpg">
     <meta property="og:type" content="website">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦞</text></svg>">
@@ -755,9 +755,9 @@
         .community-section { background: var(--bg-alt); border-top: 1px solid var(--card-border); }
         .community-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 2rem;
-            max-width: 700px;
+            max-width: 960px;
             margin: 0 auto;
         }
         .community-card {
@@ -772,10 +772,13 @@
         .community-card h4 { font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; }
         .community-card p { font-size: 0.82rem; color: var(--text-dim); margin-bottom: 1rem; }
         .community-card img {
-            width: 200px;
+            width: 160px;
             height: auto;
             border-radius: 12px;
             border: 1px solid var(--card-border);
+        }
+        @media (max-width: 768px) {
+            .community-grid { grid-template-columns: 1fr; max-width: 360px; }
         }
 
         /* ===== Footer ===== */
@@ -979,11 +982,11 @@
                 </div>
 
             <h1>openclaw-kkclaw</h1>
-            <p class="tagline en">Desktop visualization companion for OpenClaw - Fluid glass orb pet, 7-emotion system, voice cloning, and real-time WebSocket sync.</p>
-            <p class="tagline zh">OpenClaw 桌面可视化伴侣 — 流体玻璃球宠物、7情绪系统、声音克隆、实时 WebSocket 同步。</p>
+            <p class="tagline en">Desktop visualization companion for OpenClaw - Fluid glass orb pet, 14-emotion system, voice cloning, and real-time WebSocket sync.</p>
+            <p class="tagline zh">OpenClaw 桌面可视化伴侣 — 流体玻璃球宠物、14情绪系统、声音克隆、实时 WebSocket 同步。</p>
 
             <div class="badges">
-                <span class="badge badge-primary">v2.2.0</span>
+                <span class="badge badge-primary">v3.0.0</span>
                 <span class="badge badge-green">7×24 Stable</span>
                 <span class="badge badge-blue">Windows + macOS</span>
                 <span class="badge badge-primary">Electron 28</span>
@@ -1053,7 +1056,7 @@
         </div>
     </div>
 
-    <!-- What's New in v2.2.0 -->
+    <!-- What's New in v3.0.0 -->
     <section id="whats-new" style="padding: 5rem 2rem; background: linear-gradient(180deg, rgba(255,107,74,0.04) 0%, transparent 100%);">
         <div style="max-width:1100px; margin:0 auto;">
             <div class="section-header reveal">
@@ -1133,8 +1136,8 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                     <span class="en-inline">INTERACTIVE DEMO</span><span class="zh-inline">交互式演示</span>
                 </div>
-                <h2 class="section-title en">Try the Setup Wizard</h2>
-                <h2 class="section-title zh">体验配置向导</h2>
+                <h2 class="section-title en">Try the KKClaw 新手引导</h2>
+                <h2 class="section-title zh">体验 KKClaw 新手引导</h2>
                 <p class="section-subtitle en">Click through all 7 steps — Gateway, Model, Channels, TTS, Voice, Display, and Full Test.</p>
                 <p class="section-subtitle zh">点击体验全部 7 个步骤 — Gateway、模型、渠道、TTS、语音、显示、全链路测试。</p>
             </div>
@@ -1577,8 +1580,21 @@ node kkclaw-hotswitch.js --restart</code></pre>
                     <p class="zh">微信 AI Coding 技术交流群</p>
                     <img src="images/ai-coding-qr.jpg" alt="WeChat Group QR" loading="lazy">
                     <p style="margin-top:0.5rem;font-size:0.72rem;color:var(--text-muted)">
-                        <span class="en-inline">QR valid for 7 days</span>
-                        <span class="zh-inline">二维码 7 天内有效</span>
+                        <span class="en-inline">Scan to join</span>
+                        <span class="zh-inline">扫码入群</span>
+                    </p>
+                </div>
+                <div class="community-card">
+                    <h4 class="en">Discord</h4><h4 class="zh">Discord 社区</h4>
+                    <p class="en">Chat with the developer directly</p>
+                    <p class="zh">和开发者直接交流</p>
+                    <a href="https://discord.com/users/reribth_75722" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:0.5rem;margin:1.2rem 0;padding:0.6rem 1.4rem;background:#5865F2;color:#fff;border-radius:8px;font-weight:600;font-size:0.9rem;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.373-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+                        <span class="en-inline">Join Discord</span><span class="zh-inline">加入 Discord</span>
+                    </a>
+                    <p style="margin-top:0;font-size:0.72rem;color:var(--text-muted)">
+                        <span class="en-inline">reribth_75722</span>
+                        <span class="zh-inline">reribth_75722</span>
                     </p>
                 </div>
                 <div class="community-card">

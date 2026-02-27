@@ -1,7 +1,7 @@
----
+﻿---
 name: kkclaw
 description: 给你的 AI Agent 一个桌面身体 — 可视化情绪球体 + 语音交互 + 跨平台支持（Windows + macOS）
-version: 2.1.0
+version: 3.0.0
 author: xiao-k-assistant
 tags: [desktop-pet, electron, tts, voice, emotion, openclaw, visualization, cross-platform]
 ---
@@ -12,8 +12,12 @@ tags: [desktop-pet, electron, tts, voice, emotion, openclaw, visualization, cros
 
 ## 功能特性
 
+- u{1F9D9} **Setup Wizard** u{2014} 首次运行引导配置，3分钟上手
+- u{1F512} **safeStorage 加密** u{2014} API Key 本地加密存储，不再明文
+- u{1F3AD} **人设定制** u{2014} SOUL.md 自定义 AI 性格和说话风格
+
 - 🎵 **声音系统** — MiniMax 声音克隆 + CosyVoice + Edge TTS 三级降级，永不失声
-- 👀 **情绪表达** — 7种情绪色彩（idle/happy/talking/thinking/sleepy/surprised/offline）+ 15种眼睛微表情
+- 👀 **情绪表达** — 14种情绪（idle/happy/talking/thinking/sleepy/surprised/offline）+ 15种眼睛微表情
 - 🧠 **Gateway 同步** — WebSocket 实时同步 OpenClaw Agent 状态，毫秒级响应
 - 💪 **7x24 可靠** — 自动恢复、健康评分监控、Switch Logger
 - 🖥️ **轻量渲染** — 纯 HTML/CSS/JS 球体，CSS radial-gradient 琉璃质感，不依赖框架
@@ -37,9 +41,9 @@ npm start
 ```
 
 或下载安装包：
-- **Windows:** https://github.com/kk43994/kkclaw/releases/download/v2.1.0/KKClaw-Desktop-Pet-2.1.0-Setup.exe
-- **macOS (Intel):** https://github.com/kk43994/kkclaw/releases/download/v2.1.0/KKClaw-Desktop-Pet-2.1.0-x64.dmg
-- **macOS (Apple Silicon):** https://github.com/kk43994/kkclaw/releases/download/v2.1.0/KKClaw-Desktop-Pet-2.1.0-arm64.dmg
+- **Windows:** https://github.com/kk43994/kkclaw/releases/download/v3.0.0/KKClaw-Desktop-Pet-2.1.0-Setup.exe
+- **macOS (Intel):** https://github.com/kk43994/kkclaw/releases/download/v3.0.0/KKClaw-Desktop-Pet-2.1.0-x64.dmg
+- **macOS (Apple Silicon):** https://github.com/kk43994/kkclaw/releases/download/v3.0.0/KKClaw-Desktop-Pet-2.1.0-arm64.dmg
 
 ## 配置
 
@@ -68,4 +72,4 @@ kkclaw/
 
 - GitHub: https://github.com/kk43994/kkclaw
 - Landing Page: https://kk43994.github.io/kkclaw/
-- 版本: v2.1.0
+- 版本: v3.0.0

@@ -1,8 +1,19 @@
-// OpenClaw 连接模块
+﻿// OpenClaw 连接模块
 const path = require('path');
 const fs = require('fs');
 
-const OPENCLAW_HOST = 'http://127.0.0.1:18789';
+// 从 openclaw.json 读取端口，fallback 到默认 18789
+function getOpenClawHost() {
+    try {
+        const configPath = path.join(process.env.HOME || process.env.USERPROFILE, '.openclaw', 'openclaw.json');
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        const port = config.gateway?.port || 18789;
+        return `http://127.0.0.1:${port}`;
+    } catch (e) {
+        return 'http://127.0.0.1:18789';
+    }
+}
+const OPENCLAW_HOST = getOpenClawHost();
 
 // 从 openclaw.json 自动读取 token
 function getOpenClawToken() {

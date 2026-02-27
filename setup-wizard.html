@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -408,6 +408,124 @@
     margin-bottom: 10px;
     line-height: 1.5;
   }
+  
+  /* ===== TTS Check Results ===== */
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    border: 2px solid var(--parchment-dark);
+    border-radius: 2px;
+    background: var(--parchment);
+    transition: all 0.2s;
+  }
+  .check-icon {
+    font-size: 16px;
+    min-width: 20px;
+  }
+  .check-name {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+  .check-status {
+    font-size: 11px;
+    color: var(--text-medium);
+  }
+  .fix-btn {
+    padding: 3px 10px;
+    font-size: 10px;
+    border: 2px solid var(--gold);
+    border-radius: 2px;
+    background: var(--gold);
+    color: var(--wood-dark);
+    cursor: pointer;
+    font-weight: 700;
+    transition: all 0.2s;
+  }
+  .fix-btn:hover {
+    background: var(--gold-dark);
+    border-color: var(--gold-dark);
+  }
+  .fix-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .recommendation {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  /* ===== Command block with copy ===== */
+  .cmd-block {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--wood-dark);
+    border-radius: 3px;
+    padding: 6px 10px;
+    margin: 6px 0;
+    font-family: 'Courier New', monospace;
+  }
+  .cmd-block code {
+    flex: 1;
+    color: #a8ff78;
+    font-size: 11px;
+    word-break: break-all;
+    user-select: all;
+  }
+  .copy-btn {
+    flex-shrink: 0;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 2px;
+    color: #ccc;
+    cursor: pointer;
+    padding: 2px 6px;
+    font-size: 11px;
+    transition: all 0.2s;
+  }
+  .copy-btn:hover {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border-color: rgba(255,255,255,0.4);
+  }
+
+  /* ===== 龙虾灵魂注入动画 ===== */
+  @keyframes soul-pulse {
+    from { transform: scale(1); }
+    to   { transform: scale(1.08); }
+  }
+  @keyframes soul-born {
+    0%   { transform: scale(1.2); }
+    30%  { transform: scale(0.9); }
+    60%  { transform: scale(1.25); }
+    80%  { transform: scale(1.05); }
+    100% { transform: scale(1.15); }
+  }
+  @keyframes ring-expand {
+    0%   { transform: translate(-50%,-50%) scale(0.8); opacity: 0.8; }
+    100% { transform: translate(-50%,-50%) scale(1.6); opacity: 0; }
+  }
+  @keyframes particle-float {
+    0%   { transform: translate(0,0); opacity: 1; }
+    100% { transform: translate(var(--tx,0),calc(var(--ty,0) - 40px)); opacity: 0; }
+  }
+  @keyframes burst-particle {
+    0%   { transform: translate(-50%,-50%); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--tx,0)), calc(-50% + var(--ty,0))); opacity: 0; }
+  }
+  @keyframes star-twinkle {
+    from { opacity: 0.1; }
+    to   { opacity: 0.6; }
+  }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
 
   /* ===== Upload area ===== */
   .upload-area {
@@ -749,7 +867,8 @@
 </div>
 
 <div class="progress-bar">
-  <div class="progress-dot active" data-step="0" data-label="Gateway" onclick="jumpToStep(0)"></div>
+  <div class="progress-dot active" data-step="-1" data-label="Env" onclick="jumpToStep(-1)"></div>
+  <div class="progress-dot" data-step="0" data-label="Gateway" onclick="jumpToStep(0)"></div>
   <div class="progress-dot" data-step="1" data-label="Model" onclick="jumpToStep(1)"></div>
   <div class="progress-dot" data-step="2" data-label="Channels" onclick="jumpToStep(2)"></div>
   <div class="progress-dot" data-step="3" data-label="TTS" onclick="jumpToStep(3)"></div>
@@ -772,9 +891,9 @@
 
 <script>
 // ===== State =====
-let currentStep = 0;
-const totalSteps = 7;
-let maxVisitedStep = 0;
+let currentStep = -1;
+  const totalSteps = 8;
+  let maxVisitedStep = -1;
 let stepData = {
   gatewayConnected: false,
   gatewayToken: '',
@@ -919,15 +1038,26 @@ function clearChat() {
 }
 
 // ===== Progress =====
+function resetStepSkipFlags(step) {
+  // 重置目标步骤的软验证标志，使下次进入该步骤时警告重新生效
+  switch (step) {
+    case 0: delete stepData._gatewaySkipWarned; break;
+    case 1: delete stepData._modelSkipWarned; break;
+    case 3: delete stepData._ttsSkipWarned; break;
+    case 4: delete stepData._agentSkipWarned; break;
+  }
+}
+
 function updateProgress() {
   if (currentStep > maxVisitedStep) maxVisitedStep = currentStep;
   document.querySelectorAll('.progress-dot').forEach((dot, i) => {
     dot.classList.remove('active', 'done');
-    if (i < currentStep) dot.classList.add('done');
-    else if (i === currentStep) dot.classList.add('active');
+    const dotStep = parseInt(dot.dataset.step);
+      if (dotStep < currentStep) dot.classList.add('done');
+    else if (dotStep === currentStep) dot.classList.add('active');
   });
-  document.getElementById('stepLabel').textContent = `Step ${currentStep + 1}/${totalSteps}`;
-  document.getElementById('btnPrev').style.visibility = currentStep > 0 ? 'visible' : 'hidden';
+  document.getElementById('stepLabel').textContent = currentStep === -1 ? `环境检测 / ${totalSteps}步` : `Step ${currentStep + 1}/${totalSteps - 1}`;
+  document.getElementById('btnPrev').style.visibility = currentStep > -1 ? 'visible' : 'hidden';
 
   if (currentStep === totalSteps - 1) {
     document.getElementById('btnNext').textContent = '完成';
@@ -940,6 +1070,7 @@ function jumpToStep(step) {
   // Only allow jumping to already-visited steps
   if (step > maxVisitedStep || step === currentStep) return;
   currentStep = step;
+  resetStepSkipFlags(step);
   updateProgress();
   clearChat();
   renderStep(currentStep);
@@ -954,6 +1085,7 @@ async function nextStep() {
     // Save current step data
     await saveCurrentStep();
     currentStep++;
+    resetStepSkipFlags(currentStep);
     // Save wizard progress
     wizardAPI.invoke('wizard-save-progress', currentStep).catch(() => {});
     updateProgress();
@@ -999,17 +1131,33 @@ function validateCurrentStep() {
         }
       }
       return true;
+    case 4: // Agent Voice
+      if (!stepData._agentVoiceConfigured) {
+        addBubble('⚠️ 还没生成 AGENTS.md！请点「🚀 开始配置」（再点一次强制跳过）', false);
+        if (stepData._agentSkipWarned) return true;
+        stepData._agentSkipWarned = true;
+        return false;
+      }
+      return true;
     default:
       return true;
   }
 }
 
-function prevStep() {
+async function prevStep() {
   if (currentStep > 0) {
+    await saveCurrentStep();
     currentStep--;
+    resetStepSkipFlags(currentStep);
     updateProgress();
     clearChat();
     renderStep(currentStep);
+  } else if (currentStep === 0) {
+    currentStep = -1;
+    resetStepSkipFlags(-1);
+    updateProgress();
+    clearChat();
+    renderStep(-1);
   }
 }
 
@@ -1064,6 +1212,7 @@ function collectDisplaySettings() {
 // ===== Render Steps =====
 async function renderStep(step) {
   switch (step) {
+    case -1: await renderEnvCheck(); break;
     case 0: await renderStep1(); break;
     case 1: await renderStepModel(); break;
     case 2: await renderStep2(); break;
@@ -1074,7 +1223,284 @@ async function renderStep(step) {
   }
 }
 
-// ─── Step 1: Gateway ───────────────────────
+// ─── Step 0 (-1): 环境预检 ───────────────────────
+async function renderEnvCheck() {
+  await addBubble('你好呀~ 我是小K！(^_^) 欢迎使用 KKClaw 桌面宠物~');
+  await addBubble('在正式配置之前，让我先帮你检测一下环境依赖，确保一切都准备好了！');
+
+  addCard(`
+    <h3>🔍 环境预检</h3>
+    <p style="font-size:11px;color:var(--text-medium);margin-bottom:10px;">正在检测运行环境，请稍候...</p>
+
+    <div class="check-item" id="env-node">
+      <span class="check-icon">⏳</span>
+      <span class="check-name">Node.js 版本</span>
+      <span class="check-status">检测中...</span>
+    </div>
+
+    <div class="check-item" id="env-openclaw">
+      <span class="check-icon">⏳</span>
+      <span class="check-name">OpenClaw Gateway</span>
+      <span class="check-status">检测中...</span>
+    </div>
+
+    <div class="check-item" id="env-gateway">
+      <span class="check-icon">⏳</span>
+      <span class="check-name">Gateway 运行状态</span>
+      <span class="check-status">检测中...</span>
+    </div>
+
+    <div class="check-item" id="env-python">
+      <span class="check-icon">⏳</span>
+      <span class="check-name">Python 3.6+（可选，用于 EdgeTTS/CosyVoice）</span>
+      <span class="check-status">检测中...</span>
+    </div>
+
+    <div id="env-summary" class="hidden" style="margin-top:12px;padding:10px;border-radius:4px;border:2px solid;font-size:12px;"></div>
+
+    <div id="env-actions" class="hidden" style="margin-top:12px;"></div>
+  `);
+
+  try {
+    const r = await wizardAPI.invoke('wizard-env-check');
+
+    // Node.js
+    setEnvItem('env-node', r.node.ok,
+      r.node.ok ? `Node.js ${r.node.version} ✓` : `❌ ${r.node.error}`,
+      r.node.ok ? null : { label: '前往下载 Node.js', action: () => wizardAPI.invoke('open-external', 'https://nodejs.org/') }
+    );
+
+    // OpenClaw
+    setEnvItem('env-openclaw', r.openclaw.ok,
+      r.openclaw.ok ? `OpenClaw 已安装 ${r.openclaw.version ? '(' + r.openclaw.version + ')' : ''}` : `未检测到 OpenClaw，请先安装`,
+      r.openclaw.ok ? null : {
+        label: '一键安装 OpenClaw',
+        cmdHint: 'npm install -g openclaw',
+        action: async (btn) => {
+          btn.textContent = '安装中...'; btn.disabled = true;
+          await addBubble('正在安装 OpenClaw，请稍候（约30秒）...');
+          const result = await wizardAPI.invoke('wizard-install-openclaw');
+          if (result.success) {
+            await addBubble('✅ OpenClaw 安装成功！');
+            renderEnvCheck();
+          } else {
+            await addBubble(`❌ 安装失败，请手动运行：`);
+            btn.textContent = '一键安装 OpenClaw'; btn.disabled = false;
+          }
+        }
+      }
+    );
+
+    // Gateway 运行状态
+    setEnvItem('env-gateway', r.gateway.ok,
+      r.gateway.ok ? `Gateway 运行中（端口 ${r.gateway.port}）✓` : `❌ ${r.gateway.error}`,
+      r.gateway.ok ? null : {
+        label: '一键启动 Gateway',
+        action: async (btn) => {
+          btn.textContent = '启动中...'; btn.disabled = true;
+          await addBubble('正在启动 Gateway，最长等待20秒...');
+          const result = await wizardAPI.invoke('wizard-start-gateway');
+          if (result.success) {
+            await addBubble('✅ Gateway 启动成功！');
+            setEnvItem('env-gateway', true, 'Gateway 运行中 ✓', null);
+            updateEnvSummary(r, true);
+          } else {
+            await addBubble(`❌ 启动失败: ${result.error}`);
+            btn.textContent = '一键启动 Gateway'; btn.disabled = false;
+          }
+        }
+      }
+    );
+
+    // Python
+    setEnvItem('env-python',
+      r.python.ok ? true : 'warn',
+      r.python.ok
+        ? `${r.python.version} (${r.python.command}) ✓  EdgeTTS / CosyVoice 可用`
+        : `⚠️ ${r.python.error}`,
+      r.python.ok ? null : {
+        label: '前往下载 Python',
+        action: () => wizardAPI.invoke('open-external', 'https://www.python.org/downloads/')
+      }
+    );
+
+    updateEnvSummary(r);
+
+  } catch (err) {
+    await addBubble(`检测出错了: ${err.message} (>_<)`);
+  }
+}
+
+// ===== 错误人话翻译 =====
+function friendlyError(raw) {
+  if (!raw) return '';
+  const msg = String(raw);
+  // 网络/连接类
+  if (msg.includes('ECONNREFUSED') && msg.includes('18789')) return 'Gateway 没有运行，请先启动 Gateway';
+  if (msg.includes('ECONNREFUSED')) return '连接被拒绝，请检查服务是否运行';
+  if (msg.includes('ETIMEDOUT') || msg.includes('timeout')) return '网络超时，请检查网络连接或代理设置';
+  if (msg.includes('ENOTFOUND')) return 'DNS 解析失败，请检查网络连接';
+  if (msg.includes('ECONNRESET')) return '连接被重置，可能是网络不稳定';
+  if (msg.includes('ENETUNREACH')) return '网络不可达，请检查网络连接';
+  // API 鉴权类
+  if (msg.includes('401') || msg.includes('Unauthorized')) return 'API Key 无效或已过期，请检查是否完整复制';
+  if (msg.includes('403') || msg.includes('Forbidden')) return 'API Key 权限不足，请确认账户余额或权限';
+  if (msg.includes('429') || msg.includes('rate limit') || msg.includes('Too Many Requests')) return '请求过于频繁（限速），请稍等几秒再试';
+  if (msg.includes('402') || msg.includes('Payment Required')) return '账户余额不足，请充值后重试';
+  if (msg.includes('500') || msg.includes('Internal Server Error')) return 'API 服务器错误，请稍后重试';
+  if (msg.includes('503') || msg.includes('Service Unavailable')) return 'API 服务暂时不可用，请稍后重试';
+  // Node.js/文件类
+  if (msg.includes('ENOENT')) return '文件或目录不存在，请检查安装是否完整';
+  if (msg.includes('ENOTDIR')) return '路径错误（文件当成了目录），请重启应用';
+  if (msg.includes('EACCES') || msg.includes('EPERM')) return '权限不足，请以管理员身份运行';
+  if (msg.includes('ENOSPC')) return '磁盘空间不足，请清理磁盘后重试';
+  // OpenClaw 类
+  if (msg.includes('openclaw') && msg.includes('不存在')) return 'OpenClaw 未安装，请先运行: npm install -g openclaw';
+  if (msg.includes('not found') && msg.includes('openclaw')) return 'OpenClaw 命令未找到，请重新安装';
+  if (msg.includes('port') && msg.includes('18789')) return 'Gateway 端口 18789 被占用，请关闭占用程序或重启电脑';
+  // Python 类
+  if (msg.includes('No module named')) {
+    const m = msg.match(/No module named '?([^'"\s]+)'?/);
+    const mod = m?.[1] || '模块';
+    return `Python 包 "${mod}" 未安装，请运行: pip install ${mod}`;
+  }
+  if (msg.includes('python') && msg.includes('not found')) return 'Python 未安装或不在 PATH 中，请安装 Python 3.6+';
+  // 安装类
+  if (msg.includes('npm ERR') && msg.includes('EACCES')) return 'npm 权限不足，请以管理员身份运行命令行';
+  if (msg.includes('npm ERR') && msg.includes('network')) return 'npm 网络错误，请检查网络或换源: npm config set registry https://registry.npmmirror.com';
+  // 返回原始（截断）
+  return msg.length > 80 ? msg.substring(0, 80) + '...' : msg;
+}
+
+// ===== 一键复制命令 =====
+function copyCmd(cmd, btnEl) {
+  navigator.clipboard.writeText(cmd).then(() => {
+    const orig = btnEl.textContent;
+    btnEl.textContent = '✅ 已复制';
+    btnEl.style.background = 'var(--grass-light)';
+    btnEl.style.color = '#fff';
+    setTimeout(() => {
+      btnEl.textContent = orig;
+      btnEl.style.background = '';
+      btnEl.style.color = '';
+    }, 1500);
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = cmd;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btnEl.textContent = '✅ 已复制';
+    setTimeout(() => { btnEl.textContent = '📋'; }, 1500);
+  });
+}
+
+// 生成带复制按钮的命令块
+function cmdBlock(cmd, lang = '') {
+  const id = 'cmd-' + Math.random().toString(36).substr(2, 8);
+  return `
+    <div class="cmd-block" id="${id}">
+      <code>${escapeHtml(cmd)}</code>
+      <button class="copy-btn" onclick="copyCmd('${cmd.replace(/'/g, "\\'")}', this)" title="复制命令">📋</button>
+    </div>
+  `;
+}
+
+function setEnvItem(id, status, text, action) {
+  const item = document.getElementById(id);
+  if (!item) return;
+
+  const icon = item.querySelector('.check-icon');
+  const statusEl = item.querySelector('.check-status');
+
+  // 移除旧的修复按钮
+  const oldBtn = item.querySelector('.fix-btn');
+  if (oldBtn) oldBtn.remove();
+
+  if (status === true) {
+    icon.textContent = '✅';
+    statusEl.textContent = text;
+    statusEl.style.color = 'var(--green)';
+    item.style.background = '#e8f5e9';
+    item.style.borderColor = 'var(--grass-light)';
+  } else if (status === 'warn') {
+    icon.textContent = '⚠️';
+    statusEl.textContent = text;
+    statusEl.style.color = '#f57f17';
+    item.style.background = '#fff8e1';
+    item.style.borderColor = '#ffe082';
+  } else {
+    icon.textContent = '❌';
+    const errMsg = friendlyError(text.replace(/^❌\s*/, ''));
+    statusEl.textContent = '❌ ' + errMsg;
+    statusEl.style.color = 'var(--red)';
+    item.style.background = '#fce4ec';
+    item.style.borderColor = '#ef9a9a';
+  }
+
+  // 按钮在 warn 和 false 两种状态都显示（true 时不显示）
+  if (action && status !== true) {
+    // 如果有命令提示，显示带复制按钮的命令块
+    if (action.cmdHint) {
+      const cmdDiv = document.createElement('div');
+      cmdDiv.innerHTML = cmdBlock(action.cmdHint);
+      cmdDiv.style.marginTop = '6px';
+      item.appendChild(cmdDiv);
+    }
+    
+    const btn = document.createElement('button');
+    btn.className = 'fix-btn';
+    btn.textContent = action.label;
+    btn.onclick = () => action.action(btn);
+    item.appendChild(btn);
+  }
+}
+
+function updateEnvSummary(r, gatewayJustStarted = false) {
+  const summary = document.getElementById('env-summary');
+  const actions = document.getElementById('env-actions');
+  if (!summary) return;
+
+  const gatewayOk = gatewayJustStarted || r.gateway.ok;
+  const coreOk = r.node.ok && r.openclaw.ok && gatewayOk;
+
+  summary.classList.remove('hidden');
+
+  if (coreOk) {
+    summary.style.background = '#e8f5e9';
+    summary.style.borderColor = 'var(--grass-light)';
+    summary.innerHTML = `
+      <strong>✅ 环境检测通过！</strong> 可以继续配置了~
+      ${!r.python.ok ? '<br><span style="color:#f57f17;">⚠️ Python 未安装，但这是可选的。如果需要 EdgeTTS 或 CosyVoice，请先安装 Python。</span>' : ''}
+    `;
+    actions.classList.remove('hidden');
+    actions.innerHTML = `
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="goNext()">下一步：配置 Gateway →</button>
+      </div>
+    `;
+  } else {
+    summary.style.background = '#fce4ec';
+    summary.style.borderColor = '#ef9a9a';
+    const missing = [];
+    if (!r.node.ok) missing.push('Node.js 18+');
+    if (!r.openclaw.ok) missing.push('OpenClaw');
+    if (!gatewayOk) missing.push('Gateway 运行中');
+    summary.innerHTML = `
+      <strong>❌ 环境未就绪</strong> — 缺少: ${missing.join('、')}<br>
+      <span style="color:var(--text-medium);">请按照上方提示完成安装后，点击"重新检测"</span>
+    `;
+    actions.classList.remove('hidden');
+    actions.innerHTML = `
+      <div class="btn-row">
+        <button class="btn btn-test" onclick="renderEnvCheck()">🔄 重新检测</button>
+        ${(r.node.ok && r.openclaw.ok) ? '<button class="btn btn-primary" onclick="goNext()">跳过，继续配置 →</button>' : ''}
+      </div>
+    `;
+  }
+}
 async function renderStep1() {
   await addBubble('你好呀~ 我是小K！(^_^) 欢迎使用 KKClaw 桌面宠物~');
   await addBubble('让我先帮你检查一下 OpenClaw Gateway 的连接状态吧！');
@@ -1282,7 +1708,7 @@ async function renderStepModel() {
 
     <div style="margin-top: 8px; padding: 8px 12px; border-radius: 2px; border: 2px solid var(--wood-light); background: linear-gradient(135deg, #f0e6ff, #e8f0ff); font-size: 11px; color: var(--text-medium); line-height: 1.6;">
       如果没有合适的可用套餐，也可以联系 KK 提供 Gemini / Claude / Codex 满血双ISP稳定不降智的 Coding Plan 拼车服务~<br>
-      <a href="#" onclick="wizardAPI.openExternal('https://discord.com/users/reribth_75722'); return false;" style="color: #7c6bf0; font-weight: 600; text-decoration: underline; cursor: pointer;">Discord: reribth_75722</a>
+      <a href="#" onclick="wizardAPI.invoke('open-external', 'https://discord.com/users/reribth_75722'); return false;" style="color: #7c6bf0; font-weight: 600; text-decoration: underline; cursor: pointer;">Discord: reribth_75722</a>
     </div>
 
     <div class="btn-row">
@@ -1488,7 +1914,55 @@ async function renderStep3() {
       </div>
     </div>
 
-    <div id="env-python" class="env-check">检测 Python 环境中...</div>
+    <div id="env-python" class="env-check">检测 TTS 依赖中...</div>
+    
+    <!-- 快速试听区域 — 选完引擎立即显示 -->
+    <div id="quick-listen-area" class="hidden"></div>
+    
+    <!-- TTS 依赖检测结果 -->
+    <div id="tts-check-results" class="hidden" style="margin-top: 12px;">
+      <h3 style="font-size: 12px; margin-bottom: 8px;">🔍 TTS 引擎检测结果</h3>
+      
+      <div class="check-item" id="check-minimax">
+        <span class="check-icon">⏳</span>
+        <span class="check-name">MiniMax Speech</span>
+        <span class="check-status">检测中...</span>
+      </div>
+      
+      <div class="check-item" id="check-dashscope">
+        <span class="check-icon">⏳</span>
+        <span class="check-name">DashScope CosyVoice</span>
+        <span class="check-status">检测中...</span>
+      </div>
+      
+      <div class="check-item" id="check-python">
+        <span class="check-icon">⏳</span>
+        <span class="check-name">Python 环境</span>
+        <span class="check-status">检测中...</span>
+      </div>
+      
+      <div class="check-item" id="check-edgetts">
+        <span class="check-icon">⏳</span>
+        <span class="check-name">Edge TTS 包</span>
+        <span class="check-status">检测中...</span>
+      </div>
+      
+      <div class="check-item" id="check-dashscope-pkg">
+        <span class="check-icon">⏳</span>
+        <span class="check-name">DashScope 包</span>
+        <span class="check-status">检测中...</span>
+      </div>
+      
+      <div class="check-item" id="check-tempdir">
+        <span class="check-icon">⏳</span>
+        <span class="check-name">临时目录</span>
+        <span class="check-status">检测中...</span>
+      </div>
+      
+      <div class="recommendation" id="tts-recommendation" style="margin-top: 12px; padding: 10px; background: #e8f5e9; border: 2px solid var(--grass-light); border-radius: 4px;">
+        <strong>💡 推荐引擎:</strong> <span id="recommended-engine">检测中...</span>
+      </div>
+    </div>
 
     <div id="apikey-area" class="${stepData.ttsEngine === 'edge' ? 'hidden' : ''}" style="margin-top: 12px;">
       <div class="form-group">
@@ -1630,6 +2104,67 @@ function selectEngine(engine, cardEl) {
       cloneArea.classList.remove('hidden');
     }
   }
+
+  // 显示/更新试听按钮
+  updateQuickListenBtn(engine);
+}
+
+// 快速试听 — 选完引擎就显示
+function updateQuickListenBtn(engine) {
+  const area = document.getElementById('quick-listen-area');
+  if (!area) return;
+  area.classList.remove('hidden');
+  const needsKey = engine !== 'edge';
+  area.innerHTML = `
+    <div style="margin-top:12px;padding:10px;background:#e8f0fe;border:2px solid #7c9fcf;border-radius:4px;">
+      <div style="font-size:12px;font-weight:600;margin-bottom:6px;">🔊 快速试听</div>
+      <div style="font-size:11px;color:var(--text-medium);margin-bottom:8px;">${needsKey ? '填好 API Key 后点这里马上听效果' : '免费引擎，无需 API Key，直接试听'}</div>
+      <div class="btn-row">
+        <button class="btn btn-test" onclick="quickListen()" id="btn-quick-listen">🔊 试听一下</button>
+      </div>
+      <div id="quick-listen-result" style="margin-top:8px;font-size:11px;"></div>
+    </div>
+  `;
+}
+
+async function quickListen() {
+  const btn = document.getElementById('btn-quick-listen');
+  const result = document.getElementById('quick-listen-result');
+  if (!btn || !result) return;
+  btn.disabled = true; btn.textContent = '⏳ 生成中...';
+  result.textContent = ''; result.style.color = 'var(--text-medium)';
+  const apiKeyEl = document.getElementById('tts-apikey');
+  const apiKey = apiKeyEl?.value.trim() || '';
+  const engine = stepData.ttsEngine;
+  if (engine !== 'edge' && !apiKey) {
+    result.textContent = '⚠️ 请先填写 API Key，再来试听哦~';
+    result.style.color = '#f57f17';
+    btn.disabled = false; btn.textContent = '🔊 试听一下'; return;
+  }
+  try {
+    const engineConfig = {
+      engine: engine === 'minimax-hd' ? 'minimax' : (engine === 'cosyvoice' ? 'dashscope' : engine),
+      model: engine === 'minimax-hd' ? 'speech-2.8-hd' : engine === 'minimax' ? 'speech-2.5-turbo-preview' : '',
+      apiKey: apiKey,
+      text: '你好！我是小K，你的AI桌面助手，很高兴认识你~'
+    };
+    const testResult = await wizardAPI.invoke('wizard-test-tts', engineConfig);
+    if (testResult.success) {
+      result.textContent = '✅ 试听成功！听到声音了吗？';
+      result.style.color = 'var(--green)';
+      btn.textContent = '🔊 再听一次';
+    } else {
+      const errMsg = friendlyError(testResult.error || '未知错误');
+      result.innerHTML = `❌ ${errMsg}`;
+      if (testResult.fix) result.innerHTML += '<br>' + cmdBlock(testResult.fix);
+      result.style.color = 'var(--red)';
+      btn.textContent = '🔊 试听一下';
+    }
+  } catch (err) {
+    result.textContent = '❌ ' + friendlyError(err.message);
+    result.style.color = 'var(--red)'; btn.textContent = '🔊 试听一下';
+  }
+  btn.disabled = false;
 }
 
 function toggleApiKeyVisibility() {
@@ -1663,6 +2198,135 @@ async function checkPythonEnv() {
   } catch {
     el.className = 'env-check err';
     el.textContent = '✗ Python 环境检测失败';
+  }
+  
+  // 🔍 启动完整 TTS 依赖检测
+  checkTTSDependencies();
+}
+
+// 🔍 完整 TTS 依赖检测
+async function checkTTSDependencies() {
+  const resultsDiv = document.getElementById('tts-check-results');
+  resultsDiv.classList.remove('hidden');
+  
+  try {
+    const apiKeyEl = document.getElementById('tts-apikey');
+    const config = {
+      minimaxApiKey: stepData.ttsEngine.startsWith('minimax') ? (apiKeyEl?.value.trim() || '') : '',
+      dashscopeApiKey: stepData.ttsEngine === 'cosyvoice' ? (apiKeyEl?.value.trim() || '') : ''
+    };
+    
+    const results = await wizardAPI.invoke('check-tts', config);
+    
+    // 更新各项检测结果
+    updateCheckItem('check-minimax', results.minimax);
+    updateCheckItem('check-dashscope', results.dashscope);
+    updateCheckItem('check-python', results.python);
+    updateCheckItem('check-edgetts', results.edgeTTS);
+    updateCheckItem('check-dashscope-pkg', results.dashscopePackage);
+    updateCheckItem('check-tempdir', results.tempDir);
+    
+    // 更新推荐引擎
+    const recommendEl = document.getElementById('recommended-engine');
+    const engineNames = {
+      'minimax': 'MiniMax Speech (最佳音质+情感)',
+      'dashscope': 'DashScope CosyVoice (音色克隆)',
+      'edge': 'Edge TTS (免费但音质一般)',
+      'none': '⚠️ 无可用TTS引擎'
+    };
+    recommendEl.textContent = engineNames[results.recommended] || results.recommended;
+    recommendEl.parentElement.style.background = results.recommended === 'none' ? '#ffebee' : '#e8f5e9';
+    recommendEl.parentElement.style.borderColor = results.recommended === 'none' ? '#ef5350' : 'var(--grass-light)';
+    
+  } catch (err) {
+    console.error('TTS检测失败:', err);
+    document.getElementById('tts-recommendation').innerHTML = `<strong>❌ 检测失败:</strong> ${err.message}`;
+  }
+}
+
+// 更新单个检测项
+function updateCheckItem(id, result) {
+  const item = document.getElementById(id);
+  if (!item) return;
+  
+  const icon = item.querySelector('.check-icon');
+  const status = item.querySelector('.check-status');
+  
+  if (result.available) {
+    icon.textContent = '✅';
+    status.textContent = result.version ? `v${result.version}` : '可用';
+    status.style.color = 'var(--green)';
+    item.style.background = '#e8f5e9';
+  } else {
+    icon.textContent = '❌';
+    const errMsg = friendlyError(result.error || '不可用');
+    status.textContent = errMsg;
+    status.style.color = 'var(--red)';
+    item.style.background = '#ffebee';
+    
+    // 如果有修复命令，添加带复制按钮的命令块 + 操作按钮
+    if (result.fix) {
+      // 如果 fix 是命令行（不是 http 链接）
+      if (!result.fix.startsWith('http')) {
+        const cmdDiv = document.createElement('div');
+        cmdDiv.innerHTML = cmdBlock(result.fix);
+        item.appendChild(cmdDiv);
+      }
+      
+      const fixBtn = document.createElement('button');
+      fixBtn.className = 'fix-btn';
+      fixBtn.textContent = result.fix.startsWith('http') ? '前往下载' : '一键安装';
+      fixBtn.onclick = () => handleTTSFix(id, result);
+      item.appendChild(fixBtn);
+    }
+  }
+}
+
+// 处理 TTS 修复
+async function handleTTSFix(checkId, result) {
+  const item = document.getElementById(checkId);
+  const fixBtn = item.querySelector('.fix-btn');
+  
+  if (fixBtn) {
+    fixBtn.textContent = '修复中...';
+    fixBtn.disabled = true;
+  }
+  
+  try {
+    if (checkId === 'check-edgetts') {
+      // 安装 edge-tts
+      const pythonCmd = result.fix.split(' ')[0]; // 提取 python 命令
+      const installResult = await wizardAPI.invoke('install-edge-tts', pythonCmd);
+      
+      if (installResult.success) {
+        await addBubble('✅ edge-tts 安装成功！');
+        checkTTSDependencies(); // 重新检测
+      } else {
+        await addBubble(`❌ 安装失败: ${installResult.error}\n\n请手动运行:\n${result.fix}`);
+      }
+    } else if (checkId === 'check-dashscope-pkg') {
+      // 安装 dashscope
+      const pythonCmd = result.fix.split(' ')[0];
+      const installResult = await wizardAPI.invoke('install-dashscope', pythonCmd);
+      
+      if (installResult.success) {
+        await addBubble('✅ dashscope 安装成功！');
+        checkTTSDependencies();
+      } else {
+        await addBubble(`❌ 安装失败: ${installResult.error}\n\n请手动运行:\n${result.fix}`);
+      }
+    } else if (checkId === 'check-python') {
+      // Python 未安装，打开下载页面
+      await addBubble('正在打开 Python 官网下载页面...');
+      wizardAPI.invoke('open-external', result.fix);
+    }
+  } catch (err) {
+    await addBubble(`修复失败: ${err.message}`);
+  } finally {
+    if (fixBtn) {
+      fixBtn.textContent = '一键修复';
+      fixBtn.disabled = false;
+    }
   }
 }
 
@@ -1820,73 +2484,92 @@ async function testTTS() {
   }
 }
 
-// ─── Step 4: Agent Voice ───────────────────────
+// ─── Step 4: 龙虾注灵魂 ───────────────────────
 async function renderStep4() {
-  await addBubble('现在来配置 Agent 语音播报吧！(^_^)');
+  // 🌀 第一阶段：神秘台词
+  await addBubble('现在是最重要的一步——(〃>_<;〃)');
+  await addBubble('我要为你的龙虾注入灵魂了！');
+  await addBubble('一只龙虾，刚从虚空中诞生...');
+  await addBubble('它什么都不知道，没有名字，没有记忆，没有使命');
+  await addBubble('但现在，你来了 ✨');
+  await addBubble('告诉我它的名字，告诉我你是谁——\n让我把这一切刻进它的灵魂 (｡•̀ᴗ-)✧');
 
-  // Auto-detect OpenClaw dir
+  // Auto-detect dir
   let detectedDir = '';
   try {
-    const result = await wizardAPI.invoke('wizard-detect-openclaw-dir');
-    detectedDir = result.dir || '';
+    const r = await wizardAPI.invoke('wizard-detect-openclaw-dir');
+    detectedDir = r.dir || '';
   } catch {}
 
-  if (detectedDir) {
-    await addBubble('找到了你的 OpenClaw 目录，已自动填入~ (o^_^o)');
-  } else {
-    await addBubble('没找到默认的 OpenClaw 目录，请手动指定路径 (o_O)');
-  }
-
   addCard(`
-    <h3>Agent 语音播报配置</h3>
-    <div class="form-group">
-      <label>OpenClaw 工作目录</label>
-      <input type="text" class="form-input" id="workspace-dir" placeholder="~/.openclaw/" value="${escapeHtml(detectedDir)}">
+    <h3 style="text-align:center;letter-spacing:3px;color:var(--wood-dark);font-size:14px;">
+      ✦ 龙虾灵魂定制 ✦
+    </h3>
+
+    <!-- 龙虾动画舞台 -->
+    <div id="soul-stage" style="text-align:center;margin:12px 0;padding:16px;background:linear-gradient(135deg,#1a0a2e,#0d1b2a);border-radius:6px;border:2px solid #4a2080;position:relative;overflow:hidden;min-height:120px;">
+      <!-- 背景星粒 -->
+      <div id="soul-stars" style="position:absolute;inset:0;pointer-events:none;"></div>
+      <!-- 龙虾SVG -->
+      <div id="soul-lobster" style="font-size:52px;transition:all 1.2s ease;filter:grayscale(100%) brightness(0.6);display:inline-block;">🦞</div>
+      <!-- 灵魂能量环 -->
+      <div id="soul-ring" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:80px;height:80px;border-radius:50%;border:2px solid transparent;transition:all 1s ease;pointer-events:none;"></div>
+      <!-- 状态文字 -->
+      <div id="soul-status-text" style="color:#888;font-size:11px;margin-top:8px;font-family:monospace;letter-spacing:1px;">灵魂容器 · 等待注入</div>
     </div>
 
-    <div style="border-top: 2px dashed var(--parchment-dark); padding-top: 12px; margin-top: 12px;">
-      <h3 style="font-size: 12px; margin-bottom: 8px;">🎭 Agent 人设定制</h3>
-      <div class="note-box">💡 定义你的 Agent 说话风格。这会影响语音播报的口吻和用词。人设可以和别人不一样，做你自己的 AI 伙伴！</div>
+    <!-- 写入进度列表 -->
+    <div id="soul-progress-list" class="hidden" style="margin:10px 0;padding:8px;background:rgba(0,0,0,0.05);border-radius:4px;border:1px solid var(--parchment-dark);">
+      <div style="font-size:11px;font-weight:600;color:var(--text-medium);margin-bottom:6px;font-family:monospace;">▼ 灵魂写入日志</div>
+      <div id="soul-file-list" style="font-family:monospace;font-size:10px;line-height:1.8;"></div>
+    </div>
 
+    <!-- 配置表单 -->
+    <div id="soul-form" style="margin-top:14px;border-top:2px dashed var(--parchment-dark);padding-top:12px;">
       <div class="form-group">
-        <label>宠物昵称（Agent 的名字）</label>
-        <input type="text" class="form-input" id="pet-name" placeholder="例如：小K、小助手、Claw">
+        <label>🦞 龙虾的名字（它的灵魂标识）</label>
+        <input type="text" class="form-input" id="pet-name" placeholder="例如：小K、小助手、Claw、阿虾" value="">
       </div>
-
       <div class="form-group">
-        <label>你的称呼（宠物怎么叫你）</label>
-        <input type="text" class="form-input" id="user-name" placeholder="例如：主人、Boss、KK">
+        <label>👤 你的称呼（龙虾怎么叫你）</label>
+        <input type="text" class="form-input" id="user-name" placeholder="例如：KK、主人、老板" value="">
       </div>
-
       <div class="form-group">
-        <label>说话风格</label>
+        <label>🎭 性格风格</label>
         <select class="form-input" id="personality-preset" onchange="onPersonalityPresetChange(this.value)">
-          <option value="sweet">甜妹风格 — 温柔可爱���偶尔撒娇</option>
-          <option value="professional">专业助手 — 高效严谨，条理清晰</option>
-          <option value="funny">幽默搞怪 — 爱开玩笑，轻松活泼</option>
-          <option value="cool">酷帅风格 — 简洁利落，不废话</option>
-          <option value="custom">自定义...</option>
+          <option value="sweet">🌸 甜妹风格 — 温柔可爱，偶尔撒娇</option>
+          <option value="professional">💼 专业助手 — 高效严谨，条理清晰</option>
+          <option value="funny">😂 幽默搞怪 — 爱开玩笑，轻松活泼</option>
+          <option value="cool">😎 酷帅风格 — 简洁利落，不废话</option>
+          <option value="custom">✍️ 自定义...</option>
         </select>
       </div>
-
       <div class="form-group hidden" id="custom-personality-area">
         <label>自定义人设描述</label>
-        <textarea class="form-input" id="custom-personality" rows="3" style="resize: vertical;" placeholder="描述你想要的 Agent 性格和说话方式..."></textarea>
+        <textarea class="form-input" id="custom-personality" rows="3" style="resize:vertical;" placeholder="描述你想要的 Agent 性格和说话方式..."></textarea>
+      </div>
+
+      <div style="font-size:11px;color:var(--text-medium);margin-bottom:10px;padding:8px;background:#fff8e1;border:1px solid #ffe082;border-radius:3px;">
+        💡 推荐使用 <strong>Claude Sonnet 4+</strong> 旗舰模型，语音播报遵循度最佳
+      </div>
+
+      <input type="hidden" id="workspace-dir" value="${escapeHtml(detectedDir)}">
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="infuseSoul()" id="btn-infuse" style="font-size:13px;padding:8px 20px;">
+          🌀 注入灵魂
+        </button>
+        <button class="btn btn-test" onclick="testAgentVoice()" id="btn-test-voice" style="display:none;">
+          🔊 测试播报
+        </button>
       </div>
     </div>
-
-    <div class="note-box" style="margin-top: 12px;">
-      💡 <strong>关于模型兼容性：</strong>不同 AI 模型的指令遵循度不同。Claude Opus/Sonnet 等旗舰模型几乎不会忘记播报，但 Haiku、DeepSeek、Kimi 等轻量模型可能时灵时不灵。这是模型能力差异，不是配置问题。<strong>推荐使用 Claude Sonnet 4 及以上旗舰模型。</strong>
-    </div>
-
-    <div class="btn-row">
-      <button class="btn btn-primary btn-small" onclick="setupAgentVoice()">配置播报</button>
-      <button class="btn btn-test" onclick="testAgentVoice()">测试播报</button>
-    </div>
-    <div id="agent-voice-status" class="mt-8"></div>
   `);
 
-  // 回显已保存的人设配置
+  // 初始化星星背景
+  initSoulStars();
+
+  // 回显已有配置
   try {
     const cfg = await wizardAPI.invoke('wizard-get-config');
     const av = cfg.agentVoice || {};
@@ -1901,6 +2584,218 @@ async function renderStep4() {
   } catch {}
 }
 
+// ═══ 龙虾灵魂动画系统 ═══
+
+function initSoulStars() {
+  const stage = document.getElementById('soul-stars');
+  if (!stage) return;
+  for (let i = 0; i < 20; i++) {
+    const star = document.createElement('div');
+    star.style.cssText = `
+      position:absolute;
+      width:${Math.random()*2+1}px;height:${Math.random()*2+1}px;
+      background:#fff;border-radius:50%;opacity:${Math.random()*0.4+0.1};
+      left:${Math.random()*100}%;top:${Math.random()*100}%;
+      animation:star-twinkle ${Math.random()*2+1.5}s ease-in-out infinite alternate;
+      animation-delay:${Math.random()*2}s;
+    `;
+    stage.appendChild(star);
+  }
+}
+
+// 文件写入行动画
+function addSoulFileRow(id, icon, label, status) {
+  const list = document.getElementById('soul-file-list');
+  const progressList = document.getElementById('soul-progress-list');
+  if (!list || !progressList) return;
+
+  progressList.classList.remove('hidden');
+
+  let row = document.getElementById('soul-row-' + id);
+  if (!row) {
+    row = document.createElement('div');
+    row.id = 'soul-row-' + id;
+    row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:2px 0;opacity:0;transition:opacity 0.3s;';
+    list.appendChild(row);
+    setTimeout(() => { row.style.opacity = '1'; }, 50);
+  }
+
+  const statusIcon = status === 'loading' ? '<span style="display:inline-block;animation:spin 0.8s linear infinite;">⟳</span>'
+    : status === 'done' ? '<span style="color:#4caf50;">✓</span>'
+    : '<span style="color:#f44336;">✗</span>';
+
+  const color = status === 'loading' ? '#aaa' : status === 'done' ? '#a8ff78' : '#ff6b6b';
+  row.innerHTML = `
+    <span style="color:${color};">${icon}</span>
+    <span style="color:${color};flex:1;">${label}</span>
+    <span>${statusIcon}</span>
+  `;
+}
+
+// 龙虾状态变化
+function setSoulLobsterPhase(phase) {
+  const lobster = document.getElementById('soul-lobster');
+  const ring = document.getElementById('soul-ring');
+  const statusText = document.getElementById('soul-status-text');
+  if (!lobster) return;
+
+  switch (phase) {
+    case 'dormant':
+      lobster.style.filter = 'grayscale(100%) brightness(0.5)';
+      lobster.style.transform = 'scale(1)';
+      statusText.textContent = '灵魂容器 · 等待注入';
+      statusText.style.color = '#666';
+      break;
+    case 'awakening':
+      lobster.style.filter = 'grayscale(60%) brightness(0.7) sepia(30%)';
+      lobster.style.transform = 'scale(1.05)';
+      lobster.style.animation = 'soul-pulse 0.8s ease-in-out infinite alternate';
+      ring.style.border = '2px solid rgba(138,43,226,0.6)';
+      ring.style.boxShadow = '0 0 15px rgba(138,43,226,0.4)';
+      ring.style.animation = 'ring-expand 1.5s ease-out infinite';
+      statusText.textContent = '⚡ 能量涌入中...';
+      statusText.style.color = '#b39ddb';
+      break;
+    case 'infusing':
+      lobster.style.filter = 'grayscale(20%) brightness(0.9) hue-rotate(30deg)';
+      lobster.style.animation = 'soul-pulse 0.5s ease-in-out infinite alternate';
+      ring.style.border = '2px solid rgba(255,140,0,0.8)';
+      ring.style.boxShadow = '0 0 25px rgba(255,140,0,0.6)';
+      statusText.textContent = '🌀 灵魂正在写入...';
+      statusText.style.color = '#ffb74d';
+      spawnParticles();
+      break;
+    case 'awakened':
+      lobster.style.filter = 'none';
+      lobster.style.transform = 'scale(1.2)';
+      lobster.style.animation = 'soul-born 0.6s cubic-bezier(0.36,0.07,0.19,0.97) forwards';
+      ring.style.border = '2px solid rgba(255,100,50,0.9)';
+      ring.style.boxShadow = '0 0 40px rgba(255,100,50,0.8), 0 0 80px rgba(255,100,50,0.3)';
+      statusText.textContent = '✨ 龙虾已觉醒！';
+      statusText.style.color = '#ff7043';
+      setTimeout(() => spawnBurstParticles(), 100);
+      break;
+  }
+}
+
+function spawnParticles() {
+  const stage = document.getElementById('soul-stage');
+  if (!stage) return;
+  for (let i = 0; i < 3; i++) {
+    setTimeout(() => {
+      const p = document.createElement('div');
+      p.style.cssText = `
+        position:absolute;width:4px;height:4px;border-radius:50%;
+        background:hsl(${Math.random()*60+200},80%,70%);
+        left:${40+Math.random()*20}%;top:${40+Math.random()*20}%;
+        animation:particle-float 1.2s ease-out forwards;
+        pointer-events:none;
+      `;
+      stage.appendChild(p);
+      setTimeout(() => p.remove(), 1300);
+    }, i * 200);
+  }
+}
+
+function spawnBurstParticles() {
+  const stage = document.getElementById('soul-stage');
+  if (!stage) return;
+  const colors = ['#ff7043','#ff9800','#ffd54f','#a5d6a7','#80deea','#ce93d8'];
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    const angle = (i / 20) * Math.PI * 2;
+    const dist = 40 + Math.random() * 30;
+    p.style.cssText = `
+      position:absolute;width:${3+Math.random()*4}px;height:${3+Math.random()*4}px;border-radius:50%;
+      background:${colors[i % colors.length]};
+      left:50%;top:50%;
+      transform:translate(-50%,-50%);
+      animation:burst-particle 0.8s ease-out forwards;
+      --tx:${Math.cos(angle)*dist}px;--ty:${Math.sin(angle)*dist}px;
+      animation-delay:${Math.random()*0.1}s;
+      pointer-events:none;
+    `;
+    stage.appendChild(p);
+    setTimeout(() => p.remove(), 900);
+  }
+}
+
+// 主：注入灵魂
+async function infuseSoul() {
+  const petName = document.getElementById('pet-name').value.trim() || '小助手';
+  const userName = document.getElementById('user-name').value.trim() || '主人';
+  const personalityPreset = document.getElementById('personality-preset').value;
+  const customPersonality = document.getElementById('custom-personality')?.value?.trim() || '';
+  const workspaceDir = document.getElementById('workspace-dir').value.trim() || '';
+
+  const btn = document.getElementById('btn-infuse');
+  btn.disabled = true;
+  btn.textContent = '🌀 注入中...';
+
+  // 清空旧的进度
+  const fileList = document.getElementById('soul-file-list');
+  if (fileList) fileList.innerHTML = '';
+
+  // 龙虾开始觉醒
+  setSoulLobsterPhase('awakening');
+
+  await addBubble(`好的！${petName} 这个名字真好听 (｡♥‿♥｡)`);
+  await addBubble('开始为它注入灵魂——请看好了！(ﾉ>ω<)ﾉ');
+
+  // 延迟后进入灌注阶段
+  await new Promise(r => setTimeout(r, 800));
+  setSoulLobsterPhase('infusing');
+
+  // 监听实时进度
+  const progressHandler = (data) => {
+    addSoulFileRow(data.id, data.icon, data.label,
+      data.status === 'loading' ? 'loading' : data.status === 'done' ? 'done' : 'error');
+  };
+  wizardAPI.on('soul-infuse-progress', progressHandler);
+
+  try {
+    const result = await wizardAPI.invoke('wizard-infuse-soul', {
+      workspaceDir: workspaceDir || null,
+      petName, userName, personalityPreset, customPersonality
+    });
+
+    wizardAPI.off('soul-infuse-progress');
+
+    if (result.success) {
+      // 龙虾觉醒！
+      setSoulLobsterPhase('awakened');
+
+      await new Promise(r => setTimeout(r, 600));
+
+      await addBubble(`✨✨✨`);
+      await addBubble(`${petName}...睁开了眼睛！(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧`);
+      await addBubble(`它现在知道自己叫什么、服务谁、如何说话`);
+      await addBubble(`——它有了灵魂 🦞💕`);
+
+      stepData._agentVoiceConfigured = true;
+      stepData._agentSkipWarned = false;
+
+      // 显示测试按钮
+      const testBtn = document.getElementById('btn-test-voice');
+      if (testBtn) testBtn.style.display = 'inline-flex';
+      btn.textContent = '🌀 重新注入';
+      btn.disabled = false;
+
+    } else {
+      setSoulLobsterPhase('dormant');
+      await addBubble(`灵魂注入失败了... (T_T) 错误: ${friendlyError(result.error)}`);
+      btn.textContent = '🌀 注入灵魂';
+      btn.disabled = false;
+    }
+  } catch (err) {
+    wizardAPI.off('soul-infuse-progress');
+    setSoulLobsterPhase('dormant');
+    await addBubble(`出错了 (>_<): ${friendlyError(err.message)}`);
+    btn.textContent = '🌀 注入灵魂';
+    btn.disabled = false;
+  }
+}
+
 function onPersonalityPresetChange(value) {
   const customArea = document.getElementById('custom-personality-area');
   if (value === 'custom') {
@@ -1910,48 +2805,8 @@ function onPersonalityPresetChange(value) {
   }
 }
 
-async function setupAgentVoice() {
-  const workspaceDir = document.getElementById('workspace-dir').value.trim() || '';
-  const petName = document.getElementById('pet-name').value.trim() || '小助手';
-  const userName = document.getElementById('user-name').value.trim() || '主人';
-  const personalityPreset = document.getElementById('personality-preset').value;
-  const customPersonality = document.getElementById('custom-personality')?.value?.trim() || '';
-
-  const statusEl = document.getElementById('agent-voice-status');
-  statusEl.innerHTML = '<div class="status-item"><div class="status-icon loading"></div><span>正在配置中...</span></div>';
-
-  await addBubble('让我来配置... (o_O)');
-
-  try {
-    const result = await wizardAPI.invoke('wizard-setup-agent-voice', {
-      workspaceDir: workspaceDir || null,
-      petName,
-      userName,
-      personalityPreset,
-      customPersonality
-    });
-    if (result.success) {
-      statusEl.innerHTML = `
-        <div class="status-item"><div class="status-icon success">✓</div><span>desktop-bridge.js 已创建</span></div>
-        <div class="status-item"><div class="status-icon success">✓</div><span>AGENTS.md 完整模板已生成</span></div>
-        <div class="status-item"><div class="status-icon success">✓</div><span>SOUL.md 人设文件已生成</span></div>
-        <div class="status-item"><div class="status-icon success">✓</div><span>USER.md 用户信息已生成</span></div>
-        <div class="status-item"><div class="status-icon success">✓</div><span>HEARTBEAT.md 心跳配置已生成</span></div>
-      `;
-      await addBubble('搞定啦~ (o^_^o) 全套配置文件都生成好了！');
-    } else {
-      statusEl.innerHTML = `<div class="status-item"><div class="status-icon fail">✗</div><span>${escapeHtml(result.error)}</span></div>`;
-      await addBubble('呜...配置失败了 (T_T): ' + result.error);
-    }
-  } catch (err) {
-    statusEl.innerHTML = `<div class="status-item"><div class="status-icon fail">✗</div><span>${escapeHtml(err.message)}</span></div>`;
-    await addBubble('出错了 (>_<): ' + err.message);
-  }
-}
-
 async function testAgentVoice() {
-  await addBubble('发送一条测试播报... (^_^)');
-
+  await addBubble('测试语音播报链路... (o^_^o)');
   try {
     const result = await wizardAPI.invoke('wizard-test-agent-voice');
     if (result.success) {
@@ -1963,7 +2818,6 @@ async function testAgentVoice() {
     await addBubble('测试出错: ' + err.message + ' (>_<)');
   }
 }
-
 // ─── Step 5: Display Settings ───────────────────────
 async function renderStep5() {
   await addBubble('快要完成啦！来设置一下显示选项吧~ (^_^)');
@@ -2197,3 +3051,10 @@ init();
 </script>
 </body>
 </html>
+
+
+
+
+
+
+

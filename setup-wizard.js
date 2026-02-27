@@ -18,6 +18,36 @@ class SetupWizard {
   }
 
   registerIPC() {
+  // 新增：支持逐步进度的灵魂注入接口
+    ipcMain.handle('wizard-infuse-soul', async (event, config) => {
+      return this._infuseSoul(config, event.sender);
+    });
+
+    // Step 0: 环境预检 — 全面检测
+    ipcMain.handle('wizard-env-check', async () => {
+      return this._envCheck();
+    });
+
+    // 打开外部链接（安全跨进程方式）
+    ipcMain.handle('open-external', async (event, url) => {
+      if (typeof url === 'string' && (url.startsWith('https://') || url.startsWith('http://'))) {
+        const { shell } = require('electron');
+        await shell.openExternal(url);
+        return { success: true };
+      }
+      return { success: false, error: 'invalid url' };
+    });
+
+    // Step 0: 环境预检 — 尝试自动安装 OpenClaw
+    ipcMain.handle('wizard-install-openclaw', async () => {
+      return this._installOpenClaw();
+    });
+
+    // Step 0: 环境预检 — 尝试启动 Gateway
+    ipcMain.handle('wizard-start-gateway', async () => {
+      return this._startGateway();
+    });
+
     // Step 1: Gateway — 检测
     ipcMain.handle('wizard-detect-gateway', async () => {
       return this._detectGateway();
@@ -141,6 +171,273 @@ class SetupWizard {
     ipcMain.handle('wizard-retry-single-test', async (event, testKey) => {
       return this._retrySingleTest(testKey);
     });
+  }
+
+  // ─── Step 4: 灵魂注入（分步进度版）──────────────────────
+
+  async _infuseSoul(config, sender) {
+    const opts = typeof config === 'string' ? { workspaceDir: config } : (config || {});
+    const {
+      workspaceDir,
+      petName = '小助手',
+      userName = '主人',
+      personalityPreset = 'sweet',
+      customPersonality = ''
+    } = opts;
+
+    const targetDir = workspaceDir || this.openclawDir;
+    const steps = [];
+
+    const onProgress = (id, label, icon, status, detail = '') => {
+      steps.push({ id, label, icon, status, detail });
+      try {
+        if (sender && !sender.isDestroyed()) {
+          sender.send('soul-infuse-progress', { id, label, icon, status, detail });
+        }
+      } catch (e) { /* ignore */ }
+    };
+
+    try {
+      await this._writeWorkspaceFiles({ targetDir, petName, userName, personalityPreset, customPersonality }, onProgress);
+      return { success: true, steps, targetDir, petName, userName };
+    } catch (err) {
+      onProgress('error', '写入失败', '❌', 'error', err.message);
+      return { success: false, error: err.message, steps };
+    }
+  }
+
+  // ─── Step 4: 灵魂注入（分步进度版 END）──────────────────────
+
+  // ─── 公共：写入 workspace 文件 ──────────────────────
+
+  async _writeWorkspaceFiles({ targetDir, petName, userName, personalityPreset, customPersonality }, onProgress) {
+    const delay = (ms) => new Promise(r => setTimeout(r, ms));
+    const report = onProgress || (() => {});
+
+    // 1. desktop-bridge.js（每次都覆写，保持最新版本）
+    report('bridge', 'desktop-bridge.js（语音播报脚本）', '🔊', 'loading');
+    await delay(400);
+    const bridgePath = path.join(targetDir, 'desktop-bridge.js');
+    await fsPromises.writeFile(bridgePath, this._getDesktopBridgeContent(), 'utf8');
+    report('bridge', 'desktop-bridge.js（语音播报脚本）', '🔊', 'done', bridgePath);
+    await delay(300);
+
+    // 2. AGENTS.md（覆写，备份旧版本）
+    report('agents', 'AGENTS.md（工作手册 & 灵魂契约）', '📜', 'loading');
+    await delay(600);
+    const agentsPath = path.join(targetDir, 'AGENTS.md');
+    if (fs.existsSync(agentsPath)) {
+      await fsPromises.copyFile(agentsPath, path.join(targetDir, 'AGENTS.md.bak'));
+    }
+    await fsPromises.writeFile(agentsPath, this._getAgentsTemplate({ petName, userName, personalityPreset, customPersonality }), 'utf8');
+    report('agents', 'AGENTS.md（工作手册 & 灵魂契约）', '📜', 'done', agentsPath);
+    await delay(400);
+
+    // 3. SOUL.md（仅当不存在时）
+    report('soul', 'SOUL.md（人设 & 个性灵魂）', '🎭', 'loading');
+    await delay(500);
+    const soulPath = path.join(targetDir, 'SOUL.md');
+    if (!fs.existsSync(soulPath)) {
+      await fsPromises.writeFile(soulPath, this._getSoulTemplate({ petName, userName, personalityPreset, customPersonality }), 'utf8');
+    }
+    report('soul', 'SOUL.md（人设 & 个性灵魂）', '🎭', 'done', soulPath);
+    await delay(300);
+
+    // 4. USER.md（仅当不存在时）
+    report('user', 'USER.md（用户档案 & 羁绊）', '👤', 'loading');
+    await delay(400);
+    const userPath = path.join(targetDir, 'USER.md');
+    if (!fs.existsSync(userPath)) {
+      await fsPromises.writeFile(userPath, this._getUserTemplate({ userName }), 'utf8');
+    }
+    report('user', 'USER.md（用户档案 & 羁绊）', '👤', 'done', userPath);
+    await delay(300);
+
+    // 5. HEARTBEAT.md（仅当不存在时）
+    report('heartbeat', 'HEARTBEAT.md（心跳 & 使命节律）', '💓', 'loading');
+    await delay(500);
+    const heartbeatPath = path.join(targetDir, 'HEARTBEAT.md');
+    if (!fs.existsSync(heartbeatPath)) {
+      await fsPromises.writeFile(heartbeatPath, this._getHeartbeatTemplate(), 'utf8');
+    }
+    report('heartbeat', 'HEARTBEAT.md（心跳 & 使命节律）', '💓', 'done', heartbeatPath);
+    await delay(300);
+
+    // 6. memory/ 目录
+    report('memory', 'memory/（记忆宫殿）', '🧠', 'loading');
+    await delay(300);
+    const memoryDir = path.join(targetDir, 'memory');
+    await fsPromises.mkdir(memoryDir, { recursive: true });
+    report('memory', 'memory/（记忆宫殿）', '🧠', 'done', memoryDir);
+
+    // 保存配置
+    this.petConfig.set('agentVoice', { workspaceDir: targetDir, petName, userName, personalityPreset, customPersonality });
+
+    return { bridgePath, agentsPath, soulPath, userPath, heartbeatPath };
+  }
+
+  // ─── 公共：写入 workspace 文件 END ──────────────────────
+
+  // ─── Step 0: 环境预检 ──────────────────────
+
+  async _envCheck() {
+    const results = {
+      node: { ok: false, version: '', error: '' },
+      openclaw: { ok: false, version: '', path: '', error: '' },
+      gateway: { ok: false, port: 18789, error: '' },
+      python: { ok: false, version: '', command: '', error: '' },
+    };
+
+    // 1. Node.js 版本
+    try {
+      const nodeVer = process.version;
+      const major = parseInt(nodeVer.replace('v', '').split('.')[0]);
+      results.node.version = nodeVer;
+      results.node.ok = major >= 18;
+      if (!results.node.ok) {
+        results.node.error = `需要 Node.js v18+，当前 ${nodeVer}`;
+      }
+    } catch (e) {
+      results.node.error = '无法检测 Node 版本';
+    }
+
+    // 2. OpenClaw 安装 & 路径检测
+    try {
+      // 方法1: npm root -g
+      const { stdout: npmRoot } = await execAsync('npm root -g', { windowsHide: true, timeout: 5000 });
+      const p1 = path.join(npmRoot.trim(), 'openclaw', 'dist', 'index.js');
+      if (fs.existsSync(p1)) {
+        results.openclaw.ok = true;
+        results.openclaw.path = p1;
+      }
+    } catch (e) { /* fallback */ }
+
+    if (!results.openclaw.ok) {
+      try {
+        // 方法2: where/which
+        const cmd = process.platform === 'win32' ? 'where openclaw' : 'which openclaw';
+        const { stdout } = await execAsync(cmd, { windowsHide: true, timeout: 5000 });
+        const binPath = stdout.trim().split('\n')[0];
+        const binDir = path.dirname(binPath);
+        const candidates = [
+          path.join(binDir, '..', 'node_modules', 'openclaw', 'dist', 'index.js'),
+          path.join(binDir, '..', 'lib', 'node_modules', 'openclaw', 'dist', 'index.js'),
+        ];
+        for (const c of candidates) {
+          if (fs.existsSync(path.normalize(c))) {
+            results.openclaw.ok = true;
+            results.openclaw.path = path.normalize(c);
+            break;
+          }
+        }
+      } catch (e) { /* fallback */ }
+    }
+
+    if (!results.openclaw.ok) {
+      // 方法3: 常见路径
+      const home = this.homeDir;
+      const fallbacks = [
+        path.join(home, '.npm-global', 'node_modules', 'openclaw', 'dist', 'index.js'),
+        path.join(home, 'AppData', 'Roaming', 'npm', 'node_modules', 'openclaw', 'dist', 'index.js'),
+        '/usr/local/lib/node_modules/openclaw/dist/index.js',
+        '/usr/lib/node_modules/openclaw/dist/index.js',
+      ];
+      for (const p of fallbacks) {
+        if (fs.existsSync(p)) {
+          results.openclaw.ok = true;
+          results.openclaw.path = p;
+          break;
+        }
+      }
+    }
+
+    if (!results.openclaw.ok) {
+      results.openclaw.error = '未检测到 openclaw，请先安装: npm install -g openclaw';
+    }
+
+    // 获取 OpenClaw 版本
+    if (results.openclaw.ok) {
+      try {
+        const { stdout } = await execAsync('openclaw --version', { windowsHide: true, timeout: 5000 });
+        results.openclaw.version = stdout.trim();
+      } catch (e) {
+        results.openclaw.version = '(版本未知)';
+      }
+    }
+
+    // 3. Gateway 连接检测
+    try {
+      await this._httpGet(`http://127.0.0.1:18789/health`, '');
+      results.gateway.ok = true;
+      results.gateway.port = 18789;
+    } catch (e) {
+      results.gateway.ok = false;
+      results.gateway.error = 'Gateway 未运行，需要先启动: openclaw gateway start';
+    }
+
+    // 4. Python 检测
+    const pythonCmds = ['python', 'python3', 'py'];
+    for (const cmd of pythonCmds) {
+      try {
+        const { stdout, stderr } = await execAsync(`${cmd} --version`, { windowsHide: true, timeout: 3000 });
+        const raw = (stdout + ' ' + stderr).trim();   // 兼容：有些版本输出到 stderr
+        const match = raw.match(/Python (\d+)\.(\d+)/);
+        if (match) {
+          const major = parseInt(match[1]), minor = parseInt(match[2]);
+          if (major > 3 || (major === 3 && minor >= 6)) {
+            results.python.ok = true;
+            results.python.version = match[0];
+            results.python.command = cmd;
+            break;
+          }
+        }
+      } catch (e) { continue; }
+    }
+    if (!results.python.ok) {
+      results.python.error = '未检测到 Python 3.6+，Edge TTS 和 CosyVoice 将不可用';
+    }
+
+    return results;
+  }
+
+  async _installOpenClaw() {
+    try {
+      // 先尝试标准 registry
+      await execAsync('npm install -g openclaw', { windowsHide: true, timeout: 120000 });
+      return { success: true };
+    } catch (e1) {
+      try {
+        // 备选：换国内 mirror
+        await execAsync('npm install -g openclaw --registry https://registry.npmmirror.com', { windowsHide: true, timeout: 120000 });
+        return { success: true };
+      } catch (e2) {
+        return { success: false, error: e2.message };
+      }
+    }
+  }
+
+  async _startGateway() {
+    try {
+      // 用 spawn 后台启动
+      const { spawn } = require('child_process');
+      const child = spawn('openclaw', ['gateway', 'start'], {
+        detached: true, shell: true, windowsHide: true, stdio: 'ignore'
+      });
+      child.unref();
+
+      // 等待最多 20 秒
+      for (let i = 0; i < 20; i++) {
+        await new Promise(r => setTimeout(r, 1000));
+        try {
+          await this._httpGet('http://127.0.0.1:18789/health', '');
+          return { success: true };
+        } catch (e) { /* 继续等 */ }
+      }
+
+      return { success: false, error: 'Gateway 启动超时，请手动运行: openclaw gateway start' };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
   }
 
   // ─── Step 1: Gateway 检测 ──────────────────────
@@ -396,10 +693,16 @@ class SetupWizard {
         await this._playAudio(audioFile);
         return { success: true };
       } else {
-        // Edge TTS
+        // Edge TTS — 将文本写入临时文件，通过 --text-file 传入，避免 shell 注入
         const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
-        const ttsCmd = `${pythonCmd} -m edge_tts --voice "zh-CN-XiaoxiaoNeural" --text "${testText}" --write-media "${outputFile}"`;
-        await execAsync(ttsCmd, { timeout: 30000, windowsHide: true });
+        const textFile = path.join(tempDir, `wizard_tts_text_${Date.now()}.txt`);
+        await fsPromises.writeFile(textFile, testText, 'utf8');
+        try {
+          const ttsCmd = `${pythonCmd} -m edge_tts --voice "zh-CN-XiaoxiaoNeural" --text-file "${textFile}" --write-media "${outputFile}"`;
+          await execAsync(ttsCmd, { timeout: 30000, windowsHide: true });
+        } finally {
+          fsPromises.unlink(textFile).catch(() => {});
+        }
         await this._playAudio(outputFile);
         return { success: true };
       }
@@ -415,8 +718,9 @@ class SetupWizard {
     } else if (process.platform === 'linux') {
       cmd = `aplay "${filePath}" 2>/dev/null || paplay "${filePath}"`;
     } else {
-      const safePath = filePath.replace(/'/g, "''");
-      cmd = `powershell -c "Add-Type -AssemblyName presentationCore; $player = New-Object System.Windows.Media.MediaPlayer; $player.Open('${safePath}'); $player.Play(); while($player.NaturalDuration.HasTimeSpan -eq $false) { Start-Sleep -Milliseconds 100 }; $duration = $player.NaturalDuration.TimeSpan.TotalSeconds; Start-Sleep -Seconds $duration; $player.Close()"`;
+      // Windows: 用单引号包裹路径，并将路径中的单引号转义为 `'`（PowerShell 转义）
+      const ps1Path = filePath.replace(/'/g, "''");
+      cmd = `powershell -NoProfile -NonInteractive -Command "Add-Type -AssemblyName presentationCore; $player = New-Object System.Windows.Media.MediaPlayer; $player.Open([uri]'${ps1Path}'); $player.Play(); Start-Sleep -Milliseconds 500; while($player.NaturalDuration.HasTimeSpan -eq $false) { Start-Sleep -Milliseconds 100 }; Start-Sleep -Seconds $player.NaturalDuration.TimeSpan.TotalSeconds; $player.Close()"`;
     }
     await execAsync(cmd, { timeout: 30000, windowsHide: true });
   }
@@ -437,56 +741,8 @@ class SetupWizard {
     const targetDir = workspaceDir || this.openclawDir;
 
     try {
-      // 1. 创建 desktop-bridge.js
-      const bridgePath = path.join(targetDir, 'desktop-bridge.js');
-      const bridgeContent = this._getDesktopBridgeContent();
-      await fsPromises.writeFile(bridgePath, bridgeContent, 'utf8');
-
-      // 2. 生成完整 AGENTS.md（通用框架 + 语音播报规则）
-      const agentsPath = path.join(targetDir, 'AGENTS.md');
-      const agentsContent = this._getAgentsTemplate({ petName, userName, personalityPreset, customPersonality });
-      // 覆写前备份旧文件，避免用户自定义内容丢失
-      if (fs.existsSync(agentsPath)) {
-        const bakPath = path.join(targetDir, 'AGENTS.md.bak');
-        await fsPromises.copyFile(agentsPath, bakPath);
-      }
-      await fsPromises.writeFile(agentsPath, agentsContent, 'utf8');
-
-      // 3. 生成 SOUL.md（人设文件）— 仅当不存在时
-      const soulPath = path.join(targetDir, 'SOUL.md');
-      if (!fs.existsSync(soulPath)) {
-        const soulContent = this._getSoulTemplate({ petName, userName, personalityPreset, customPersonality });
-        await fsPromises.writeFile(soulPath, soulContent, 'utf8');
-      }
-
-      // 4. 生成 USER.md（用户信息文件）— 仅当不存在时
-      const userPath = path.join(targetDir, 'USER.md');
-      if (!fs.existsSync(userPath)) {
-        const userContent = this._getUserTemplate({ userName });
-        await fsPromises.writeFile(userPath, userContent, 'utf8');
-      }
-
-      // 5. 生成 HEARTBEAT.md — 仅当不存在时
-      const heartbeatPath = path.join(targetDir, 'HEARTBEAT.md');
-      if (!fs.existsSync(heartbeatPath)) {
-        const heartbeatContent = this._getHeartbeatTemplate();
-        await fsPromises.writeFile(heartbeatPath, heartbeatContent, 'utf8');
-      }
-
-      // 6. 确保 memory/ 目录存在
-      const memoryDir = path.join(targetDir, 'memory');
-      await fsPromises.mkdir(memoryDir, { recursive: true });
-
-      // 保存人设配置到 petConfig，用于回显
-      this.petConfig.set('agentVoice', {
-        workspaceDir: targetDir,
-        petName,
-        userName,
-        personalityPreset,
-        customPersonality
-      });
-
-      return { success: true, bridgePath, agentsPath, soulPath, userPath, heartbeatPath };
+      const result = await this._writeWorkspaceFiles({ targetDir, petName, userName, personalityPreset, customPersonality });
+      return { success: true, ...result };
     } catch (err) {
       return { success: false, error: err.message };
     }

@@ -1408,6 +1408,43 @@ ipcMain.handle('set-voice-enabled', async (event, enabled) => {
   return true;
 });
 
+// 🔍 TTS 依赖检测
+const TTSChecker = require('./voice/tts-checker');
+
+ipcMain.handle('check-tts', async (event, config = {}) => {
+  try {
+    const results = await TTSChecker.checkAll({
+      minimaxApiKey: config.minimaxApiKey || petConfig.get('minimax')?.apiKey,
+      dashscopeApiKey: config.dashscopeApiKey || petConfig.get('dashscope')?.apiKey,
+      tempDir: path.join(__dirname, 'temp')
+    });
+    return results;
+  } catch (err) {
+    console.error('[TTS Check] 检测失败:', err);
+    return {
+      error: err.message,
+      recommended: 'none'
+    };
+  }
+});
+
+ipcMain.handle('install-edge-tts', async (event, pythonCmd) => {
+  try {
+    const result = await TTSChecker.installEdgeTTS(pythonCmd);
+    return result;
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('install-dashscope', async (event, pythonCmd) => {
+  try {
+    const result = await TTSChecker.installDashScope(pythonCmd);
+    return result;
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
 
 // 🔥 截图系统
 ipcMain.handle('take-screenshot', async (event, reason = 'manual') => {

@@ -218,12 +218,38 @@ class ServiceManager extends EventEmitter {
         }
 
         const home = process.env.HOME || process.env.USERPROFILE;
-        let openclawPath = path.join(home, '.npm-global', 'node_modules', 'openclaw', 'dist', 'index.js');
-
         const fs = require('fs');
-        // Cross-platform: try common npm global paths
-        if (!fs.existsSync(openclawPath)) {
+        const { execSync } = require('child_process');
+        let openclawPath = null;
+
+        // 方法1: npm root -g（最准确）
+        try {
+            const npmRoot = execSync('npm root -g', { encoding: 'utf8', windowsHide: true }).trim();
+            const p = path.join(npmRoot, 'openclaw', 'dist', 'index.js');
+            if (fs.existsSync(p)) openclawPath = p;
+        } catch (e) { /* fallback */ }
+
+        // 方法2: where/which openclaw（第二准确）
+        if (!openclawPath) {
+            try {
+                const cmd = process.platform === 'win32' ? 'where openclaw' : 'which openclaw';
+                const binPath = execSync(cmd, { encoding: 'utf8', windowsHide: true }).trim().split('\n')[0];
+                const binDir = path.dirname(binPath);
+                const candidates = [
+                    path.join(binDir, '..', 'node_modules', 'openclaw', 'dist', 'index.js'),
+                    path.join(binDir, '..', 'lib', 'node_modules', 'openclaw', 'dist', 'index.js'),
+                ];
+                for (const c of candidates) {
+                    if (fs.existsSync(path.normalize(c))) { openclawPath = path.normalize(c); break; }
+                }
+            } catch (e) { /* fallback */ }
+        }
+
+        // 方法3: 常见安装路径（兜底）
+        if (!openclawPath) {
             const altPaths = [
+                path.join(home, '.npm-global', 'node_modules', 'openclaw', 'dist', 'index.js'),
+                path.join(home, 'AppData', 'Roaming', 'npm', 'node_modules', 'openclaw', 'dist', 'index.js'),
                 path.join('/usr/local/lib/node_modules/openclaw/dist/index.js'),
                 path.join('/usr/lib/node_modules/openclaw/dist/index.js'),
                 path.join(home, '.nvm/versions/node', process.version, 'lib/node_modules/openclaw/dist/index.js'),
@@ -233,9 +259,12 @@ class ServiceManager extends EventEmitter {
             }
         }
 
-        if (!fs.existsSync(openclawPath)) {
-            this.log('error', `openclaw 不存在: ${openclawPath}`, 'gateway');
-            return { success: false, error: `openclaw 不存在: ${openclawPath}` };
+        if (!openclawPath) {
+            this.log('error', 'openclaw 未找到！已检测以下位置均不存在。请确认已运行: npm install -g openclaw', 'gateway');
+            return { 
+                success: false, 
+                error: 'openclaw 未找到，请先安装: npm install -g openclaw' 
+            };
         }
 
         const child = spawn('node', [openclawPath, 'gateway', '--port', '18789'], {
