@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.1] - 2026-03-12
+
+### Fixed
+- **双声音问题修复** — 所有 `new Notification()` 添加 `silent: true`，阻止 Windows 系统朗读通知内容导致的第二个机器人声音
+- **桌面快捷方式不显示 CMD** — 快捷方式改为指向 `start.cmd`，启动时显示 CMD 控制台 + Gateway 日志；`WindowStyle` 从 7（隐藏）改为 1（正常显示）
+- **移除 speak() 临时调试日志** — 清理双声音排查时添加的 stack trace 调试代码
+
 ## [3.5.0] - 2026-03-12
 
 ### Added
