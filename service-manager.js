@@ -278,17 +278,17 @@ class ServiceManager extends EventEmitter {
         // 记录启动状态
         this._startupState = { pid: child.pid, startedAt: Date.now(), exited: false };
 
-        // 去重集合：Gateway 可能同时向 stdout/stderr 写相同内容
+        // 去重集合：Gateway 可能输出重复行（多logger/tee）
         const _recentLines = new Set();
         const _dedupLine = (line) => {
-            // 彻底清理：所有 ANSI + 控制字符 + 不可见 Unicode + \r
+            // 彻底清理：每次用非全局正则，避免 lastIndex 状态问题
             const plain = line
                 .replace(/\x1b\[[\d;]*[A-Za-z]/g, '')
-                .replace(/\x1b\][\s\S]*?(?:\x07|\x1b\\)/g, '')
+                .replace(/\x1b\].*?(\x07|\x1b\\)/g, '')
                 .replace(/\x1b[()][A-Z0-9]/g, '')
                 .replace(/\x1b[=><78NOMDEHFcZ]/g, '')
-                .replace(/[\u200B\u200C\u200D\uFEFF\u00A0]/g, '')
-                .replace(/\r/g, '')
+                .replace(/[\u200B\u200C\u200D\uFEFF\u00A0\r]/g, '')
+                .replace(/\s+/g, ' ')  // 统一所有空白为单个空格
                 .trim();
             if (!plain) return false;
             if (_recentLines.has(plain)) return false;
@@ -328,12 +328,17 @@ class ServiceManager extends EventEmitter {
         child.stderr.on('data', (chunk) => {
             const text = chunk.toString();
             stderrBuf = (stderrBuf + text).slice(-2048);
+            // stderr 只收集 buffer 用于错误诊断，不再输出到控制台
+            // Gateway 会将相同内容同时写入 stdout 和 stderr，
+            // stdout handler 已经负责了日志显示，stderr 重复显示只会造成干扰
+            // 仅对 stderr 独有的错误信息做输出（即 stdout 中未出现的）
             text.split('\n').filter(l => l.trim()).forEach(line => {
-                if (_dedupLine(line)) {
-                    const plain = _stripAnsi(line);
+                const plain = _stripAnsi(line);
+                // 只有包含明确错误关键词、且 stdout 没出现过的行才显示
+                if (/error|Error|fatal|FAIL|panic|exception/i.test(plain) && _dedupLine(line)) {
                     const highlighted = this._highlightKeywords(line);
-                    console.log(`\x1b[33m[Gateway:WARN]\x1b[0m ${highlighted}`);
-                    this.log('warn', plain, 'gateway-stderr');
+                    console.log(`\x1b[31m[Gateway:ERR]\x1b[0m ${highlighted}`);
+                    this.log('error', plain, 'gateway-stderr');
                 }
             });
         });
