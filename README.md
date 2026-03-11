@@ -35,38 +35,99 @@
 
 ## 🌟 项目亮点
 
-给你的 OpenClaw AI 一个**看得见、听得到**的桌面化身：
+给你的 OpenClaw AI 一个**看得见、听得到**的桌面化身。
 
-#### 🎨 视觉 & 情感
-- 🦞 **67px 琉璃球体** — 3层流体动画 + 双重高光 + 1.5px 玻璃边框，像活的一样
-- 🌈 **14种情绪色系** — happy / sad / angry / calm / excited / love / focused 等，每种有专属外发光效果
-- 👀 **38种待机表情** — 眨眼、歪头、星星眼、打盹、装死…不操作时也有生命感
-- 🎨 **空气感双窗口** — 球体 + 歌词字幕，像桌面歌词一样不挡操作，却始终陪伴
+### 🦞 球体 & 动画
 
-#### 🎙️ 语音 & 人设
-- 🎤 **一键声音克隆** — 上传30秒录音即可克隆专属音色，MiniMax 2.5 Turbo 驱动
-- 🎭 **14种情绪语调** — TTS 自动识别文本情绪，开心用欢快声、悲伤用低沉声
-- 🧠 **人设定制系统** — 5种预设风格（甜妹/专业/幽默/酷帅/自定义），一键生成 AGENTS.md + SOUL.md
-- 🔉 **智能降级链** — MiniMax → Edge TTS 自动降级，永远不会没声音
+| 功能 | 说明 |
+|------|------|
+| 🔮 **会呼吸的小球** | 67px 琉璃球体，内部液体一直在流动，看起来像活的一样（3层流体动画 + 径向渐变 + 双重高光） |
+| 🌈 **14种心情颜色** | 开心是暖橙色、伤心是天蓝色、生气是火红色…每种心情自动切换颜色和光晕（14-emotion glow system） |
+| 👀 **38种小表情** | 不操作的时候也会自己眨眼、歪头、偷瞄、打盹、星星眼、装死…像真的有脾气（idle micro-expression engine） |
+| 🕐 **看时间变表情** | 早上精神、下午犯困、深夜打哈欠，它知道现在几点（时间场景感知：morning / noon / afternoon / evening / latenight） |
+| 🖱️ **眼睛跟着鼠标转** | 你移动鼠标，球体的眼睛会跟着光标方向看（mouse tracking） |
+| 💗 **害羞会脸红** | 触发特定表情时，脸颊两边会浮现粉色红晕（dynamic blush overlay） |
+| 🫧 **身边有小气泡** | 球体周围飘着半透明的小泡泡，增加灵动感（bubble particle decoration） |
+| ✨ **点击有弹跳反馈** | 点球体会弹一下 + 颜色闪���下，有手感（squish animation + color pulse） |
+| 🎈 **悬浮呼吸效果** | 球体会微微上下浮动，像在水面漂浮（60fps float + breath scaling） |
 
-#### 🛡️ Gateway 增强
-- ⚡ **智能自启动** — Guardian 检测不到 Gateway 后自动拉起，不再永远等待
-- 📊 **异常检测 + 健康评分** — 多维度量化 Gateway 状态，自动识别异常模式
-- 🎙️ **状态语音播报** — 启动中/成功/失败 分别语音通知，不用盯控制台
-- 🔧 **二次确认防误判** — 与 ServiceManager 交叉校验，避免误触重启
+### 🎙️ 声音 & 语音
 
-#### 🧙 Setup Wizard 配置向导
-- 🎮 **RPG 游戏风格** — 木质边框 + 羊皮纸背景 + 龙虾向导角色 + 打字机效果
-- 📋 **7步引导流程** — Gateway → 模型 → 渠道 → TTS → 播报 → 显示 → 全链路测试
-- ⚡ **一键安装缺失依赖** — 自动安装 edge-tts / sqlite3 / node_modules，实时进度反馈
-- 🩺 **Doctor 自检系统** — 10项全自动诊断，每项带修复建议
+| 功能 | 说明 |
+|------|------|
+| 🎤 **30秒克隆你的声音** | 上传一段30秒录音，AI就能用你的声音说话（MiniMax Voice Cloning API） |
+| 🗣️ **14种语气自动切换** | 说开心的事用欢快声、说难过的事用低沉声，自动识别（emotion-aware TTS） |
+| 🔉 **永远不会哑巴** | 主引擎挂了自动切备用，备用也挂了用免费的，保证一直有声音（MiniMax → Edge TTS 降级链） |
+| ⏸️ **说话会自然停顿** | 在逗号、句号处自然停顿，不是机器人念稿（TTS pause markers `<#0.5#>`） |
+| 📝 **桌面字幕同步** | 说话时桌面同步显示字幕，像 KTV 一样一个字一个字蹦出来（typewriter lyrics overlay） |
+| 🔇 **不会抢话** | 多条消息同时到不会叠在一起，排队一条条说（priority speech queue） |
 
-#### 🔧 工程 & 稳定性
-- 🎨 **彩色终端日志** — 12+ 模块全覆盖，Gateway 日志关键词自动高亮（模型/URL/渠道/错误）
-- 🔁 **模型热切换** — CC-Switch 同步 Provider，切换 Claude / GPT / Gemini 无需重启
-- 🔐 **安全存储** — API Key 加密落盘 (safeStorage)、IPC 白名单沙箱、日志自动脱敏
-- 🎯 **7×24 生产级稳定** — 自动重启 + 日志轮转 + 性能监控 + 内存清理
-- 🍎 **跨平台** — Windows 10/11 + macOS (Intel & Apple Silicon)，首次启动自动创建桌面快捷方式
+### 🧠 人设 & 性格
+
+| 功能 | 说明 |
+|------|------|
+| 🎭 **5种性格随你选** | 甜妹、专业、幽默、酷帅、自定义，选一个它就变成那种说话风格（personality preset system） |
+| 📝 **自动生成人设档案** | 选好性格后一键生成 AI 的「人格档案」，不用自己写提示词（auto-generate AGENTS.md + SOUL.md + USER.md） |
+| 💬 **给宠物取名字** | 给宠物起名、设定它怎么叫你，比如"小K叫你主人"（petName + userName 配置） |
+
+### 🛡️ Gateway 智能守护
+
+| 功能 | 说明 |
+|------|------|
+| ⚡ **挂了自动拉起来** | 检测到 Gateway 没运行会自动帮你启动，不用手动操作（Guardian auto-start，连续3次检测失败后触发） |
+| 📊 **实时健康体检** | 后台一直在监控 Gateway 状态，有问题第一时间告诉你（anomaly detection + health scoring） |
+| 🎙️ **语音播报状态** | 启动中、成功、失败都用声音告诉你，不用盯控制台（voice status announcement） |
+| 🔄 **崩了自动重启** | Gateway 崩溃后自动重启，每小时最多10次防止死循环（auto-restart with rate limiting） |
+| 🩺 **10项一键体检** | Gateway / TTS / 模型 / 端口 / 缓存 / 日志等10个维度一键诊断，告诉你怎么修（Doctor self-check） |
+| 🔧 **不会误操作** | 重启前会二次确认，避免把好的 Gateway 误杀（cross-validation with ServiceManager） |
+
+### 🧙 新手引导向导
+
+| 功能 | 说明 |
+|------|------|
+| 🎮 **游戏风格界面** | 木质边框 + 羊皮纸背景 + 龙虾向导 + 打字机对话，像在玩 RPG（RPG-style Setup Wizard） |
+| 📋 **7步搞定全部配置** | Gateway → 模型 → 消息渠道 → 语音引擎 → 播报设置 → 显示选项 → 全链路测试 |
+| ⚡ **缺什么一键装** | 检测到缺依赖，一个按钮自动安装，装的时候还能看进度条（one-click dependency install + real-time progress） |
+| 🔍 **自动检测你的环境** | 自动找 Node.js、Python、OpenClaw 等，装没装、版本多少一目了然（smart environment detection） |
+| ✅ **最后来一次全面验证** | 7项测试确保所有功能正常工作，不留隐患（end-to-end validation） |
+
+### 🎨 终端 & 日志
+
+| 功能 | 说明 |
+|------|------|
+| 🌈 **彩色控制台** | 不同信息用不同颜色：模型名蓝色、URL绿色、错误红色，一眼看清（ANSI colorized logging，12+ 模块） |
+| 🔇 **日志自动去重** | 同样的消息不会重复刷屏，控制台干干净净（whitespace-normalized dedup） |
+| 📁 **日志自动整理** | 每天自动归档旧日志，超过10MB自动压缩，保留7天（log rotation + gzip archiving） |
+| 📊 **性能实时监控** | 内存、CPU、帧率随时掌握，超标了自动告警（performance monitor + 24h sample history） |
+
+### 🔁 模型切换
+
+| 功能 | 说明 |
+|------|------|
+| 🔄 **一键换 AI 大脑** | Claude ↔ GPT ↔ Gemini ↔ DeepSeek，不用重启，3秒生效（hot model swap via CC-Switch） |
+| 📊 **测 AI 响应速度** | 一键测每个模型的延迟，帮你选最快的（latency benchmark） |
+| ➕ **自己加模型** | 支持15+主流 AI 服务商，也能自己填 API 地址（custom provider + preset templates） |
+| 📜 **切换历史记录** | 记录每次切了什么模型、什么时候切的，可追溯（switch history tracking） |
+
+### 🔐 安全
+
+| 功能 | 说明 |
+|------|------|
+| 🔑 **密钥加密存盘** | API Key 加密后才写入硬盘，不是明文裸奔（Electron safeStorage 加密） |
+| 🛡️ **操作权限管控** | 页面不能直接调系统功能，所有操作走白名单审核（IPC whitelist sandbox） |
+| 🧹 **日志自动脱敏** | 日志里自动隐藏 API Key、Token 等敏感信息（log sanitizer） |
+
+### 🖥️ 桌面集成
+
+| 功能 | 说明 |
+|------|------|
+| 📌 **永远置顶** | 球体和字幕永远在最上面，切窗口不会被挡住（always-on-top） |
+| 🖱️ **字幕不挡鼠标** | 歌词字幕完全穿透，不影响你点底下的东西（mouse-through transparent window） |
+| 🔗 **自动建桌面快捷方式** | 第一次打开自动在桌面创建快捷方式，下次双击就能开（auto .lnk / .app creation） |
+| 📸 **一键截图上传** | 工具栏点截图，自动截屏并上传到飞书（screenshot + Lark upload） |
+| 💬 **多平台消息同步** | Discord / Telegram / 飞书 / 企业微信的消息都能同步过来语音播报（multi-channel message sync） |
+| 🍎 **Win + Mac 都能用** | Windows 10/11 和 macOS（Intel & Apple Silicon）都支持（cross-platform Electron） |
+| 📱 **托盘菜单一站式管理** | 右键托盘图标就能切模型、看状态、开诊断、管会话（system tray context menu） |
 
 ### 🆕 v3.5.2 — Setup Wizard 修复 + 一键安装缺失依赖
 
@@ -1021,38 +1082,99 @@ node kkclaw-hotswitch.js --restart
 
 ### ✨ Highlights
 
-Give your OpenClaw AI a **visible, audible** desktop embodiment:
+Give your OpenClaw AI a **visible, audible** desktop embodiment.
 
-#### 🎨 Visual & Emotion
-- 🦞 **67px Glass Orb** — 3-layer fluid animation + dual highlights + glass border, feels alive
-- 🌈 **14 Emotion Colors** — happy / sad / angry / calm / excited / love / focused, each with unique glow
-- 👀 **38 Idle Animations** — Blink, tilt, sparkle, doze, play dead… lifelike even when idle
-- 🎨 **Airy Dual Windows** — Orb + lyric subtitle, like desktop lyrics — present but never in the way
+#### 🦞 Orb & Animation
 
-#### 🎙️ Voice & Persona
-- 🎤 **One-Click Voice Cloning** — Upload 30s audio to clone your voice, MiniMax 2.5 Turbo powered
-- 🎭 **14 Emotion Tones** — Auto-detects text emotion, adjusts speech tone accordingly
-- 🧠 **Persona System** — 5 presets (sweet/pro/humor/cool/custom), auto-generates AGENTS.md + SOUL.md
-- 🔉 **Smart Fallback** — MiniMax → Edge TTS auto-fallback, never silent
+| Feature | Description |
+|---------|-------------|
+| 🔮 **Living Glass Orb** | 67px glass sphere with fluid constantly flowing inside, looks alive (3-layer fluid animation + radial gradient + dual highlights) |
+| 🌈 **14 Mood Colors** | Happy = warm orange, sad = sky blue, angry = fire red… auto-switches color and glow per mood (14-emotion glow system) |
+| 👀 **38 Micro-Expressions** | Blinks, tilts, peeks, dozes, sparkle eyes, plays dead while idle… like it has a personality (idle micro-expression engine) |
+| 🕐 **Time-Aware Expressions** | Energetic in morning, sleepy in afternoon, yawning late at night — it knows what time it is (time scene awareness: morning / noon / afternoon / evening / latenight) |
+| 🖱️ **Eye Tracking** | Eyes follow your cursor direction as you move the mouse (mouse tracking) |
+| 💗 **Blushing** | Certain expressions trigger pink blush on both cheeks (dynamic blush overlay) |
+| 🫧 **Floating Bubbles** | Semi-transparent bubbles floating around the orb for extra liveliness (bubble particle decoration) |
+| ✨ **Bounce on Click** | Click the orb and it squishes + flashes color, satisfying feedback (squish animation + color pulse) |
+| 🎈 **Breathing Float** | Orb gently bobs up and down, like floating on water (60fps float + breath scaling) |
+
+#### 🎙️ Voice & Audio
+
+| Feature | Description |
+|---------|-------------|
+| 🎤 **30s Voice Cloning** | Upload a 30-second recording, AI speaks in your voice (MiniMax Voice Cloning API) |
+| 🗣️ **14 Auto Tone Shifts** | Happy news = cheerful voice, sad news = subdued voice, auto-detected (emotion-aware TTS) |
+| 🔉 **Never Goes Silent** | Primary engine down → auto-switches to backup → then free fallback, always has a voice (MiniMax → Edge TTS fallback chain) |
+| ⏸️ **Natural Pauses** | Pauses at commas and periods, not robotic read-aloud (TTS pause markers `<#0.5#>`) |
+| 📝 **Desktop Subtitles** | Words pop up on screen in sync with speech, like karaoke (typewriter lyrics overlay) |
+| 🔇 **No Overlapping Speech** | Multiple messages arrive at once? Queued and spoken one by one (priority speech queue) |
+
+#### 🧠 Persona & Personality
+
+| Feature | Description |
+|---------|-------------|
+| 🎭 **5 Personality Presets** | Sweet / Professional / Humorous / Cool / Custom — pick one and it talks that way (personality preset system) |
+| 📝 **Auto-Generated Persona Files** | One click generates the AI's "character sheet", no manual prompt writing (auto-generate AGENTS.md + SOUL.md + USER.md) |
+| 💬 **Name Your Pet** | Give it a name and set what it calls you, e.g. "Kiki calls you Boss" (petName + userName config) |
 
 #### 🛡️ Gateway Guardian
-- ⚡ **Smart Auto-Start** — Auto-launches Gateway after detection failure, no manual intervention
-- 📊 **Anomaly Detection + Health Scoring** — Multi-dimensional Gateway health metrics
-- 🎙️ **Voice Status Reports** — Startup/success/failure spoken aloud
-- 🔧 **Cross-Validation** — Double-checks with ServiceManager to prevent false restarts
+
+| Feature | Description |
+|---------|-------------|
+| ⚡ **Auto-Restart on Crash** | Detects Gateway not running and auto-starts it for you (Guardian auto-start, triggers after 3 consecutive detection failures) |
+| 📊 **Live Health Monitoring** | Continuously monitors Gateway health, alerts you at first sign of trouble (anomaly detection + health scoring) |
+| 🎙️ **Voice Status Reports** | "Starting…", "Success!", "Failed!" — spoken aloud so you don't have to watch the console (voice status announcement) |
+| 🔄 **Crash Auto-Recovery** | Auto-restarts after crash, max 10 times per hour to prevent infinite loops (auto-restart with rate limiting) |
+| 🩺 **10-Point Health Check** | Gateway / TTS / Model / Port / Cache / Logs — one-click diagnosis with fix suggestions (Doctor self-check) |
+| 🔧 **Safe Guard** | Double-confirms before restart to avoid killing a healthy Gateway (cross-validation with ServiceManager) |
 
 #### 🧙 Setup Wizard
-- 🎮 **RPG Style** — Wood frames + parchment background + lobster guide + typewriter text
-- 📋 **7-Step Onboarding** — Gateway → Model → Channels → TTS → Voice → Display → Full Test
-- ⚡ **One-Click Dependency Install** — Auto-install edge-tts / sqlite3 / node_modules with progress
-- 🩺 **Doctor Self-Check** — 10 auto-diagnostics with fix suggestions
 
-#### 🔧 Engineering & Stability
-- 🎨 **Colorized Terminal Logs** — 12+ modules, auto-highlighting models/URLs/channels/errors
-- 🔁 **Hot Model Swap** — CC-Switch synced providers, Claude / GPT / Gemini without restart
-- 🔐 **Secure Storage** — Encrypted API keys (safeStorage), IPC sandbox, auto log sanitization
-- 🎯 **7×24 Production-Grade** — Auto-restart + log rotation + perf monitoring + memory cleanup
-- 🍎 **Cross-Platform** — Windows 10/11 + macOS (Intel & Apple Silicon), auto desktop shortcut
+| Feature | Description |
+|---------|-------------|
+| 🎮 **RPG-Style UI** | Wood frames + parchment background + lobster guide + typewriter dialogue, feels like an RPG game (RPG-style Setup Wizard) |
+| 📋 **7 Steps, Fully Configured** | Gateway → Model → Channels → TTS Engine → Voice Settings → Display → End-to-End Test |
+| ⚡ **One-Click Install Missing Deps** | Missing something? One button auto-installs with live progress bar (one-click dependency install + real-time progress) |
+| 🔍 **Auto Environment Detection** | Auto-finds Node.js, Python, OpenClaw, etc. — installed or not, version at a glance (smart environment detection) |
+| ✅ **Full Validation at the End** | 7 checks ensure everything works before you start, no hidden issues (end-to-end validation) |
+
+#### 🎨 Terminal & Logs
+
+| Feature | Description |
+|---------|-------------|
+| 🌈 **Colorized Console** | Different info in different colors: model names blue, URLs green, errors red — easy to scan (ANSI colorized logging, 12+ modules) |
+| 🔇 **Auto Log Dedup** | Same message won't spam your console, keeps output clean (whitespace-normalized dedup) |
+| 📁 **Auto Log Archiving** | Old logs archived daily, compressed over 10MB, kept for 7 days (log rotation + gzip archiving) |
+| 📊 **Real-Time Perf Monitoring** | Memory, CPU, FPS at your fingertips, auto-alerts when thresholds exceeded (performance monitor + 24h sample history) |
+
+#### 🔁 Model Switching
+
+| Feature | Description |
+|---------|-------------|
+| 🔄 **One-Click AI Brain Swap** | Claude ↔ GPT ↔ Gemini ↔ DeepSeek, no restart needed, 3 seconds (hot model swap via CC-Switch) |
+| 📊 **AI Speed Test** | One-click latency benchmark for each model, pick the fastest (latency benchmark) |
+| ➕ **Add Your Own Models** | 15+ mainstream AI providers supported, or enter your own API endpoint (custom provider + preset templates) |
+| 📜 **Switch History** | Records every model switch — what, when, fully traceable (switch history tracking) |
+
+#### 🔐 Security
+
+| Feature | Description |
+|---------|-------------|
+| 🔑 **Encrypted Key Storage** | API keys encrypted before writing to disk, never plaintext (Electron safeStorage encryption) |
+| 🛡️ **Permission Control** | Pages can't directly call system functions, all operations go through whitelist (IPC whitelist sandbox) |
+| 🧹 **Auto Log Sanitization** | API keys, tokens auto-hidden from logs (log sanitizer) |
+
+#### 🖥️ Desktop Integration
+
+| Feature | Description |
+|---------|-------------|
+| 📌 **Always on Top** | Orb and subtitles stay on top of all windows, never hidden (always-on-top) |
+| 🖱️ **Click-Through Subtitles** | Lyric subtitles are fully click-through, never block what's underneath (mouse-through transparent window) |
+| 🔗 **Auto Desktop Shortcut** | First launch auto-creates desktop shortcut, double-click to start next time (auto .lnk / .app creation) |
+| 📸 **One-Click Screenshot Upload** | Toolbar screenshot button, auto-captures and uploads to Lark (screenshot + Lark upload) |
+| 💬 **Multi-Platform Message Sync** | Discord / Telegram / Lark / WeCom messages all synced for voice readout (multi-channel message sync) |
+| 🍎 **Win + Mac Support** | Windows 10/11 and macOS (Intel & Apple Silicon) both supported (cross-platform Electron) |
+| 📱 **Tray Menu Control Center** | Right-click tray icon to switch models, check status, run diagnostics, manage sessions (system tray context menu) |
 
 ### 🆕 What's New in v3.5.2
 
