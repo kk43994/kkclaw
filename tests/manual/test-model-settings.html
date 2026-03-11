@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Test</title>
+</head>
+<body>
+<h1>Model Settings Debug</h1>
+<div id="status">Loading...</div>
+<div id="data"></div>
+<script>
+console.log('Test script loaded');
+console.log('electronAPI:', window.electronAPI);
+
+setTimeout(async () => {
+  const status = document.getElementById('status');
+  const data = document.getElementById('data');
+
+  if (!window.electronAPI) {
+    status.textContent = 'ERROR: electronAPI not available';
+    return;
+  }
+
+  try {
+    const result = await window.electronAPI.invoke('model-full-status');
+    status.textContent = 'SUCCESS';
+    data.innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+  } catch (err) {
+    status.textContent = 'ERROR: ' + err.message;
+    data.textContent = err.stack;
+  }
+}, 1000);
+</script>
+</body>
+</html>

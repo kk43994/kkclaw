@@ -1,211 +1,171 @@
-﻿# Changelog
+# Changelog
 
 All notable changes to this project will be documented in this file.
 
-The format is based on Keep a Changelog, and this project loosely follows semantic versioning.
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.2] - 2026-03-11
 
-## [3.1.2] - 2026-02-22
+### Fixed
+- **Edge TTS 语音播报修复** — 修正 `--text-file` → `--file` 参数，修复语音播报全部失败的问题
+- **macOS 托盘图标修复** — 使用 22×22 Template PNG 替换原 128×121 RGB 图标，消除黑色方框
+- **macOS 球体透明度修复** — 添加 `backgroundColor: '#00000000'`，仅在 Windows 上禁用硬件加速
+- **外部链接修复** — `open-external` IPC 调用改为直接 `shell.openExternal`，修复链接无法打开
+- **Preload 白名单补全** — 添加 `wizard-save-voice-id` 通道，修复语音克隆 ID 保存失败
 
-### 🎤 Setup Wizard Voice Configuration Improvements
+## [3.1.1] - 2026-03-11
 
-#### New Features
-- ✨ **Preset voice selection**: 8 official MiniMax voices (female-tianmei, female-shaonv, diadia_xuemei, qiaopi_mengmei, tianxin_xiaoling, lovely_girl, Sweet_Girl, Cute_Elf)
-- ✨ **Custom voice_id input**: Manual input field for users who cloned voices in MiniMax console
-- ✨ **Current voice display**: Real-time display of selected voice_id in UI
-- ✨ **Permission detection**: Auto-detect and warn if using someone else's cloned voice
+### Security
+- **命令注入修复** — 音频播放 (`_playAudioFile`, `_playAudio`) 由 `exec()` 字符串拼接改为 `execFile()`/`spawn()` + 参数数组
+- **Edge TTS 命令注入修复** — 文本通过临时文件 (`--text-file`) 传递，替代内联 `--text`
+- **Token 安全** — ��态配置读取替代模块级缓存；新增 `SecureStorage`、`LogSanitizer`、`IpcValidator` 模块
 
-#### Bug Fixes
-- 🐛 **Fixed error 2042**: Test playback now uses current selected voice_id instead of old config
-- 🐛 **Fixed default voice**: New users default to official preset voices, avoiding permission errors
-- 🐛 **Fixed voice priority**: Configuration file voice_id takes precedence over defaults
+### Added
+- **模型热切换** — 状态机 + 策略模式 + 切换历史记录
+- **Gateway 智能监控** — 异常检测、健康评分、指标采集、智能探测器
+- **SessionLockManager** — 安全并发访问的会话锁管理
+- **openclaw-path-resolver** — 消除硬编码路径
 
-#### Improvements
-- 💡 **3 configuration methods**: Preset selection / Custom input / Upload & clone
-- 💡 **Smart fallback**: If no voice_id configured, uses official preset instead of unavailable cloned voice
-- 💡 **Better UX**: Voice selection dropdown with descriptions, custom input for advanced users
+### Fixed
+- **`stop()` 终止播放** — 正确终止正在运行的音频进程
 
----
+## [3.0.0] - 2026-02-22
+
+### Added
+- **Setup Wizard 配置向导** — RPG 游戏风格，7 ���引导流程（Gateway → 模型 → 渠道 → TTS → 播报 → 显示 → 测试）
+- **一键音色克隆** — 上传 30 秒录音，自动调 MiniMax/CosyVoice API 创建专属音色
+- **人设定制系统** — 5 种预设风格（甜妹/专业/幽默/酷帅/自定义），一键生成 `AGENTS.md` + `SOUL.md` + `USER.md` + `HEARTBEAT.md`
+- **14 种情绪系统** — 在原 7 种基础上新增 sad、angry、fearful、calm、excited、love、focused，每种有专属 glow 光效
+- **情绪文本检测** — `desktop-bridge.js` 自动分析内容情绪，10 种匹配规则
+- **Doctor 自检系统** — 10 项全自动诊断（Gateway / 托盘 / TTS / 模型 / 端口 / 健康度 / 缓存 / 歌词 / 日志），每项带修复建议
+- **模型管理升级** — 延迟测速、Provider CRUD、模型增删
+- **预设语音选择** — 8 种官方 MiniMax 语音 + 自定义 voice_id 输入
+
+### Fixed
+- **voice_id 错误 2042** — 测试播放使用当前选中 voice_id 而非旧配置
+- **默认语音** — 新用户默认使用官方预设语音，避免权限错误
+- **语音优先级** — 配置文件 voice_id 优先于默认值
+
+### Security
+- **API Key 加密存储** — `safeStorage` 加密，密钥不再明文写入磁盘
+- **preload 安全沙箱** — 主窗口/歌词/诊断/模型设置全部走 IPC 白名单
+- **渲染进程错误转发** — `preload-error` + `console-message` 转发到主进程日志
 
 ## [2.2.0] - 2026-02-15
 
-### 🛡️ Gateway Error Diagnosis Chain
-- **Gateway Guardian v2**: Startup grace period (60s), prevents false-positive restarts during slow init
-- **Service Manager**: Captures stdout + stderr from gateway process for error diagnosis
-- **Error extraction**: `_extractErrorReason()` parses gateway output to identify root cause
-- **Restart notifications**: Desktop notifications now show specific error reasons (not just "restart failed")
-- **Restart-limit-reached event**: Emits last error for UI display when entering low-frequency monitoring
-- **shell:false**: Spawns gateway without shell wrapper for cleaner process management
+### Added
+- **Gateway Guardian v2** — 启动宽限期（60s），防止慢启动误触重启
+- **安全模型切换与回滚** — 乐观更新 + 验证，5s 内失败自动回滚
+- **会话管理** — 托盘菜单新增「会话管理」子菜单，支持上下文状态查看与一键清理
+- **OpenClaw Client v2** — 请求计数器、错误历史（最近 50 条）、上下文长度感知
 
-### 🔄 Safe Model Switching with Rollback
-- **Optimistic update + verify**: Switches model, waits for gateway reload, then verifies
-- **Auto-rollback**: If gateway fails to load new model within 5s, rolls back to previous model
-- **Switch logging**: Detailed logs for every switch attempt (success/fail/rollback)
-- **Gateway reload detection**: `_waitForGatewayReload()` polls gateway status after config write
-
-### 📊 Session Management & Context Tracking
-- **Tray menu**: New "会话管理" submenu with context status and session clear
-- **Context length check**: Estimates token usage percentage before each request
-- **Token estimation**: Chinese (~2 tokens/char) and English (~1.3 tokens/word) heuristics
-- **Request tracking**: Numbered requests with timing, error history (last 50), request history (last 20)
-- **Timeout warnings**: 30s timeout detection with diagnostic suggestions
-- **Session clear**: One-click session cleanup from tray menu
-
-### 🔧 OpenClaw Client v2
-- **Request counter**: Sequential request IDs for log correlation
-- **Error history**: Tracks last 50 errors with request ID, message, elapsed time
-- **Context awareness**: `checkContextLength()` warns when approaching model limits
-- **Graceful degradation**: Better error messages with actionable suggestions
-
----
+### Improved
+- **Service Manager** — 捕获 stdout + stderr，解析错误根因
+- **进程管理** — `shell:false` 直接 spawn，更干净的进程管控
 
 ## [2.0.4] - 2026-02-11
 
-### 🏗️ Major Refactor
-- **Project restructure**: 97 files reorganized — clean separation of concerns
-  - `voice/` — all TTS engines (MiniMax, CosyVoice, DashScope, Edge)
-  - `utils/` — auto-notify, progress-reporter, notify helpers
-  - `scripts/` — build scripts, shortcuts, screenshots
-  - `docs-dev/` — developer documentation (30+ files moved)
-  - `archive/` — deprecated voice files
-  - `tests/` — test files isolated
+### Changed
+- **项目重构** — 97 个文件重新组织，按职责分离（`voice/`、`utils/`、`scripts/`、`docs-dev/`、`archive/`、`tests/`）
+- **品牌升级** — 全面使用 kkclaw 品牌
 
-### 🔒 Security
-- **Hardcoded credentials removed**: 5 files cleaned (API keys, tokens, personal paths)
-- **Safe runtime config**: `openclaw-client.js` reads tokens from `~/.openclaw/openclaw.json` at runtime
-- **Asar audit**: 0 leaks verified in packaged build
+### Security
+- **清除硬编码凭证** — 5 个文件清理（API keys、tokens、个人路径）
+- **运行时安全配置** — `openclaw-client.js` 从 `~/.openclaw/openclaw.json` 运行时读取 token
+- **Asar 审计** — 打包产物 0 泄漏验证
 
-### 🎨 Enhanced
-- **GitHub Pages v3.0**: Interactive 7-emotion ball demo, click-to-switch mood
-- **Brand upgrade**: kkclaw branding throughout
-- **README rewrite**: Bilingual, screenshots gallery, architecture diagrams
+### Added
+- **KKClaw Switch 日志** (`utils/switch-logger.js`) — Provider 切换跟踪
+- **服务管理器** (`service-manager.js`) — 统一服务生命周期
+- **GitHub Pages v3.0** — 交互式 7 情绪球 demo
 
-### 🔧 Added
-- **KKClaw Switch logger** (`utils/switch-logger.js`): 132-line provider switch tracking
-- **Service manager** (`service-manager.js`): Unified service lifecycle
-- **Project structure doc** (`PROJECT-STRUCTURE.md`): Complete file map
-- **Feature guide** (`docs-dev/FEATURE-GUIDE.md`): 1446-line comprehensive guide
-
-### 📦 Build
-- **Windows exe installer**: 74MB NSIS installer, electron-builder
-- **GitHub Release v2.0.3→v2.0.4**: Automated build pipeline
-- **Repo renamed**: `claw-desktop-pet` → `KKClaw-Desktop-Pet`
-
-### 🐛 Fixes
-- Fixed `model-switcher.js` import path error
-- Removed legacy files: `gateway-listener.js`, `lark-uploader.js`, `work-logger.js`, etc.
-- Cleaned up 7 test files that shouldn't ship in production
-
----
+### Fixed
+- 修复 `model-switcher.js` 引入路径错误
+- 清理不应打包的测试文件
 
 ## [2.0.3] - 2026-02-10
 
-### 🎨 Enhanced
-- **Silky smooth color transitions**: Upgraded mood color changes from basic `ease` to layered `cubic-bezier` curves
-- **Tri-layer gradient timing**: Inner fluid (2.2s), blob1 (1.8s), blob2 (2.6s) create visual depth
-- **Blush & opacity transitions**: Happy-mode blush and sleepy-mode opacity now fade smoothly (1.5s/2.5s)
-- **Material Design easing**: All transitions use `cubic-bezier(0.4, 0.0, 0.2, 1)` for natural motion
+### Improved
+- **丝滑色彩过渡** — 从基础 `ease` 升级到分层 `cubic-bezier` 曲线
+- **三层渐变时序** — inner fluid (2.2s)、blob1 (1.8s)、blob2 (2.6s) 营造视觉层次
 
-### 🔧 Added
-- **KKClaw Switch Auto-Sync Watcher** (`kkclaw-auto-sync.js`): Monitors `~/.cc-switch/cc-switch.db` every 2s, auto-syncs provider changes to OpenClaw with minimal restart
-- **Integrated into Desktop Pet lifecycle**: Watcher starts with pet, stops on quit—no manual management needed
-- **Installed `better-sqlite3`** dependency for DB monitoring
-
----
+### Added
+- **KKClaw Switch 自动同步** (`kkclaw-auto-sync.js`) — 监控 `~/.cc-switch/cc-switch.db`，自动同步 Provider 变更
+- **集成到桌面宠物生命周期** — 随宠物启动/退出，无需手动管理
 
 ## [2.0.2] - 2026-02-10
 
-### 📝 Docs
-- README hardened into a bilingual, open-source friendly "enterprise" layout
-- Added configuration matrix, troubleshooting, security, contributing and release checklist
-- Added community QR + support QR entries to GitHub Pages and README
-
----
+### Improved
+- README 强化为双语企业级布局
+- 新增配置矩阵、故障排查、安全、贡献与发布清单
 
 ## [2.0.1] - 2026-02-10
 
-### 🐛 Fixes
-- Fix KKClaw Switch -> OpenClaw sync failing due to duplicated provider keys (case-sensitive collisions)
+### Fixed
+- KKClaw Switch → OpenClaw 同步因大小写冲突导致 Provider 键重复
 
-### ✨ Added
-- `kkclaw-hotswitch.js`: sync current active provider from KKClaw Switch and optionally restart OpenClaw (`--restart`)
-- `fix-openclaw-config.js`: repair helper for duplicated keys in `~/.openclaw/openclaw.json`
-
-### 📝 Docs
-- README and GitHub Pages refreshed: version/date, hot-switch guide, and community QR entry
-
----
+### Added
+- `kkclaw-hotswitch.js` — 同步当前 Provider 并可选重启 OpenClaw
+- `fix-openclaw-config.js` — 修复重复键的配置修复工具
 
 ## [1.4.0] - 2026-02-07
 
-### ✨ 新功能
-- 🎙️ 智能语音音调调整
-  - 普通消息从0Hz提升到+20Hz,声音更年轻活泼
-  - 保持情绪化音调变化 (开心+30Hz, 超兴奋+50Hz)
-  - 声音更有层次感和表现力
+### Added
+- **智能语音音调** — 普通消息 +20Hz，情绪化音调变化（开心 +30Hz，超兴奋 +50Hz）
 
-### 🐛 Bug修复
-- 修复重复播报问题
-  - 在main.js添加EventEmitter监听器清理
-  - 解决同一消息播报3次的bug
-  
-### ⚡ 性能优化
-- 大幅增加语音播报时长限制
-  - TTS生成超时: 15秒 → 30秒
-  - 播放超时: 60秒 → 120秒
-  - 文本长度: 300-500字 → 800字
-  - 支持更长的内容播报,不会被截断
+### Fixed
+- 修复重复播报问题 — EventEmitter 监听器清理，解决同一消息播报 3 次的 bug
 
-- 文本清理增强 (desktop-bridge.js)
-  - 自动移除emoji、颜文字
-  - 清理markdown格式
-  - 标点符号归一化
-  - 播报更自然流畅
-
-### 📝 其他改进
-- 更新.gitignore,排除个人设置和临时文件
-- 代码注释优化
-- 错误日志改进
-
----
+### Improved
+- TTS 生成超时 15s → 30s，播放超时 60s → 120s，文本上限 500 → 800 字
+- 文本清理增强 — 自动移除 emoji、颜文字、markdown 格式，标点归一化
 
 ## [1.3.0] - 2026-02-06
 
-### ✨ 新功能
-- 🎭 智能语音系统 (SmartVoiceSystem)
-- 🔄 自动重启系统
-- 📊 性能监控
-- 🧹 缓存管理
-- 🛡️ 全局错误处理
-- 📝 日志轮转
+### Added
+- 智能语音系统 (SmartVoiceSystem)
+- 自动重启系统
+- 性能监控
+- 缓存管理
+- 全局错误处理
+- 日志轮转
 
-### 🐛 Bug修复
+### Fixed
 - 修复内存泄漏问题
 - 优化窗口位置保存
 
----
-
 ## [1.2.0] - 2026-02-05
 
-### ✨ 新功能
-- 📸 截图功能
-- 📤 Lark上传集成
-- 💬 消息同步系统
-
----
+### Added
+- 截图功能
+- Lark 上传集成
+- 消息同步系统
 
 ## [1.1.0] - 2026-02-04
 
-### ✨ 新功能
-- 🎙️ 语音播报系统
-- 🔧 服务管理器
-- 📋 工作日志
-
----
+### Added
+- 语音播报系统
+- 服务管理器
+- 工作日志
 
 ## [1.0.0] - 2026-02-03
 
-### 🎉 初始版本
+### Added
 - 基础桌面宠物功能
-- OpenClaw集成
+- OpenClaw 集成
 - 简单语音系统
+
+[3.1.2]: https://github.com/kk43994/kkclaw/compare/v3.1.1...v3.1.2
+[3.1.1]: https://github.com/kk43994/kkclaw/compare/v3.0.0...v3.1.1
+[3.0.0]: https://github.com/kk43994/kkclaw/compare/v2.2.0...v3.0.0
+[2.2.0]: https://github.com/kk43994/kkclaw/compare/v2.0.4...v2.2.0
+[2.0.4]: https://github.com/kk43994/kkclaw/compare/v2.0.3...v2.0.4
+[2.0.3]: https://github.com/kk43994/kkclaw/compare/v2.0.2...v2.0.3
+[2.0.2]: https://github.com/kk43994/kkclaw/compare/v2.0.1...v2.0.2
+[2.0.1]: https://github.com/kk43994/kkclaw/compare/v1.4.0...v2.0.1
+[1.4.0]: https://github.com/kk43994/kkclaw/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/kk43994/kkclaw/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/kk43994/kkclaw/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/kk43994/kkclaw/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/kk43994/kkclaw/releases/tag/v1.0.0

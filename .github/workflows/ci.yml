@@ -9,34 +9,78 @@ on:
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'npm'
-    
+
     - name: Install dependencies
       run: npm ci || npm install
-    
-    - name: Check syntax
-      run: node -c main.js && echo "✅ main.js OK"
-    
-    - name: Check HTML files
+
+    - name: Syntax check — core modules
       run: |
-        for f in index.html lyrics.html; do
+        echo "🔍 Checking core modules..."
+        for f in main.js preload.js setup-preload.js openclaw-client.js \
+                 smart-voice.js message-sync.js service-manager.js \
+                 gateway-guardian.js model-switcher.js cache-manager.js \
+                 pet-config.js setup-wizard.js global-error-handler.js \
+                 log-rotation.js performance-monitor.js auto-restart.js \
+                 desktop-notifier.js screenshot-system.js; do
           if [ -f "$f" ]; then
-            echo "✅ $f exists"
+            node -c "$f" && echo "  ✅ $f"
           fi
         done
-    
-    - name: Check package.json
+
+    - name: Syntax check — utils
       run: |
-        node -e "const p = require('./package.json'); console.log('✅ Package:', p.name, 'v' + p.version)"
-    
-    - name: Verify Electron dependency
+        echo "🔍 Checking utils..."
+        for f in utils/*.js; do
+          if [ -f "$f" ]; then
+            node -c "$f" && echo "  ✅ $f"
+          fi
+        done
+
+    - name: Verify package.json
       run: |
-        node -e "const p = require('./package.json'); if(p.devDependencies?.electron || p.dependencies?.electron) console.log('✅ Electron found'); else process.exit(1)"
+        node -e "
+          const p = require('./package.json');
+          console.log('📦 Package:', p.name, 'v' + p.version);
+          if (!p.main) { console.error('❌ Missing main entry'); process.exit(1); }
+          if (!p.devDependencies?.electron) { console.error('❌ Missing Electron'); process.exit(1); }
+          console.log('✅ package.json valid');
+        "
+
+    - name: Verify HTML files exist
+      run: |
+        for f in index.html lyrics.html setup-wizard.html model-settings.html diagnostic-toolbox.html; do
+          if [ -f "$f" ]; then
+            echo "✅ $f"
+          else
+            echo "⚠️ $f not found (optional)"
+          fi
+        done
+
+    - name: Run tests
+      run: npm test --if-present
+
+    - name: Security check — no hardcoded secrets
+      run: |
+        echo "🔒 Scanning for potential secrets..."
+        FOUND=0
+        # Check for common secret patterns (skip node_modules, .git, dist)
+        if grep -rn --include="*.js" --include="*.json" \
+           -E '(sk-[a-zA-Z0-9]{20,}|eyJhbGci|AKIA[0-9A-Z]{16})' \
+           --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist . 2>/dev/null; then
+          echo "❌ Potential secrets found!"
+          FOUND=1
+        fi
+        if [ $FOUND -eq 0 ]; then
+          echo "✅ No hardcoded secrets detected"
+        else
+          exit 1
+        fi

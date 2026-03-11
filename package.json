@@ -10,6 +10,8 @@
     "build:win": "electron-builder --win --x64",
     "build:mac": "electron-builder --mac --x64 --arm64",
     "build:all": "electron-builder --win --mac --x64 --arm64",
+    "test": "jest --verbose",
+    "test:ci": "jest --ci --coverage",
     "shortcut": "node scripts/create-shortcut.js",
     "kill": "taskkill /IM electron.exe /F 2>nul || echo No running instance"
   },
@@ -29,7 +31,8 @@
   "license": "MIT",
   "devDependencies": {
     "electron": "^28.3.3",
-    "electron-builder": "^24.13.3"
+    "electron-builder": "^24.13.3",
+    "jest": "^30.3.0"
   },
   "dependencies": {
     "ws": "^8.19.0"
@@ -118,6 +121,19 @@
       "!monitor-*.js",
       "!get-*.js",
       "!batch-*.js"
+    ]
+  },
+  "jest": {
+    "testMatch": ["**/tests/__tests__/**/*.test.js"],
+    "testPathIgnorePatterns": ["/node_modules/", "/dist/"],
+    "modulePathIgnorePatterns": ["/dist/"],
+    "collectCoverageFrom": [
+      "*.js",
+      "utils/**/*.js",
+      "!main.js",
+      "!preload.js",
+      "!setup-preload.js",
+      "!node_modules/**"
     ]
   }
 }
