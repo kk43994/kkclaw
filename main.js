@@ -391,7 +391,8 @@ async function createWindow() {
       body: info.lastError
         ? `原因: ${info.lastError}\n已重启 ${info.restartHistory.length} 次，进入低频监控。`
         : `Gateway 已重启 ${info.restartHistory.length} 次，进入低频监控。`,
-      icon: path.join(__dirname, 'icon.png')
+      icon: path.join(__dirname, 'icon.png'),
+      silent: true
     }).show();
   });
 
@@ -513,12 +514,13 @@ async function createWindow() {
       });
       workLogger.logMessage(payload.sender || '用户', payload.content);
       
-      // 🔔 Windows 系统通知
+      // 🔔 Windows 系统通知（silent: true 防止系统朗读通知内容）
       if (!mainWindow.isFocused()) {
         new Notification({
           title: payload.sender || '用户',
           body: payload.content.substring(0, 100),
-          icon: path.join(__dirname, 'icon.png')
+          icon: path.join(__dirname, 'icon.png'),
+          silent: true
         }).show();
       }
       
@@ -1658,26 +1660,21 @@ function _createWindowsShortcut(desktopPath, projectPath, colorLog, execFile) {
   }
 
   const iconPath = path.join(projectPath, 'icon.ico');
-  const electronExe = path.join(projectPath, 'node_modules', 'electron', 'dist', 'electron.exe');
+  const startCmd = path.join(projectPath, 'start.cmd');
 
   function escPS(value) {
     return value.replace(/'/g, "''");
   }
 
+  // 快捷方式指向 start.cmd，这样会打开 CMD 控制台显示 Gateway 日志
   const psScript = [
     '$WshShell = New-Object -ComObject WScript.Shell',
     `$Shortcut = $WshShell.CreateShortcut('${escPS(shortcutPath)}')`,
-    `if (Test-Path '${escPS(electronExe)}') {`,
-    `  $Shortcut.TargetPath = '${escPS(electronExe)}'`,
-    `  $Shortcut.Arguments = '${escPS(projectPath)}'`,
-    `} else {`,
-    "  $Shortcut.TargetPath = 'cmd.exe'",
-    `  $Shortcut.Arguments = '/c cd /d "${escPS(projectPath)}" && npm start'`,
-    `}`,
+    `$Shortcut.TargetPath = '${escPS(startCmd)}'`,
     `$Shortcut.WorkingDirectory = '${escPS(projectPath)}'`,
     "$Shortcut.Description = 'Claw 桌面宠物 - OpenClaw AI 助手'",
     `$Shortcut.IconLocation = '${escPS(iconPath)}'`,
-    '$Shortcut.WindowStyle = 7',
+    '$Shortcut.WindowStyle = 1',
     '$Shortcut.Save()'
   ].join('; ');
 
@@ -1832,7 +1829,8 @@ function showServiceNotification(title, body) {
   new Notification({
     title: title,
     body: body,
-    icon: path.join(__dirname, 'icon.png')
+    icon: path.join(__dirname, 'icon.png'),
+    silent: true
   }).show();
 }
 

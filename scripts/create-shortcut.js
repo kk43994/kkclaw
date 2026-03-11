@@ -7,27 +7,21 @@ const desktopPath = path.join(homePath, 'Desktop');
 const shortcutPath = path.join(desktopPath, 'Claw 桌面宠物.lnk');
 const projectPath = path.resolve(__dirname, '..');
 const iconPath = path.join(projectPath, 'icon.ico');
-const electronExe = path.join(projectPath, 'node_modules', 'electron', 'dist', 'electron.exe');
+const startCmd = path.join(projectPath, 'start.cmd');
 
 function escapePowerShellSingleQuote(value) {
     return value.replace(/'/g, "''");
 }
 
-// 使用 PowerShell 创建快捷方式
+// 使用 PowerShell 创建快捷方式 — 指向 start.cmd 以显示 CMD 控制台
 const psScript = [
     '$WshShell = New-Object -ComObject WScript.Shell',
     `$Shortcut = $WshShell.CreateShortcut('${escapePowerShellSingleQuote(shortcutPath)}')`,
-    `if (Test-Path '${escapePowerShellSingleQuote(electronExe)}') {`,
-    `  $Shortcut.TargetPath = '${escapePowerShellSingleQuote(electronExe)}'`,
-    `  $Shortcut.Arguments = '${escapePowerShellSingleQuote(projectPath)}'`,
-    `} else {`,
-    "  $Shortcut.TargetPath = 'cmd.exe'",
-    `  $Shortcut.Arguments = '/c cd /d "${escapePowerShellSingleQuote(projectPath)}" && npm start'`,
-    `}`,
+    `$Shortcut.TargetPath = '${escapePowerShellSingleQuote(startCmd)}'`,
     `$Shortcut.WorkingDirectory = '${escapePowerShellSingleQuote(projectPath)}'`,
     "$Shortcut.Description = 'Claw 桌面宠物 - OpenClaw AI 助手'",
     `$Shortcut.IconLocation = '${escapePowerShellSingleQuote(iconPath)}'`,
-    '$Shortcut.WindowStyle = 7',
+    '$Shortcut.WindowStyle = 1',
     '$Shortcut.Save()',
     `Write-Host '快捷方式已创建: ${escapePowerShellSingleQuote(shortcutPath)}'`
 ].join('; ');

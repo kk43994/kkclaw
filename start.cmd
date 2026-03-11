@@ -5,7 +5,7 @@ title KKClaw Gateway Console
 
 echo.
 echo   +==========================================+
-echo   :      KKClaw Desktop Pet  v3.1.2          :
+echo   :      KKClaw Desktop Pet  v3.5.0          :
 echo   :      Gateway Console - Live Monitor       :
 echo   +==========================================+
 echo.
