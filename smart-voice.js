@@ -99,24 +99,21 @@ class SmartVoiceSystem {
                 await execFileAsync('paplay', [filePath], { timeout: 120000 });
             }
         } else {
-            // Windows: 用 PowerShell MediaPlayer，增加超时保护和错误处理
+            // Windows: 用 winmm.dll MCI 接口直接播放，不触发系统文件关联
             const psScript = `
-                Add-Type -AssemblyName presentationCore
-                $player = New-Object System.Windows.Media.MediaPlayer
-                $player.Open([uri]$args[0])
-                $player.Play()
-                $wait = 0
-                while($player.NaturalDuration.HasTimeSpan -eq $false -and $wait -lt 50) {
-                    Start-Sleep -Milliseconds 100
-                    $wait++
-                }
-                if($player.NaturalDuration.HasTimeSpan) {
-                    $duration = $player.NaturalDuration.TimeSpan.TotalSeconds
-                    Start-Sleep -Seconds ([Math]::Min($duration + 0.5, 60))
-                } else {
-                    Start-Sleep -Seconds 3
-                }
-                $player.Close()
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+public class WinAudio {
+    [DllImport("winmm.dll", CharSet=CharSet.Unicode)]
+    public static extern int mciSendStringW(string cmd, StringBuilder buf, int bufLen, IntPtr hwnd);
+}
+"@
+$f = $args[0] -replace '"','""'
+[WinAudio]::mciSendStringW("open ""$f"" type mpegvideo alias kkaudio", $null, 0, [IntPtr]::Zero)
+[WinAudio]::mciSendStringW("play kkaudio wait", $null, 0, [IntPtr]::Zero)
+[WinAudio]::mciSendStringW("close kkaudio", $null, 0, [IntPtr]::Zero)
             `;
             await new Promise((resolve, reject) => {
                 const child = spawn('powershell', [
@@ -126,12 +123,12 @@ class SmartVoiceSystem {
                 const timer = setTimeout(() => {
                     child.kill();
                     this._currentProcess = null;
-                    resolve(); // 超时不报错，静默完成
-                }, 30000); // 30秒播放超时（比之前120秒合理得多）
-                child.on('close', (code) => {
+                    resolve(); // 超时静默完成
+                }, 60000); // 60秒播放超时
+                child.on('close', () => {
                     clearTimeout(timer);
                     this._currentProcess = null;
-                    resolve(); // 不管退出码都resolve，避免播放问题阻断后续逻辑
+                    resolve();
                 });
                 child.on('error', (err) => {
                     clearTimeout(timer);
