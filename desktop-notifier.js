@@ -90,7 +90,9 @@ class DesktopNotifier extends EventEmitter {
 
     _handleNotification(data) {
         const { type, payload } = data;
-        console.log('📢 收到通知:', type, payload);
+        // 不再打印完整 payload — 各事件处理器（main.js）已有详细日志
+        // 只打印类型，避免与 🤖/👤 日志重复
+        console.log(`📢 收到通知: ${type}`);
         this.emit(type, payload);
     }
 

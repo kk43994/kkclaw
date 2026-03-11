@@ -279,18 +279,20 @@ class ServiceManager extends EventEmitter {
         this._startupState = { pid: child.pid, startedAt: Date.now(), exited: false };
 
         // 去重集合：Gateway 可能同时向 stdout/stderr 写相同内容
-        // 用纯文本（去掉 ANSI 颜色码）做比较，防止同内容不同颜色码绕过去重
+        // 用纯文本（去掉所有 ANSI 转义序列）做比较，防止同内容不同颜色码绕过去重
         const _recentLines = new Set();
+        // 匹配所有 ANSI CSI 序列（SGR、清屏、光标移动等）+ OSC 序列
+        const _ansiRe = /\x1b\[[\d;]*[A-Za-z]|\x1b\][\s\S]*?(?:\x07|\x1b\\)|\x1b[()][A-Z0-9]|\x1b[=><78NOMDEHFcABCDZ ]/g;
         const _dedupLine = (line) => {
-            // 去掉 ANSI 颜色码 + 不可见字符 + 首尾空白，确保彻底去重
-            const plain = line.replace(/\x1b\[[0-9;]*m/g, '')
-                              .replace(/[\u200B\u200C\u200D\uFEFF]/g, '')
+            // 去掉所有 ANSI 转义 + 不可见 Unicode + 首尾空白，确保彻底去重
+            const plain = line.replace(_ansiRe, '')
+                              .replace(/[\u200B\u200C\u200D\uFEFF\u00A0]/g, '')
                               .trim();
             if (!plain) return false; // 空行跳过
             if (_recentLines.has(plain)) return false;
             _recentLines.add(plain);
-            // 只保留最近 50 条用于去重
-            if (_recentLines.size > 50) {
+            // 只保留最近 100 条用于去重（扩大窗口）
+            if (_recentLines.size > 100) {
                 const first = _recentLines.values().next().value;
                 _recentLines.delete(first);
             }
@@ -303,7 +305,7 @@ class ServiceManager extends EventEmitter {
             // 实时转发 Gateway stdout 到 KKClaw 控制台，关键信息高亮
             text.split('\n').filter(l => l.trim()).forEach(line => {
                 if (_dedupLine(line)) {
-                    const plain = line.replace(/\x1b\[[0-9;]*m/g, '');
+                    const plain = line.replace(_ansiRe, '');
                     let tag;
                     if (/error|Error|❌|FAIL|fatal/i.test(plain)) {
                         tag = '\x1b[31m[Gateway]\x1b[0m';
@@ -326,7 +328,7 @@ class ServiceManager extends EventEmitter {
             stderrBuf = (stderrBuf + text).slice(-2048);
             text.split('\n').filter(l => l.trim()).forEach(line => {
                 if (_dedupLine(line)) {
-                    const plain = line.replace(/\x1b\[[0-9;]*m/g, '');
+                    const plain = line.replace(_ansiRe, '');
                     const highlighted = this._highlightKeywords(line);
                     console.log(`\x1b[33m[Gateway:WARN]\x1b[0m ${highlighted}`);
                     this.log('warn', plain, 'gateway-stderr');

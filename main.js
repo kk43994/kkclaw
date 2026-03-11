@@ -553,11 +553,9 @@ async function createWindow() {
       });
       workLogger.logMessage(msg.sender, msg.content);
       console.log('📩 新消息:', msg.sender, '-', msg.content.substring(0, 50));
-      
-      // 🔥 添加语音播报用户消息
-      if (msg.content) {
-        voiceSystem.speak(msg.content.substring(0, 500)); // 用户消息也播报
-      }
+
+      // ⚠️ 不在这里播报语音 — desktopNotifier 的 user-message 已经负责播报了
+      // 如果两边都 speak 会导致双重播报
     }
   });
 
