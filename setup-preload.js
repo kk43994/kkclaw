@@ -31,10 +31,12 @@ const VALID_INVOKE_CHANNELS = [
   'check-tts',
   'install-edge-tts',
   'install-dashscope',
+  'wizard-install-missing-deps',
 ];
 
 const VALID_ON_CHANNELS = [
   'soul-infuse-progress',
+  'dep-install-progress',
 ];
 
 contextBridge.exposeInMainWorld('wizardAPI', {

@@ -190,6 +190,11 @@ class SetupWizard {
     ipcMain.handle('wizard-retry-single-test', async (event, testKey) => {
       return this._retrySingleTest(testKey);
     });
+
+    // 环境预检 — 一键安装缺失依赖
+    ipcMain.handle('wizard-install-missing-deps', async (event, depList) => {
+      return this._installMissingDeps(depList, event.sender);
+    });
   }
 
   // ─── Step 4: 灵魂注入（分步进度版）──────────────────────
@@ -1766,6 +1771,111 @@ ${personality}
       default:
         return { status: 'fail', message: '未知测试项' };
     }
+  }
+
+  // ─── 一键安装缺失依赖 ──────────────────────
+  async _installMissingDeps(depList, sender) {
+    const results = {};
+    const isWin = process.platform === 'win32';
+
+    for (const dep of depList) {
+      try {
+        sender.send('dep-install-progress', { dep, status: 'installing' });
+
+        switch (dep) {
+          case 'edge-tts': {
+            // 先找 Python
+            const pythonCmd = await this._findPython();
+            if (!pythonCmd) {
+              results[dep] = { success: false, error: '需要先安装 Python' };
+              break;
+            }
+            const { stdout, stderr } = await execAsync(`${pythonCmd} -m pip install edge-tts`, {
+              timeout: 120000, windowsHide: true
+            });
+            // 验证
+            try {
+              await execAsync('edge-tts --version', { timeout: 5000, windowsHide: true });
+              results[dep] = { success: true };
+            } catch {
+              results[dep] = { success: true, warning: '已安装但可能需要重启终端才能使用' };
+            }
+            break;
+          }
+
+          case 'sqlite3': {
+            if (isWin) {
+              // Windows: 尝试 winget
+              try {
+                await execAsync('winget install SQLite.SQLite --accept-source-agreements --accept-package-agreements', {
+                  timeout: 120000, windowsHide: true
+                });
+                results[dep] = { success: true, warning: '已安装，可能需要重启终端才能生效' };
+              } catch (e) {
+                // winget 失败，试 choco
+                try {
+                  await execAsync('choco install sqlite -y', { timeout: 120000, windowsHide: true });
+                  results[dep] = { success: true, warning: '已通过 Chocolatey 安装' };
+                } catch {
+                  results[dep] = { success: false, error: '自动安装失败，请手动运行: winget install SQLite.SQLite' };
+                }
+              }
+            } else if (process.platform === 'darwin') {
+              try {
+                await execAsync('brew install sqlite3', { timeout: 120000 });
+                results[dep] = { success: true };
+              } catch {
+                results[dep] = { success: false, error: '请手动运行: brew install sqlite3' };
+              }
+            } else {
+              // Linux: 尝试 apt / yum
+              try {
+                await execAsync('sudo apt-get install -y sqlite3 2>/dev/null || sudo yum install -y sqlite 2>/dev/null', {
+                  timeout: 120000
+                });
+                results[dep] = { success: true };
+              } catch {
+                results[dep] = { success: false, error: '请手动安装: sudo apt install sqlite3' };
+              }
+            }
+            break;
+          }
+
+          case 'node_modules': {
+            try {
+              const projectRoot = path.resolve(__dirname);
+              await execAsync('npm install', {
+                cwd: projectRoot, timeout: 300000, windowsHide: true
+              });
+              results[dep] = { success: true };
+            } catch (e) {
+              results[dep] = { success: false, error: 'npm install 失败: ' + e.message.substring(0, 200) };
+            }
+            break;
+          }
+
+          default:
+            results[dep] = { success: false, error: '不支持自动安装: ' + dep };
+        }
+      } catch (e) {
+        results[dep] = { success: false, error: e.message };
+      }
+
+      sender.send('dep-install-progress', { dep, status: results[dep].success ? 'done' : 'error', result: results[dep] });
+    }
+
+    return { success: true, results };
+  }
+
+  async _findPython() {
+    const candidates = ['python3', 'python', 'py'];
+    for (const cmd of candidates) {
+      try {
+        await execAsync(`${cmd} --version`, { timeout: 5000, windowsHide: true });
+        return cmd;
+      } catch {}
+    }
+    return null;
   }
 }
 

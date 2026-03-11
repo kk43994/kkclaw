@@ -893,6 +893,7 @@
 // ===== State =====
 let currentStep = -1;
 let smartEnvManualPath = '';
+let missingDepsForInstall = []; // 记录可自动安装的缺失依赖
   const totalSteps = 8;
   let maxVisitedStep = -1;
 let stepData = {
@@ -1419,6 +1420,12 @@ async function renderEnvCheck() {
       deps.sqlite3.ok ? null : { label: '安装命令', cmdHint: 'winget install SQLite.SQLite' }
     );
 
+    // ─── 收集可自动安装的缺失依赖 ───
+    missingDepsForInstall = [];
+    if (!projOk) missingDepsForInstall.push({ key: 'node_modules', name: '项目依赖 (npm install)' });
+    if (!deps.edgeTts.ok && deps.python.ok) missingDepsForInstall.push({ key: 'edge-tts', name: 'edge-tts (语音合成)' });
+    if (!deps.sqlite3.ok) missingDepsForInstall.push({ key: 'sqlite3', name: 'sqlite3 (CC-Switch 同步)' });
+
     // ─── 路径快照 ───
     const pathsSection = document.getElementById('env-paths-section');
     if (pathsSection) {
@@ -1527,9 +1534,14 @@ function updateSmartEnvSummary(summary, gatewayOk) {
       '<span style="color:var(--text-medium);font-size:11px;">' + summary.warnings.join('<br>') + '</span>' +
       (!gatewayOk ? '<br><span style="color:#f57f17;">Gateway 未运行，建议先启动</span>' : '');
     actions.classList.remove('hidden');
+    const installBtn = missingDepsForInstall.length > 0
+      ? '<button class="btn btn-test" onclick="installMissingDeps()" id="install-deps-btn">⚡ 一键安装缺失依赖 (' + missingDepsForInstall.length + ')</button>'
+      : '';
     actions.innerHTML = '<div class="btn-row">' +
+      installBtn +
       '<button class="btn btn-test" onclick="clearChat(); renderEnvCheck()">重新检测</button>' +
-      '<button class="btn btn-primary" onclick="goNext()">继续配置</button></div>';
+      '<button class="btn btn-primary" onclick="goNext()">继续配置</button></div>' +
+      '<div id="install-progress" class="hidden" style="margin-top:10px;font-size:12px;"></div>';
   } else {
     summaryEl.style.background = '#fce4ec';
     summaryEl.style.borderColor = '#ef9a9a';
@@ -1537,10 +1549,84 @@ function updateSmartEnvSummary(summary, gatewayOk) {
     summaryEl.innerHTML = '<strong>环境未就绪</strong> — 缺少: ' + summary.missing.join(', ') +
       '<br><span style="color:var(--text-medium);">请按照上方提示完成安装后，点击"重新检测"</span>';
     actions.classList.remove('hidden');
+    const installBtn = missingDepsForInstall.length > 0
+      ? '<button class="btn btn-test" onclick="installMissingDeps()" id="install-deps-btn">⚡ 一键安装缺失依赖 (' + missingDepsForInstall.length + ')</button>'
+      : '';
     actions.innerHTML = '<div class="btn-row">' +
+      installBtn +
       '<button class="btn btn-test" onclick="clearChat(); renderEnvCheck()">重新检测</button>' +
       (canSkip ? '<button class="btn btn-secondary" onclick="goNext()">跳过，继续配置</button>' : '') +
-      '</div>';
+      '</div>' +
+      '<div id="install-progress" class="hidden" style="margin-top:10px;font-size:12px;"></div>';
+  }
+}
+
+// ===== 一键安装缺失依赖 =====
+async function installMissingDeps() {
+  const btn = document.getElementById('install-deps-btn');
+  const progressEl = document.getElementById('install-progress');
+  if (!btn || !progressEl) return;
+
+  btn.disabled = true;
+  btn.textContent = '⏳ 安装中...';
+  progressEl.classList.remove('hidden');
+
+  const depKeys = missingDepsForInstall.map(d => d.key);
+
+  // 显示进度列表
+  progressEl.innerHTML = missingDepsForInstall.map(d =>
+    '<div id="dep-progress-' + d.key + '" style="padding:3px 0;">' +
+      '<span class="dep-icon">⏳</span> ' + escapeHtml(d.name) + ' — <span class="dep-status">等待安装...</span>' +
+    '</div>'
+  ).join('');
+
+  // 监听安装进度
+  wizardAPI.on('dep-install-progress', (data) => {
+    const row = document.getElementById('dep-progress-' + data.dep);
+    if (!row) return;
+    const icon = row.querySelector('.dep-icon');
+    const status = row.querySelector('.dep-status');
+    if (data.status === 'installing') {
+      icon.textContent = '🔄';
+      status.textContent = '正在安装...';
+      status.style.color = '#1565c0';
+    } else if (data.status === 'done') {
+      icon.textContent = '✅';
+      const warning = data.result && data.result.warning ? ' (' + data.result.warning + ')' : '';
+      status.textContent = '安装成功' + warning;
+      status.style.color = 'var(--green)';
+    } else if (data.status === 'error') {
+      icon.textContent = '❌';
+      status.textContent = data.result ? data.result.error : '安装失败';
+      status.style.color = 'var(--red)';
+    }
+  });
+
+  try {
+    const result = await wizardAPI.invoke('wizard-install-missing-deps', depKeys);
+
+    // 安装完成，统计结果
+    const successCount = Object.values(result.results).filter(r => r.success).length;
+    const failCount = Object.values(result.results).filter(r => !r.success).length;
+
+    btn.textContent = successCount > 0
+      ? '✅ 安装完成 (' + successCount + '/' + depKeys.length + ')'
+      : '❌ 安装失败';
+    btn.disabled = true;
+
+    // 显示完成提示
+    if (successCount > 0) {
+      await addBubble('已成功安装 ' + successCount + ' 个依赖！' +
+        (failCount > 0 ? '有 ' + failCount + ' 个需要手动安装。' : '') +
+        ' 点击"重新检测"验证~');
+    } else {
+      await addBubble('自动安装失败了，请根据上方提示手动安装 (>_<)');
+    }
+  } catch (e) {
+    btn.textContent = '❌ 安装出错';
+    progressEl.innerHTML += '<div style="color:var(--red);margin-top:6px;">错误: ' + escapeHtml(e.message) + '</div>';
+  } finally {
+    wizardAPI.off('dep-install-progress');
   }
 }
 
