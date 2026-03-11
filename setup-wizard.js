@@ -4,9 +4,10 @@ const path = require('path');
 const fs = require('fs');
 const fsPromises = require('fs').promises;
 const http = require('http');
-const { exec } = require('child_process');
+const { exec, execFile, spawn } = require('child_process');
 const { promisify } = require('util');
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 class SetupWizard {
   constructor(petConfig) {
@@ -693,13 +694,12 @@ class SetupWizard {
         await this._playAudio(audioFile);
         return { success: true };
       } else {
-        // Edge TTS — 将文本写入临时文件，通过 --text-file 传入，避免 shell 注入
+        // Edge TTS — 将文本写入临时文件，通过 --text-file 传入，使用 execFileAsync 避免 shell 注入
         const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
         const textFile = path.join(tempDir, `wizard_tts_text_${Date.now()}.txt`);
         await fsPromises.writeFile(textFile, testText, 'utf8');
         try {
-          const ttsCmd = `${pythonCmd} -m edge_tts --voice "zh-CN-XiaoxiaoNeural" --text-file "${textFile}" --write-media "${outputFile}"`;
-          await execAsync(ttsCmd, { timeout: 30000, windowsHide: true });
+          await execFileAsync(pythonCmd, ['-m', 'edge_tts', '--voice', 'zh-CN-XiaoxiaoNeural', '--text-file', textFile, '--write-media', outputFile], { timeout: 30000, windowsHide: true });
         } finally {
           fsPromises.unlink(textFile).catch(() => {});
         }
@@ -712,17 +712,35 @@ class SetupWizard {
   }
 
   async _playAudio(filePath) {
-    let cmd;
     if (process.platform === 'darwin') {
-      cmd = `afplay "${filePath}"`;
+      await execFileAsync('afplay', [filePath], { timeout: 30000 });
     } else if (process.platform === 'linux') {
-      cmd = `aplay "${filePath}" 2>/dev/null || paplay "${filePath}"`;
+      try {
+        await execFileAsync('aplay', [filePath], { timeout: 30000 });
+      } catch {
+        await execFileAsync('paplay', [filePath], { timeout: 30000 });
+      }
     } else {
-      // Windows: 用单引号包裹路径，并将路径中的单引号转义为 `'`（PowerShell 转义）
-      const ps1Path = filePath.replace(/'/g, "''");
-      cmd = `powershell -NoProfile -NonInteractive -Command "Add-Type -AssemblyName presentationCore; $player = New-Object System.Windows.Media.MediaPlayer; $player.Open([uri]'${ps1Path}'); $player.Play(); Start-Sleep -Milliseconds 500; while($player.NaturalDuration.HasTimeSpan -eq $false) { Start-Sleep -Milliseconds 100 }; Start-Sleep -Seconds $player.NaturalDuration.TimeSpan.TotalSeconds; $player.Close()"`;
+      // Windows: 用 spawn + 参数数组避免命令注入
+      const psScript = `
+        Add-Type -AssemblyName presentationCore
+        $player = New-Object System.Windows.Media.MediaPlayer
+        $player.Open([uri]$args[0])
+        $player.Play()
+        Start-Sleep -Milliseconds 500
+        while($player.NaturalDuration.HasTimeSpan -eq $false) { Start-Sleep -Milliseconds 100 }
+        Start-Sleep -Seconds $player.NaturalDuration.TimeSpan.TotalSeconds
+        $player.Close()
+      `;
+      await new Promise((resolve, reject) => {
+        const child = spawn('powershell', [
+          '-NoProfile', '-NonInteractive', '-Command', psScript, filePath
+        ], { windowsHide: true, stdio: 'ignore' });
+        child.on('close', (code) => code === 0 ? resolve() : reject(new Error(`播放退出码: ${code}`)));
+        child.on('error', reject);
+        setTimeout(() => { child.kill(); reject(new Error('播放超时')); }, 30000);
+      });
     }
-    await execAsync(cmd, { timeout: 30000, windowsHide: true });
   }
 
   // ─── Step 4: Agent 语音播报配置 ──────────────────────

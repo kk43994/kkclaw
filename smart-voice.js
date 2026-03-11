@@ -1,7 +1,7 @@
 // 🎙️ 智能语音播报系统 - 增强版（支持 MiniMax Speech / DashScope CosyVoice）
-const { exec } = require('child_process');
+const { execFile, spawn } = require('child_process');
 const { promisify } = require('util');
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 const path = require('path');
 const fs = require('fs').promises;
 const DashScopeTTS = require('./voice/dashscope-tts');
@@ -47,6 +47,7 @@ class SmartVoiceSystem {
         };
         
         this.initTempDir();
+        this._currentProcess = null; // 当前播放进程引用，用于 stop() 时杀掉
     }
 
     async initTempDir() {
@@ -91,19 +92,45 @@ class SmartVoiceSystem {
     }
 
     /**
-     * 🔊 跨平台音频播放
+     * 🔊 跨平台音频播放（使用 execFile/spawn 避免命令注入）
      */
     async _playAudioFile(filePath) {
-        let cmd;
         if (process.platform === 'darwin') {
-            cmd = `afplay "${filePath}"`;
+            await execFileAsync('afplay', [filePath], { timeout: 120000 });
         } else if (process.platform === 'linux') {
-            cmd = `aplay "${filePath}" 2>/dev/null || paplay "${filePath}"`;
+            try {
+                await execFileAsync('aplay', [filePath], { timeout: 120000 });
+            } catch {
+                await execFileAsync('paplay', [filePath], { timeout: 120000 });
+            }
         } else {
-            const safePath = filePath.replace(/'/g, "''");
-            cmd = `powershell -c "Add-Type -AssemblyName presentationCore; $player = New-Object System.Windows.Media.MediaPlayer; $player.Open('${safePath}'); $player.Play(); while($player.NaturalDuration.HasTimeSpan -eq $false) { Start-Sleep -Milliseconds 100 }; $duration = $player.NaturalDuration.TimeSpan.TotalSeconds; Start-Sleep -Seconds $duration; $player.Close()"`;
+            // Windows: 用 spawn 启动 PowerShell，参数数组传递避免注入
+            const psScript = `
+                Add-Type -AssemblyName presentationCore
+                $player = New-Object System.Windows.Media.MediaPlayer
+                $player.Open([uri]$args[0])
+                $player.Play()
+                while($player.NaturalDuration.HasTimeSpan -eq $false) { Start-Sleep -Milliseconds 100 }
+                $duration = $player.NaturalDuration.TimeSpan.TotalSeconds
+                Start-Sleep -Seconds $duration
+                $player.Close()
+            `;
+            await new Promise((resolve, reject) => {
+                const child = spawn('powershell', [
+                    '-NoProfile', '-NonInteractive', '-Command', psScript, filePath
+                ], { windowsHide: true, stdio: 'ignore' });
+                this._currentProcess = child;
+                child.on('close', (code) => {
+                    this._currentProcess = null;
+                    code === 0 ? resolve() : reject(new Error(`播放退出码: ${code}`));
+                });
+                child.on('error', (err) => {
+                    this._currentProcess = null;
+                    reject(err);
+                });
+                setTimeout(() => { child.kill(); reject(new Error('播放超时')); }, 120000);
+            });
         }
-        await execAsync(cmd, { timeout: 120000, windowsHide: true });
     }
 
     /**
@@ -633,23 +660,37 @@ class SmartVoiceSystem {
     stop() {
         this.clearQueue();
         this.isSpeaking = false;
+        // 杀掉正在播放的进程
+        if (this._currentProcess && !this._currentProcess.killed) {
+            this._currentProcess.kill();
+            this._currentProcess = null;
+        }
     }
 
     /**
-     * 🔊 使用 Edge TTS 播报（回退方案）
+     * 🔊 使用 Edge TTS 播报（回退方案，使用 execFile 避免命令注入）
      */
     async speakWithEdgeTTS(cleanText, voiceConfig, outputFile) {
         const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
-        let ttsCmd = `${pythonCmd} -m edge_tts --voice "${voiceConfig.voice}" --text "${cleanText.replace(/"/g, '').replace(/\n/g, ' ')}" --write-media "${outputFile}"`;
-        
+        // 将文本写入临时文件，通过 --text-file 传入，避免 shell 注入
+        const textFile = path.join(this.tempDir, `tts_text_${Date.now()}.txt`);
+        const fsSync = require('fs');
+        fsSync.writeFileSync(textFile, cleanText, 'utf8');
+
+        const args = ['-m', 'edge_tts', '--voice', voiceConfig.voice, '--text-file', textFile, '--write-media', outputFile];
+
         if (voiceConfig.rate !== '+0%') {
-            ttsCmd += ` --rate="${voiceConfig.rate}"`;
+            args.push('--rate', voiceConfig.rate);
         }
         if (voiceConfig.pitch !== '+0Hz') {
-            ttsCmd += ` --pitch="${voiceConfig.pitch}"`;
+            args.push('--pitch', voiceConfig.pitch);
         }
-        
-        await execAsync(ttsCmd, { timeout: 30000, windowsHide: true });
+
+        try {
+            await execFileAsync(pythonCmd, args, { timeout: 30000, windowsHide: true });
+        } finally {
+            fsSync.unlink(textFile, () => {}); // 清理临时文件
+        }
 
         await this._playAudioFile(outputFile);
     }
