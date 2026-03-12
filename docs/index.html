@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KKClaw — Desktop Visualization Companion for OpenClaw</title>
-    <meta name="description" content="KKClaw: Desktop visualization companion for OpenClaw with fluid glass orb pet, 14-emotion system, voice cloning (MiniMax/CosyVoice), Setup Wizard, and real-time WebSocket sync.">
+    <meta name="description" content="KKClaw: Desktop visualization companion for OpenClaw with fluid glass orb pet, 14-emotion system, voice cloning (MiniMax), Gateway Guardian, Setup Wizard, and real-time WebSocket sync.">
     <meta name="keywords" content="openclaw, desktop pet, AI assistant, OpenClaw extension, Electron, TTS, voice cloning, desktop companion, AI coding">
     <meta property="og:title" content="openclaw-kkclaw — Desktop Visualization Companion for OpenClaw">
     <meta property="og:description" content="Desktop visualization companion for OpenClaw - Fluid glass orb pet, 14-emotion system, voice cloning, and real-time WebSocket sync.">
@@ -842,11 +842,103 @@
             .community-grid { grid-template-columns: 1fr; }
             .screenshot-grid { grid-template-columns: 1fr; }
             section { padding: 3rem 1.5rem; }
+            #gateway-demo .reveal > div[style*="grid-template-columns: 1fr 1fr"] { display: block !important; }
+            #gateway-demo .terminal-window { margin-top: 2rem; }
         }
         @media (max-width: 480px) {
             .hero h1 { font-size: 1.8rem; }
             .stat-item h3 { font-size: 2rem; }
             .moods-row { gap: 1rem; }
+        }
+
+        /* ===== Terminal Demo ===== */
+        .terminal-window {
+            background: #0d1117;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #21262d;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        .terminal-bar {
+            background: #161b22;
+            padding: 0.6rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid #21262d;
+        }
+        .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .terminal-dot.red { background: #ff5f56; }
+        .terminal-dot.yellow { background: #ffbd2e; }
+        .terminal-dot.green { background: #27c93f; }
+        .terminal-title { color: #8b949e; font-size: 0.75rem; margin-left: 0.5rem; font-family: 'SF Mono', monospace; }
+        .terminal-body {
+            padding: 1.2rem;
+            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 0.82rem;
+            line-height: 1.8;
+            min-height: 280px;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+        .terminal-line { opacity: 0; animation: fadeInLine 0.3s ease forwards; white-space: nowrap; }
+        .t-cyan { color: #79c0ff; }
+        .t-green { color: #7ee787; }
+        .t-red { color: #ff7b72; }
+        .t-yellow { color: #e3b341; }
+        .t-magenta { color: #d2a8ff; }
+        .t-dim { color: #484f58; }
+        .t-white { color: #e6edf3; }
+        @keyframes fadeInLine { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* ===== Gateway Status Flow ===== */
+        .status-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+        .status-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            transition: all 0.4s;
+        }
+        .status-node.active .status-circle { transform: scale(1.15); }
+        .status-circle {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.4s;
+            border: 2px solid transparent;
+        }
+        .status-circle.green { background: rgba(52,211,153,0.15); border-color: rgba(52,211,153,0.4); }
+        .status-circle.yellow { background: rgba(251,191,36,0.15); border-color: rgba(251,191,36,0.4); }
+        .status-circle.red { background: rgba(255,107,74,0.15); border-color: rgba(255,107,74,0.4); }
+        .status-circle.blue { background: rgba(107,138,255,0.15); border-color: rgba(107,138,255,0.4); }
+        .status-node.active .status-circle { box-shadow: 0 0 20px currentColor; }
+        .status-label { font-size: 0.78rem; color: var(--text-dim); font-weight: 500; text-align: center; }
+        .status-arrow { color: var(--text-muted); font-size: 1.2rem; margin: 0 0.3rem; }
+
+        /* ===== Latency Bars ===== */
+        .latency-row { display: flex; align-items: center; gap: 1rem; margin: 0.6rem 0; }
+        .latency-name { width: 90px; text-align: right; font-size: 0.85rem; color: var(--text-dim); font-weight: 500; }
+        .latency-track { flex: 1; height: 24px; background: rgba(255,255,255,0.04); border-radius: 6px; overflow: hidden; position: relative; }
+        .latency-fill { height: 100%; border-radius: 6px; transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1); display: flex; align-items: center; padding-left: 0.6rem; font-size: 0.75rem; font-weight: 600; color: white; }
+
+        @media (max-width: 768px) {
+            .status-flow { gap: 0.3rem; }
+            .status-circle { width: 44px; height: 44px; font-size: 1.2rem; }
+            .terminal-body { font-size: 0.72rem; min-height: 200px; }
+            .latency-name { width: 70px; font-size: 0.78rem; }
         }
     </style>
 </head>
@@ -868,7 +960,7 @@
             <a href="#architecture" class="nav-link"><span class="en-inline">Architecture</span><span class="zh-inline">架构</span></a>
             <a href="#voice" class="nav-link"><span class="en-inline">Voice</span><span class="zh-inline">语音</span></a>
             <a href="#install" class="nav-link"><span class="en-inline">Install</span><span class="zh-inline">安装</span></a>
-            <span class="nav-version">v3.1.2</span>
+            <span class="nav-version">v3.5.2</span>
             <div class="lang-switch">
                 <button class="lang-btn active" onclick="setLang('en')">EN</button>
                 <button class="lang-btn" onclick="setLang('zh')">中文</button>
@@ -914,79 +1006,103 @@
                         <span class="en-inline">Click any mood icon to see the ball change color.</span>
                         <span class="zh-inline">点击情绪图标，即可实时查看球体的变化。</span>
                     </div>
-                    
-                    <div style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; max-width: 600px; margin: 0 auto;">
-                        <!-- Idle -->
+
+                    <div style="display: flex; gap: 1.2rem; justify-content: center; flex-wrap: wrap; max-width: 700px; margin: 0 auto;">
+                        <!-- Row 1: Original 7 -->
                         <div onclick="setDemoMood('idle')" style="cursor: pointer; text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform=''">
-                            <div style="width: 60px; height: 60px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,154,108,0.9), rgba(255,107,74,0.95), rgba(220,70,50,1)); box-shadow: 0 4px 16px rgba(255,107,74,0.4), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.5rem;"></div>
-                            <div style="font-size: 0.8rem; color: var(--text-dim);">
-                                <div class="en-inline">Idle</div>
-                                <div class="zh-inline">闲置的</div>
+                            <div style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,154,108,0.9), rgba(255,107,74,0.95), rgba(220,70,50,1)); box-shadow: 0 4px 16px rgba(255,107,74,0.4), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.4rem;"></div>
+                            <div style="font-size: 0.72rem; color: var(--text-dim);">
+                                <div class="en-inline">Idle</div><div class="zh-inline">待机</div>
                             </div>
                         </div>
-                        
-                        <!-- Happy -->
                         <div onclick="setDemoMood('happy')" style="cursor: pointer; text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform=''">
-                            <div style="width: 60px; height: 60px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,235,130,0.9), rgba(251,191,36,0.95), rgba(245,158,11,1)); box-shadow: 0 4px 16px rgba(251,191,36,0.4), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.5rem;"></div>
-                            <div style="font-size: 0.8rem; color: var(--text-dim);">
-                                <div class="en-inline">Happy</div>
-                                <div class="zh-inline">快乐的</div>
+                            <div style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,235,130,0.9), rgba(251,191,36,0.95), rgba(245,158,11,1)); box-shadow: 0 4px 16px rgba(251,191,36,0.4), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.4rem;"></div>
+                            <div style="font-size: 0.72rem; color: var(--text-dim);">
+                                <div class="en-inline">Happy</div><div class="zh-inline">开心</div>
                             </div>
                         </div>
-                        
-                        <!-- Talking -->
                         <div onclick="setDemoMood('talking')" style="cursor: pointer; text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform=''">
-                            <div style="width: 60px; height: 60px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,154,200,0.9), rgba(255,107,157,0.95), rgba(236,72,153,1)); box-shadow: 0 4px 16px rgba(255,107,157,0.4), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.5rem;"></div>
-                            <div style="font-size: 0.8rem; color: var(--text-dim);">
-                                <div class="en-inline">Talking</div>
-                                <div class="zh-inline">说</div>
+                            <div style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,154,200,0.9), rgba(255,107,157,0.95), rgba(236,72,153,1)); box-shadow: 0 4px 16px rgba(255,107,157,0.4), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.4rem;"></div>
+                            <div style="font-size: 0.72rem; color: var(--text-dim);">
+                                <div class="en-inline">Talking</div><div class="zh-inline">说话</div>
                             </div>
                         </div>
-                        
-                        <!-- Thinking -->
                         <div onclick="setDemoMood('thinking')" style="cursor: pointer; text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform=''">
-                            <div style="width: 60px; height: 60px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(167,139,250,0.9), rgba(124,88,237,0.95), rgba(109,40,217,1)); box-shadow: 0 4px 16px rgba(124,88,237,0.4), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.5rem;"></div>
-                            <div style="font-size: 0.8rem; color: var(--text-dim);">
-                                <div class="en-inline">Thinking</div>
-                                <div class="zh-inline">思维</div>
+                            <div style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(167,139,250,0.9), rgba(124,88,237,0.95), rgba(109,40,217,1)); box-shadow: 0 4px 16px rgba(124,88,237,0.4), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.4rem;"></div>
+                            <div style="font-size: 0.72rem; color: var(--text-dim);">
+                                <div class="en-inline">Thinking</div><div class="zh-inline">思考</div>
                             </div>
                         </div>
-                        
-                        <!-- Sleepy -->
                         <div onclick="setDemoMood('sleepy')" style="cursor: pointer; text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform=''">
-                            <div style="width: 60px; height: 60px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(200,180,170,0.9), rgba(160,130,120,0.95), rgba(140,110,100,1)); box-shadow: 0 4px 16px rgba(160,130,120,0.4), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.5rem;"></div>
-                            <div style="font-size: 0.8rem; color: var(--text-dim);">
-                                <div class="en-inline">Sleepy</div>
-                                <div class="zh-inline">困</div>
+                            <div style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(200,180,170,0.9), rgba(160,130,120,0.95), rgba(140,110,100,1)); box-shadow: 0 4px 16px rgba(160,130,120,0.4), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.4rem;"></div>
+                            <div style="font-size: 0.72rem; color: var(--text-dim);">
+                                <div class="en-inline">Sleepy</div><div class="zh-inline">困倦</div>
                             </div>
                         </div>
-                        
-                        <!-- Surprised -->
                         <div onclick="setDemoMood('surprised')" style="cursor: pointer; text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform=''">
-                            <div style="width: 60px; height: 60px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,200,100,0.9), rgba(255,165,0,0.95), rgba(237,137,0,1)); box-shadow: 0 4px 16px rgba(255,165,0,0.4), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.5rem;"></div>
-                            <div style="font-size: 0.8rem; color: var(--text-dim);">
-                                <div class="en-inline">Surprised</div>
-                                <div class="zh-inline">惊讶</div>
+                            <div style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,200,100,0.9), rgba(255,165,0,0.95), rgba(237,137,0,1)); box-shadow: 0 4px 16px rgba(255,165,0,0.4), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.4rem;"></div>
+                            <div style="font-size: 0.72rem; color: var(--text-dim);">
+                                <div class="en-inline">Surprised</div><div class="zh-inline">惊讶</div>
                             </div>
                         </div>
-                        
-                        <!-- Offline -->
                         <div onclick="setDemoMood('offline')" style="cursor: pointer; text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform=''">
-                            <div style="width: 60px; height: 60px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(180,180,180,0.9), rgba(140,140,140,0.95), rgba(100,100,100,1)); box-shadow: 0 4px 16px rgba(128,128,128,0.4), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.5rem;"></div>
-                            <div style="font-size: 0.8rem; color: var(--text-dim);">
-                                <div class="en-inline">Offline</div>
-                                <div class="zh-inline">离线</div>
+                            <div style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(180,180,180,0.9), rgba(140,140,140,0.95), rgba(100,100,100,1)); box-shadow: 0 4px 16px rgba(128,128,128,0.4), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.4rem;"></div>
+                            <div style="font-size: 0.72rem; color: var(--text-dim);">
+                                <div class="en-inline">Offline</div><div class="zh-inline">离线</div>
+                            </div>
+                        </div>
+                        <!-- Row 2: New 7 emotions -->
+                        <div onclick="setDemoMood('sad')" style="cursor: pointer; text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform=''">
+                            <div style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(130,180,230,0.9), rgba(70,130,200,0.95), rgba(40,100,180,1)); box-shadow: 0 4px 16px rgba(70,130,200,0.4), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.4rem;"></div>
+                            <div style="font-size: 0.72rem; color: var(--text-dim);">
+                                <div class="en-inline">Sad</div><div class="zh-inline">伤心</div>
+                            </div>
+                        </div>
+                        <div onclick="setDemoMood('angry')" style="cursor: pointer; text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform=''">
+                            <div style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,100,100,0.9), rgba(220,40,40,0.95), rgba(180,20,20,1)); box-shadow: 0 4px 16px rgba(220,40,40,0.5), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.4rem;"></div>
+                            <div style="font-size: 0.72rem; color: var(--text-dim);">
+                                <div class="en-inline">Angry</div><div class="zh-inline">生气</div>
+                            </div>
+                        </div>
+                        <div onclick="setDemoMood('fearful')" style="cursor: pointer; text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform=''">
+                            <div style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(160,130,180,0.9), rgba(120,80,150,0.95), rgba(80,50,120,1)); box-shadow: 0 4px 16px rgba(120,80,150,0.4), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.4rem;"></div>
+                            <div style="font-size: 0.72rem; color: var(--text-dim);">
+                                <div class="en-inline">Fearful</div><div class="zh-inline">恐惧</div>
+                            </div>
+                        </div>
+                        <div onclick="setDemoMood('calm')" style="cursor: pointer; text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform=''">
+                            <div style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(130,220,200,0.9), rgba(60,190,170,0.95), rgba(30,160,140,1)); box-shadow: 0 4px 16px rgba(60,190,170,0.4), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.4rem;"></div>
+                            <div style="font-size: 0.72rem; color: var(--text-dim);">
+                                <div class="en-inline">Calm</div><div class="zh-inline">平静</div>
+                            </div>
+                        </div>
+                        <div onclick="setDemoMood('excited')" style="cursor: pointer; text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform=''">
+                            <div style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,230,80,0.9), rgba(255,200,0,0.95), rgba(240,180,0,1)); box-shadow: 0 4px 16px rgba(255,200,0,0.5), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.4rem;"></div>
+                            <div style="font-size: 0.72rem; color: var(--text-dim);">
+                                <div class="en-inline">Excited</div><div class="zh-inline">兴奋</div>
+                            </div>
+                        </div>
+                        <div onclick="setDemoMood('love')" style="cursor: pointer; text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform=''">
+                            <div style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,150,180,0.9), rgba(230,80,130,0.95), rgba(200,50,100,1)); box-shadow: 0 4px 16px rgba(230,80,130,0.4), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.4rem;"></div>
+                            <div style="font-size: 0.72rem; color: var(--text-dim);">
+                                <div class="en-inline">Love</div><div class="zh-inline">喜欢</div>
+                            </div>
+                        </div>
+                        <div onclick="setDemoMood('focused')" style="cursor: pointer; text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform=''">
+                            <div style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(80,140,220,0.9), rgba(40,100,190,0.95), rgba(20,70,160,1)); box-shadow: 0 4px 16px rgba(40,100,190,0.4), inset 0 -2px 8px rgba(0,0,0,0.2); margin: 0 auto 0.4rem;"></div>
+                            <div style="font-size: 0.72rem; color: var(--text-dim);">
+                                <div class="en-inline">Focused</div><div class="zh-inline">专注</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
             <h1>openclaw-kkclaw</h1>
-            <p class="tagline en">Desktop visualization companion for OpenClaw - Fluid glass orb pet, 14-emotion system, voice cloning, and real-time WebSocket sync.</p>
-            <p class="tagline zh">OpenClaw 桌面可视化伴侣 — 流体玻璃球宠物、14情绪系统、声音克隆、实时 WebSocket 同步。</p>
+            <p class="tagline en">Desktop visualization companion for OpenClaw - Fluid glass orb pet, 14-emotion system, voice cloning, Gateway Guardian, and real-time WebSocket sync.</p>
+            <p class="tagline zh">OpenClaw 桌面可视化伴侣 — 流体玻璃球宠物、14情绪系统、声音克隆、Gateway 智能守护、实时 WebSocket 同步。</p>
 
             <div class="badges">
-                <span class="badge badge-primary">v3.1.2</span>
+                <span class="badge badge-primary">v3.5.2</span>
                 <span class="badge badge-green">7×24 Stable</span>
                 <span class="badge badge-blue">Windows + macOS</span>
                 <span class="badge badge-primary">Electron 28</span>
@@ -1034,17 +1150,17 @@
     <div class="stats-bar">
         <div class="stats-grid">
             <div class="stat-item reveal">
-                <h3>7</h3>
-                <p class="en">Mood Color Themes</p>
-                <p class="zh">情绪色系</p>
+                <h3>14</h3>
+                <p class="en">Emotion States</p>
+                <p class="zh">情绪状态</p>
             </div>
             <div class="stat-item reveal reveal-delay-1">
-                <h3>15+</h3>
-                <p class="en">Eye Expressions</p>
-                <p class="zh">眼睛表情</p>
+                <h3>38</h3>
+                <p class="en">Micro-Expressions</p>
+                <p class="zh">待机微表情</p>
             </div>
             <div class="stat-item reveal reveal-delay-2">
-                <h3>3</h3>
+                <h3>2</h3>
                 <p class="en">TTS Engines</p>
                 <p class="zh">语音引擎</p>
             </div>
@@ -1056,7 +1172,7 @@
         </div>
     </div>
 
-    <!-- What's New in v3.1.2 -->
+    <!-- What's New in v3.5.2 -->
     <section id="whats-new" style="padding: 5rem 2rem; background: linear-gradient(180deg, rgba(255,107,74,0.04) 0%, transparent 100%);">
         <div style="max-width:1100px; margin:0 auto;">
             <div class="section-header reveal">
@@ -1064,65 +1180,206 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
                     <span class="en-inline">WHAT'S NEW</span><span class="zh-inline">新版亮点</span>
                 </div>
-                <h2 class="section-title en">v3.1.2 — Setup Wizard & 14 Emotions</h2>
-                <h2 class="section-title zh">v3.1.2 — 配置向导 & 14 种情绪</h2>
-                <p class="section-subtitle en">One-click setup wizard, voice cloning, persona customization, Doctor self-check, and cross-platform support.</p>
-                <p class="section-subtitle zh">一键配置向导、音色克隆、人设定制、Doctor 自检系统、macOS 全面适配。</p>
+                <h2 class="section-title en">v3.5.2 — Gateway Guardian + Colorized Logs + One-Click Install</h2>
+                <h2 class="section-title zh">v3.5.2 — Gateway 智能守护 + 彩色日志 + 一键安装</h2>
+                <p class="section-subtitle en">Smart auto-start, 12+ colorized modules, Setup Wizard polish, and security hardening.</p>
+                <p class="section-subtitle zh">Gateway 智能自启、12+ 模块彩色日志、配置向导优化、安全加固。</p>
             </div>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 2.5rem;">
                 <div class="feature-card reveal" style="border-left: 3px solid var(--primary);">
                     <div class="feature-icon" style="background:rgba(255,107,74,0.08)">
-                        <svg viewBox="0 0 24 24" stroke="var(--primary)"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                        <svg viewBox="0 0 24 24" stroke="var(--primary)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                     </div>
-                    <h3 class="en">7-Step Setup Wizard</h3><h3 class="zh">7 步配置向导</h3>
-                    <p class="en">RPG-themed guided setup: Gateway detection, AI model config (9 providers), channel control, TTS engine selection, voice cloning, persona customization, and full-chain testing.</p>
-                    <p class="zh">RPG 风格引导式配置：Gateway 检测、AI 模型配置（9 大服务商）、渠道控制、TTS 引擎选择、音色克隆、人设定制、全链路测试。</p>
+                    <h3 class="en">Gateway Guardian</h3><h3 class="zh">Gateway 智能守护</h3>
+                    <p class="en">Auto-starts Gateway after 3 consecutive detection failures. Health scoring, voice status announcements, crash auto-recovery with rate limiting (max 10/hour).</p>
+                    <p class="zh">连续3次检测失败后自动拉起 Gateway。健康评分、语音状态播报、崩溃自动恢复（每小时上限10次）。</p>
                 </div>
 
-                <div class="feature-card reveal reveal-delay-1" style="border-left: 3px solid var(--accent-purple);">
-                    <div class="feature-icon" style="background:rgba(168,85,247,0.08)">
-                        <svg viewBox="0 0 24 24" stroke="var(--accent-purple)"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
-                    </div>
-                    <h3 class="en">Voice Cloning</h3><h3 class="zh">音色克隆</h3>
-                    <p class="en">Upload 30s of audio to clone your own voice. Supports MiniMax Speech 2.8 HD and CosyVoice engines. Your AI companion speaks in any voice you want.</p>
-                    <p class="zh">上传 30 秒录音即可克隆专属音色。支持 MiniMax Speech 2.8 HD 和 CosyVoice 引擎。让你的 AI 伙伴用任何声音说话。</p>
-                </div>
-
-                <div class="feature-card reveal reveal-delay-2" style="border-left: 3px solid var(--accent-green);">
+                <div class="feature-card reveal reveal-delay-1" style="border-left: 3px solid var(--accent-green);">
                     <div class="feature-icon" style="background:rgba(52,211,153,0.08)">
-                        <svg viewBox="0 0 24 24" stroke="var(--accent-green)"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        <svg viewBox="0 0 24 24" stroke="var(--accent-green)"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                     </div>
-                    <h3 class="en">Doctor Self-Check</h3><h3 class="zh">Doctor 自检系统</h3>
-                    <p class="en">10-item automated diagnosis: Gateway, tray, TTS config, API keys, model config, port conflicts, health score, cache size, lyrics window, and log directory. Each with fix suggestions.</p>
-                    <p class="zh">10 项全自动诊断：Gateway、系统托盘、TTS 配置、API Key、模型配置、端口占用、健康评分、缓存大小、歌词窗口、日志目录。每项附修复建议。</p>
+                    <h3 class="en">Colorized Terminal Logs</h3><h3 class="zh">彩色终端日志</h3>
+                    <p class="en">12+ modules with ANSI colorized output. Models in cyan, URLs in green, errors in red, channels in magenta. Auto-dedup + log rotation.</p>
+                    <p class="zh">12+ 模块统一彩色输出。模型名青色、URL绿色、错误红色、渠道洋红。自动去重 + 日志轮转。</p>
                 </div>
 
-                <div class="feature-card reveal" style="border-left: 3px solid var(--accent-blue);">
+                <div class="feature-card reveal reveal-delay-2" style="border-left: 3px solid var(--accent-blue);">
                     <div class="feature-icon" style="background:rgba(107,138,255,0.08)">
-                        <svg viewBox="0 0 24 24" stroke="var(--accent-blue)"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <svg viewBox="0 0 24 24" stroke="var(--accent-blue)"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
                     </div>
-                    <h3 class="en">Encrypted API Keys</h3><h3 class="zh">API Key 加密存储</h3>
-                    <p class="en">All API keys encrypted with Electron safeStorage. Preload security sandbox with IPC whitelist for all windows. Zero plaintext secrets on disk.</p>
-                    <p class="zh">所有 API Key 使用 Electron safeStorage 加密。Preload 安全沙箱对所有窗口实施 IPC 白名单校验。磁盘上零明文密钥。</p>
+                    <h3 class="en">One-Click Dependency Install</h3><h3 class="zh">一键安装缺失依赖</h3>
+                    <p class="en">Setup Wizard detects missing deps and installs with one button. Real-time progress for edge-tts, sqlite3, node_modules. Cross-platform: Windows/macOS/Linux.</p>
+                    <p class="zh">向导检测缺失依赖后一键安装。edge-tts / sqlite3 / node_modules 实时进度。跨平台：Windows/macOS/Linux。</p>
                 </div>
 
-                <div class="feature-card reveal reveal-delay-1" style="border-left: 3px solid var(--accent-pink);">
-                    <div class="feature-icon" style="background:rgba(255,107,157,0.08)">
-                        <svg viewBox="0 0 24 24" stroke="var(--accent-pink)"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                <div class="feature-card reveal" style="border-left: 3px solid var(--accent-purple);">
+                    <div class="feature-icon" style="background:rgba(168,85,247,0.08)">
+                        <svg viewBox="0 0 24 24" stroke="var(--accent-purple)"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
                     </div>
-                    <h3 class="en">Persona Customization</h3><h3 class="zh">人设定制</h3>
-                    <p class="en">Name your AI, choose its speaking style (sweet / professional / funny / cool / custom), auto-generate AGENTS.md + SOUL.md + USER.md + HEARTBEAT.md.</p>
-                    <p class="zh">给 AI 起名、选说话风格（甜妹 / 专业 / 幽默 / 酷帅 / 自定义），自动生成 AGENTS.md + SOUL.md + USER.md + HEARTBEAT.md 全套配置。</p>
+                    <h3 class="en">38 Micro-Expressions</h3><h3 class="zh">38种待机微表情</h3>
+                    <p class="en">Three-dimensional trigger system: mood × time-of-day × conversation tone. Morning energetic, afternoon sleepy, late-night yawning — all automatic.</p>
+                    <p class="zh">三维触发系统：心情×时间段×对话语气。早晨活力、午后犯困、深夜哈欠——全自动切换。</p>
                 </div>
 
-                <div class="feature-card reveal reveal-delay-2" style="border-left: 3px solid var(--accent-yellow);">
+                <div class="feature-card reveal reveal-delay-1" style="border-left: 3px solid var(--accent-yellow);">
                     <div class="feature-icon" style="background:rgba(251,191,36,0.08)">
-                        <svg viewBox="0 0 24 24" stroke="var(--accent-yellow)"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                        <svg viewBox="0 0 24 24" stroke="var(--accent-yellow)"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     </div>
-                    <h3 class="en">Cross-Platform</h3><h3 class="zh">跨平台支持</h3>
-                    <p class="en">Full macOS support: native screencapture, afplay audio, lsof port detection. Windows + macOS (x64 & ARM64) builds via GitHub Actions.</p>
-                    <p class="zh">完整 macOS 适配：原生 screencapture 截图、afplay 音频播放、lsof 端口检测。Windows + macOS (x64 & ARM64) 双平台自动构建。</p>
+                    <h3 class="en">Security Hardening</h3><h3 class="zh">安全加固</h3>
+                    <p class="en">Command injection prevention (execFile/spawn with args array), auto log sanitization, IPC whitelist sandbox for all windows.</p>
+                    <p class="zh">命令注入防护（execFile/spawn 参数数组）、日志自动脱敏、全窗口 IPC 白名单沙箱。</p>
+                </div>
+
+                <div class="feature-card reveal reveal-delay-2" style="border-left: 3px solid var(--accent-pink);">
+                    <div class="feature-icon" style="background:rgba(255,107,157,0.08)">
+                        <svg viewBox="0 0 24 24" stroke="var(--accent-pink)"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                    </div>
+                    <h3 class="en">Wizard Stability</h3><h3 class="zh">向导稳定性</h3>
+                    <p class="en">Fixed 3 syntax errors causing blank pages. Error visualization shows actual error instead of white screen. Dual audio fix with silent notifications.</p>
+                    <p class="zh">修复3处语法错误导致的白屏。出错时直接显示报错信息而非空白。通知静默化修复双声音问题。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gateway Guardian Live Demo -->
+    <section id="gateway-demo" style="padding: 5rem 2rem; background: linear-gradient(180deg, rgba(52,211,153,0.04) 0%, transparent 100%);">
+        <div style="max-width:1100px; margin:0 auto;">
+            <div class="section-header reveal">
+                <div class="section-label" style="background: rgba(52,211,153,0.15); color: var(--accent-green);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <span class="en-inline">LIVE DEMO</span><span class="zh-inline">实时演示</span>
+                </div>
+                <h2 class="section-title en">Gateway Guardian in Action</h2>
+                <h2 class="section-title zh">Gateway 智能守护演示</h2>
+                <p class="section-subtitle en">Watch how Guardian detects failure and auto-recovers Gateway</p>
+                <p class="section-subtitle zh">观看 Guardian 如何检测故障并自动恢复 Gateway</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2.5rem;" class="reveal">
+                <!-- Left: Status Flow -->
+                <div>
+                    <div class="status-flow" id="gatewayFlow">
+                        <div class="status-node active" id="gw-step-0">
+                            <div class="status-circle green" style="color: var(--accent-green);">🟢</div>
+                            <span class="status-label"><span class="en-inline">Healthy</span><span class="zh-inline">正常</span></span>
+                        </div>
+                        <span class="status-arrow">→</span>
+                        <div class="status-node" id="gw-step-1">
+                            <div class="status-circle yellow" style="color: var(--accent-yellow);">🟡</div>
+                            <span class="status-label"><span class="en-inline">Detecting</span><span class="zh-inline">检测中</span></span>
+                        </div>
+                        <span class="status-arrow">→</span>
+                        <div class="status-node" id="gw-step-2">
+                            <div class="status-circle red" style="color: var(--primary);">🔴</div>
+                            <span class="status-label"><span class="en-inline">3× Failed</span><span class="zh-inline">3次失败</span></span>
+                        </div>
+                        <span class="status-arrow">→</span>
+                        <div class="status-node" id="gw-step-3">
+                            <div class="status-circle blue" style="color: var(--accent-blue);">⚡</div>
+                            <span class="status-label"><span class="en-inline">Auto Start</span><span class="zh-inline">自动拉起</span></span>
+                        </div>
+                        <span class="status-arrow">→</span>
+                        <div class="status-node" id="gw-step-4">
+                            <div class="status-circle green" style="color: var(--accent-green);">✅</div>
+                            <span class="status-label"><span class="en-inline">Recovered</span><span class="zh-inline">已恢复</span></span>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 1.5rem;">
+                        <button class="btn btn-primary" onclick="playGatewayDemo()" id="gw-play-btn" style="font-size: 0.9rem;">
+                            <span class="en-inline">▶ Simulate Gateway Crash</span>
+                            <span class="zh-inline">▶ 模拟 Gateway 崩溃</span>
+                        </button>
+                    </div>
+                    <div style="margin-top: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div style="background: var(--card); padding: 1.2rem; border-radius: 10px; border: 1px solid var(--card-border); text-align: center;">
+                            <div style="font-size: 1.8rem; font-weight: 800; color: var(--accent-green);">98</div>
+                            <div style="font-size: 0.78rem; color: var(--text-dim);"><span class="en-inline">Health Score</span><span class="zh-inline">健康评分</span></div>
+                        </div>
+                        <div style="background: var(--card); padding: 1.2rem; border-radius: 10px; border: 1px solid var(--card-border); text-align: center;">
+                            <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary);">10/h</div>
+                            <div style="font-size: 0.78rem; color: var(--text-dim);"><span class="en-inline">Max Restarts</span><span class="zh-inline">重启上限</span></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Right: Terminal -->
+                <div class="terminal-window">
+                    <div class="terminal-bar">
+                        <div class="terminal-dot red"></div>
+                        <div class="terminal-dot yellow"></div>
+                        <div class="terminal-dot green"></div>
+                        <span class="terminal-title">KKClaw Gateway Console</span>
+                    </div>
+                    <div class="terminal-body" id="gw-terminal">
+                        <div class="terminal-line" style="animation-delay:0s"><span class="t-dim">[14:32:05]</span> <span class="t-green">Gateway</span> <span class="t-white">health check passed</span> <span class="t-dim">(score: 98)</span></div>
+                        <div class="terminal-line" style="animation-delay:0.1s"><span class="t-dim">[14:32:10]</span> <span class="t-green">Gateway</span> <span class="t-white">health check passed</span> <span class="t-dim">(score: 97)</span></div>
+                        <div class="terminal-line" style="animation-delay:0.2s"><span class="t-dim">[14:32:15]</span> <span class="t-cyan">Model:</span> <span class="t-white">claude-3.5-sonnet</span></div>
+                        <div class="terminal-line" style="animation-delay:0.3s"><span class="t-dim">[14:32:15]</span> <span class="t-magenta">Channel:</span> <span class="t-white">#general</span> <span class="t-magenta">@KKBot</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Colorized Terminal Logs Demo -->
+    <section id="terminal-demo" style="padding: 5rem 2rem;">
+        <div style="max-width:1100px; margin:0 auto;">
+            <div class="section-header reveal">
+                <div class="section-label" style="background: rgba(121,192,255,0.15); color: #79c0ff;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                    <span class="en-inline">COLORIZED LOGS</span><span class="zh-inline">彩色日志</span>
+                </div>
+                <h2 class="section-title en">12+ Modules, One Color System</h2>
+                <h2 class="section-title zh">12+ 模块，统一彩色输出</h2>
+                <p class="section-subtitle en">Every module speaks the same color language — scan your logs at a glance</p>
+                <p class="section-subtitle zh">所有模块统一色彩语言——一目了然的控制台体验</p>
+            </div>
+            <div class="reveal" style="max-width: 800px; margin: 0 auto;">
+                <div class="terminal-window">
+                    <div class="terminal-bar">
+                        <div class="terminal-dot red"></div>
+                        <div class="terminal-dot yellow"></div>
+                        <div class="terminal-dot green"></div>
+                        <span class="terminal-title">npm start — KKClaw Gateway Console</span>
+                    </div>
+                    <div class="terminal-body" id="color-terminal"></div>
+                </div>
+                <div style="display: flex; gap: 1.5rem; justify-content: center; margin-top: 1.5rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#79c0ff;"></span><span style="font-size:0.82rem;color:var(--text-dim);"><span class="en-inline">Model Names</span><span class="zh-inline">模型名</span></span></div>
+                    <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#7ee787;"></span><span style="font-size:0.82rem;color:var(--text-dim);">URLs</span></div>
+                    <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#ff7b72;"></span><span style="font-size:0.82rem;color:var(--text-dim);"><span class="en-inline">Errors</span><span class="zh-inline">错误</span></span></div>
+                    <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#d2a8ff;"></span><span style="font-size:0.82rem;color:var(--text-dim);"><span class="en-inline">Channels</span><span class="zh-inline">渠道</span></span></div>
+                    <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#e3b341;"></span><span style="font-size:0.82rem;color:var(--text-dim);"><span class="en-inline">Metrics</span><span class="zh-inline">指标</span></span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Model Switch Enhanced - Latency Benchmark -->
+    <section id="latency-demo" style="padding: 3rem 2rem 5rem;">
+        <div style="max-width:800px; margin:0 auto;">
+            <div class="section-header reveal">
+                <div class="section-label" style="background: rgba(168,85,247,0.15); color: var(--accent-purple);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                    <span class="en-inline">LATENCY BENCHMARK</span><span class="zh-inline">延迟测速</span>
+                </div>
+                <h2 class="section-title en">Find Your Fastest Model</h2>
+                <h2 class="section-title zh">找到你最快的模型</h2>
+            </div>
+            <div class="reveal" style="background: var(--card); padding: 2rem; border-radius: 16px; border: 1px solid var(--card-border);">
+                <div id="latency-bars">
+                    <div class="latency-row"><span class="latency-name">GPT-4o</span><div class="latency-track"><div class="latency-fill" style="width:0;background:linear-gradient(90deg,var(--accent-green),#27c93f);" data-width="35%">180ms</div></div></div>
+                    <div class="latency-row"><span class="latency-name">Gemini Pro</span><div class="latency-track"><div class="latency-fill" style="width:0;background:linear-gradient(90deg,var(--accent-blue),#5b9cf5);" data-width="48%">250ms</div></div></div>
+                    <div class="latency-row"><span class="latency-name">Claude 3.5</span><div class="latency-track"><div class="latency-fill" style="width:0;background:linear-gradient(90deg,var(--primary),var(--accent-pink));" data-width="62%">320ms</div></div></div>
+                    <div class="latency-row"><span class="latency-name">DeepSeek</span><div class="latency-track"><div class="latency-fill" style="width:0;background:linear-gradient(90deg,var(--accent-purple),#b07be8);" data-width="78%">400ms</div></div></div>
+                    <div class="latency-row"><span class="latency-name">GLM-4</span><div class="latency-track"><div class="latency-fill" style="width:0;background:linear-gradient(90deg,var(--accent-yellow),#f0c040);" data-width="55%">285ms</div></div></div>
+                </div>
+                <div style="text-align:center;margin-top:1.5rem;">
+                    <button class="btn btn-outline" onclick="runLatencyDemo()" style="font-size:0.88rem;">
+                        <span class="en-inline">▶ Run Benchmark</span><span class="zh-inline">▶ 开始测速</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -1172,24 +1429,24 @@
                     <svg viewBox="0 0 24 24" stroke="var(--primary)"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
                 </div>
                 <h3 class="en">Air-Feel UI</h3><h3 class="zh">空气感 UI</h3>
-                <p class="en">67px fluid glass ball with 7 mood-based color themes. No clunky windows — just a floating orb on your desktop.</p>
+                <p class="en">67px fluid glass ball with 14 mood-based color themes. No clunky windows — just a floating orb on your desktop.</p>
                 <p class="zh">67px 流体玻璃球，14 种情绪色系。没有笨重窗口，只有一个漂浮的光球。</p>
             </div>
             <div class="feature-card reveal reveal-delay-1">
                 <div class="feature-icon" style="background:rgba(168,85,247,0.08)">
                     <svg viewBox="0 0 24 24" stroke="var(--accent-purple)"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 </div>
-                <h3 class="en">15+ Eye Expressions</h3><h3 class="zh">15+ 眼睛表情</h3>
-                <p class="en">Capsule eyes blink, look around, and react. Idle micro-animations trigger randomly — your pet is always alive.</p>
-                <p class="zh">胶囊眼睛会眨眼、环顾、做出反应。待机微表情随机触发 — 宠物始终鲜活。</p>
+                <h3 class="en">38 Micro-Expressions</h3><h3 class="zh">38 种微表情</h3>
+                <p class="en">Capsule eyes blink, look around, and react. Idle micro-animations trigger by mood, time, and tone — your pet is always alive.</p>
+                <p class="zh">胶囊眼睛会眨眼、环顾、做出反应。待机微表情由心情×时间×语气三维触发 — 宠物始终鲜活。</p>
             </div>
             <div class="feature-card reveal reveal-delay-2">
                 <div class="feature-icon" style="background:rgba(255,107,157,0.08)">
                     <svg viewBox="0 0 24 24" stroke="var(--accent-pink)"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
                 </div>
                 <h3 class="en">Emotional TTS</h3><h3 class="zh">情感语音</h3>
-                <p class="en">MiniMax Speech 2.5 Turbo with voice cloning + 7 emotion modes. 3-tier fallback: MiniMax → CosyVoice → Edge TTS.</p>
-                <p class="zh">MiniMax Speech 2.5 Turbo 声音克隆 + 14 种情绪。三级降级：MiniMax → CosyVoice → Edge TTS。</p>
+                <p class="en">MiniMax Speech 2.5 Turbo with voice cloning + 14 emotion modes. 2-tier fallback: MiniMax → Edge TTS — never silent.</p>
+                <p class="zh">MiniMax Speech 2.5 Turbo 声音克隆 + 14 种情绪。双级降级：MiniMax → Edge TTS，语音永不中断。</p>
             </div>
             <div class="feature-card reveal">
                 <div class="feature-icon" style="background:rgba(107,138,255,0.08)">
@@ -1350,6 +1607,10 @@ node kkclaw-hotswitch.js --restart</code></pre>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/></svg>
                         OpenClaw Gateway
                     </div>
+                    <div class="arch-box core" style="background:rgba(52,211,153,0.08);border-color:rgba(52,211,153,0.3);color:var(--accent-green);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        Gateway Guardian
+                    </div>
                 </div>
                 <div class="arch-arrow">↕ HTTP :18788</div>
                 <div class="layer">
@@ -1375,7 +1636,6 @@ node kkclaw-hotswitch.js --restart</code></pre>
                 <div class="arch-arrow">↕ API Calls</div>
                 <div class="layer" style="gap:0.8rem">
                     <div class="arch-box tts">MiniMax TTS</div>
-                    <div class="arch-box tts">CosyVoice</div>
                     <div class="arch-box tts">Edge TTS</div>
                 </div>
             </div>
@@ -1475,6 +1735,34 @@ node kkclaw-hotswitch.js --restart</code></pre>
                 <div class="mood-orb" style="background:radial-gradient(circle,#b0b0b0,#808080)"></div>
                 <span class="mood-label">Offline</span>
             </div>
+            <div class="mood-item" onclick="setDemoMood('sad')">
+                <div class="mood-orb" style="background:radial-gradient(circle,#87CEEB,#4682B4)"></div>
+                <span class="mood-label">Sad</span>
+            </div>
+            <div class="mood-item" onclick="setDemoMood('angry')">
+                <div class="mood-orb" style="background:radial-gradient(circle,#FF4444,#CC0000)"></div>
+                <span class="mood-label">Angry</span>
+            </div>
+            <div class="mood-item" onclick="setDemoMood('fearful')">
+                <div class="mood-orb" style="background:radial-gradient(circle,#9966CC,#663399)"></div>
+                <span class="mood-label">Fearful</span>
+            </div>
+            <div class="mood-item" onclick="setDemoMood('calm')">
+                <div class="mood-orb" style="background:radial-gradient(circle,#66CDAA,#2E8B57)"></div>
+                <span class="mood-label">Calm</span>
+            </div>
+            <div class="mood-item" onclick="setDemoMood('excited')">
+                <div class="mood-orb" style="background:radial-gradient(circle,#FFD700,#FF8C00)"></div>
+                <span class="mood-label">Excited</span>
+            </div>
+            <div class="mood-item" onclick="setDemoMood('love')">
+                <div class="mood-orb" style="background:radial-gradient(circle,#FF69B4,#DC143C)"></div>
+                <span class="mood-label">Love</span>
+            </div>
+            <div class="mood-item" onclick="setDemoMood('focused')">
+                <div class="mood-orb" style="background:radial-gradient(circle,#4169E1,#1E3A8A)"></div>
+                <span class="mood-label">Focused</span>
+            </div>
         </div>
     </section>
 
@@ -1496,15 +1784,15 @@ node kkclaw-hotswitch.js --restart</code></pre>
                     <p class="install-desc en">Pre-built binaries for Windows and macOS</p>
                     <p class="install-desc zh">Windows 和 macOS 预编译安装包</p>
                     <div style="display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1rem;">
-                        <a href="https://github.com/kk43994/kkclaw/releases/latest/download/KKClaw-Desktop-Pet-2.2.0-Setup.exe" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                        <a href="https://github.com/kk43994/kkclaw/releases/latest/download/KKClaw-Desktop-Pet-3.5.2-Setup.exe" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
                             <span class="en-inline">Windows (x64)</span><span class="zh-inline">Windows (x64)</span>
                         </a>
-                        <a href="https://github.com/kk43994/kkclaw/releases/latest/download/KKClaw-Desktop-Pet-2.2.0-x64.dmg" class="btn btn-outline" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                        <a href="https://github.com/kk43994/kkclaw/releases/latest/download/KKClaw-Desktop-Pet-3.5.2-x64.dmg" class="btn btn-outline" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
                             <span class="en-inline">macOS (Intel)</span><span class="zh-inline">macOS (Intel)</span>
                         </a>
-                        <a href="https://github.com/kk43994/kkclaw/releases/latest/download/KKClaw-Desktop-Pet-2.2.0-arm64.dmg" class="btn btn-outline" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                        <a href="https://github.com/kk43994/kkclaw/releases/latest/download/KKClaw-Desktop-Pet-3.5.2-arm64.dmg" class="btn btn-outline" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
                             <span class="en-inline">macOS (Apple Silicon)</span><span class="zh-inline">macOS (Apple Silicon)</span>
                         </a>
@@ -1815,6 +2103,13 @@ node kkclaw-hotswitch.js --restart</code></pre>
             sleepy:    { fluid: 'linear-gradient(135deg, #e8d5e0, #f0e6ef)', blob1: 'radial-gradient(circle at 30% 30%, rgba(186,147,170,0.85), transparent 40%), radial-gradient(circle at 70% 65%, rgba(200,170,190,0.8), transparent 40%)', blob2: 'radial-gradient(circle at 60% 30%, rgba(220,200,215,0.4), transparent 35%), radial-gradient(circle at 35% 70%, rgba(170,130,160,0.3), transparent 35%)', glow: '0 0 30px rgba(186,147,170,0.2), 0 0 60px rgba(186,147,170,0.08)' },
             surprised: { fluid: 'linear-gradient(135deg, #fff9c4, #fff3e0)', blob1: 'radial-gradient(circle at 30% 30%, rgba(255,215,0,0.85), transparent 40%), radial-gradient(circle at 70% 65%, rgba(255,165,0,0.8), transparent 40%)', blob2: 'radial-gradient(circle at 60% 30%, rgba(255,235,59,0.4), transparent 35%), radial-gradient(circle at 35% 70%, rgba(255,87,34,0.3), transparent 35%)', glow: '0 0 50px rgba(255,215,0,0.35), 0 0 100px rgba(255,165,0,0.15)' },
             offline:   { fluid: 'linear-gradient(135deg, #ccc, #ddd)', blob1: 'radial-gradient(circle at 30% 30%, rgba(160,160,160,0.85), transparent 40%), radial-gradient(circle at 70% 65%, rgba(180,180,180,0.8), transparent 40%)', blob2: 'radial-gradient(circle at 60% 30%, rgba(200,200,200,0.4), transparent 35%), radial-gradient(circle at 35% 70%, rgba(140,140,140,0.3), transparent 35%)', glow: '0 0 20px rgba(160,160,160,0.15), 0 0 40px rgba(160,160,160,0.05)' },
+            sad:       { fluid: 'linear-gradient(135deg, #b3d4f0, #dbe9f7)', blob1: 'radial-gradient(circle at 30% 30%, rgba(70,130,200,0.85), transparent 40%), radial-gradient(circle at 70% 65%, rgba(100,160,220,0.8), transparent 40%)', blob2: 'radial-gradient(circle at 60% 30%, rgba(150,200,240,0.4), transparent 35%), radial-gradient(circle at 35% 70%, rgba(40,100,180,0.3), transparent 35%)', glow: '0 0 40px rgba(70,130,200,0.25), 0 0 80px rgba(70,130,200,0.1)' },
+            angry:     { fluid: 'linear-gradient(135deg, #f0b3b3, #f5d0d0)', blob1: 'radial-gradient(circle at 30% 30%, rgba(220,40,40,0.85), transparent 40%), radial-gradient(circle at 70% 65%, rgba(255,80,80,0.8), transparent 40%)', blob2: 'radial-gradient(circle at 60% 30%, rgba(255,120,120,0.4), transparent 35%), radial-gradient(circle at 35% 70%, rgba(180,20,20,0.3), transparent 35%)', glow: '0 0 50px rgba(220,40,40,0.35), 0 0 100px rgba(220,40,40,0.15)' },
+            fearful:   { fluid: 'linear-gradient(135deg, #d5c4e9, #e8ddf0)', blob1: 'radial-gradient(circle at 30% 30%, rgba(120,80,150,0.85), transparent 40%), radial-gradient(circle at 70% 65%, rgba(140,100,170,0.8), transparent 40%)', blob2: 'radial-gradient(circle at 60% 30%, rgba(170,140,200,0.4), transparent 35%), radial-gradient(circle at 35% 70%, rgba(80,50,120,0.3), transparent 35%)', glow: '0 0 30px rgba(120,80,150,0.25), 0 0 60px rgba(120,80,150,0.1)' },
+            calm:      { fluid: 'linear-gradient(135deg, #b3e8df, #d5f5f0)', blob1: 'radial-gradient(circle at 30% 30%, rgba(60,190,170,0.85), transparent 40%), radial-gradient(circle at 70% 65%, rgba(100,210,190,0.8), transparent 40%)', blob2: 'radial-gradient(circle at 60% 30%, rgba(150,230,215,0.4), transparent 35%), radial-gradient(circle at 35% 70%, rgba(30,160,140,0.3), transparent 35%)', glow: '0 0 40px rgba(60,190,170,0.25), 0 0 80px rgba(60,190,170,0.1)' },
+            excited:   { fluid: 'linear-gradient(135deg, #fff0b3, #fff8d6)', blob1: 'radial-gradient(circle at 30% 30%, rgba(255,200,0,0.85), transparent 40%), radial-gradient(circle at 70% 65%, rgba(255,220,50,0.8), transparent 40%)', blob2: 'radial-gradient(circle at 60% 30%, rgba(255,240,100,0.4), transparent 35%), radial-gradient(circle at 35% 70%, rgba(240,180,0,0.3), transparent 35%)', glow: '0 0 50px rgba(255,200,0,0.35), 0 0 100px rgba(255,200,0,0.15)' },
+            love:      { fluid: 'linear-gradient(135deg, #f5c0d0, #fce0e8)', blob1: 'radial-gradient(circle at 30% 30%, rgba(230,80,130,0.85), transparent 40%), radial-gradient(circle at 70% 65%, rgba(255,120,160,0.8), transparent 40%)', blob2: 'radial-gradient(circle at 60% 30%, rgba(255,170,200,0.4), transparent 35%), radial-gradient(circle at 35% 70%, rgba(200,50,100,0.3), transparent 35%)', glow: '0 0 40px rgba(230,80,130,0.3), 0 0 80px rgba(230,80,130,0.12)' },
+            focused:   { fluid: 'linear-gradient(135deg, #b3c8e8, #d0def5)', blob1: 'radial-gradient(circle at 30% 30%, rgba(40,100,190,0.85), transparent 40%), radial-gradient(circle at 70% 65%, rgba(70,130,210,0.8), transparent 40%)', blob2: 'radial-gradient(circle at 60% 30%, rgba(120,170,230,0.4), transparent 35%), radial-gradient(circle at 35% 70%, rgba(20,70,160,0.3), transparent 35%)', glow: '0 0 40px rgba(40,100,190,0.25), 0 0 80px rgba(40,100,190,0.1)' },
         };
 
         function setDemoMood(mood) {
@@ -1824,9 +2119,13 @@ node kkclaw-hotswitch.js --restart</code></pre>
             demoBlob2.style.background = c.blob2;
             demoGlow.style.boxShadow = c.glow;
             if (mood === 'sleepy') DEMO_EXPR.sleepy();
-            else if (mood === 'surprised') { DEMO_EXPR.surprised(); setTimeout(() => DEMO_EXPR.normal(), 1000); }
-            else if (mood === 'happy') { DEMO_EXPR.happy(); setTimeout(() => DEMO_EXPR.normal(), 1200); }
-            else if (mood === 'thinking') { DEMO_EXPR.thinking(); setTimeout(() => DEMO_EXPR.normal(), 1200); }
+            else if (mood === 'surprised' || mood === 'excited') { DEMO_EXPR.surprised(); setTimeout(() => DEMO_EXPR.normal(), 1000); }
+            else if (mood === 'happy' || mood === 'love') { DEMO_EXPR.happy(); demoBlushL.style.background='rgba(255,100,100,0.5)'; demoBlushR.style.background='rgba(255,100,100,0.5)'; setTimeout(() => { DEMO_EXPR.normal(); demoBlushL.style.background='rgba(255,130,130,0.25)'; demoBlushR.style.background='rgba(255,130,130,0.25)'; }, 1200); }
+            else if (mood === 'thinking' || mood === 'focused') { DEMO_EXPR.thinking(); setTimeout(() => DEMO_EXPR.normal(), 1200); }
+            else if (mood === 'sad') { DEMO_EXPR.sleepy(); setTimeout(() => DEMO_EXPR.normal(), 1500); }
+            else if (mood === 'angry') { DEMO_EXPR.surprised(); setTimeout(() => DEMO_EXPR.normal(), 800); }
+            else if (mood === 'fearful') { setDemoEyes({ w:20, h:32, br:'11px' }); setTimeout(() => DEMO_EXPR.normal(), 1000); }
+            else if (mood === 'calm') { DEMO_EXPR.halfBlink(); setTimeout(() => DEMO_EXPR.normal(), 1500); }
             else if (mood === 'offline') DEMO_EXPR.sleepy();
             else DEMO_EXPR.normal();
             // Squish feedback
@@ -1900,6 +2199,114 @@ node kkclaw-hotswitch.js --restart</code></pre>
                 if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
         });
+
+        // ===== Gateway Guardian Demo =====
+        let gwPlaying = false;
+        function playGatewayDemo() {
+            if (gwPlaying) return;
+            gwPlaying = true;
+            const btn = document.getElementById('gw-play-btn');
+            btn.style.opacity = '0.5';
+            btn.style.pointerEvents = 'none';
+            const terminal = document.getElementById('gw-terminal');
+            const steps = ['gw-step-0','gw-step-1','gw-step-2','gw-step-3','gw-step-4'];
+            // Reset all
+            steps.forEach(id => document.getElementById(id).classList.remove('active'));
+            document.getElementById('gw-step-0').classList.add('active');
+            const lines = [
+                { delay: 500,  html: '<span class="t-dim">[14:32:20]</span> <span class="t-yellow">⚠ Gateway not responding...</span>', step: 1 },
+                { delay: 1500, html: '<span class="t-dim">[14:32:25]</span> <span class="t-yellow">⚠ Retry 2/3...</span>' },
+                { delay: 2500, html: '<span class="t-dim">[14:32:30]</span> <span class="t-red">✗ Retry 3/3 FAILED</span>', step: 2 },
+                { delay: 3500, html: '<span class="t-dim">[14:32:30]</span> <span class="t-cyan">⚡ Guardian: auto-starting Gateway...</span>', step: 3 },
+                { delay: 4500, html: '<span class="t-dim">[14:32:32]</span> <span class="t-dim">  Spawning gateway process...</span>' },
+                { delay: 5500, html: '<span class="t-dim">[14:32:33]</span> <span class="t-green">✓ Gateway started on :18788</span>', step: 4 },
+                { delay: 6200, html: '<span class="t-dim">[14:32:33]</span> <span class="t-magenta">🔊 "Gateway 启动成功"</span>' },
+                { delay: 7000, html: '<span class="t-dim">[14:32:38]</span> <span class="t-green">Gateway</span> <span class="t-white">health check passed</span> <span class="t-dim">(score: 98)</span>' },
+            ];
+            lines.forEach(l => {
+                setTimeout(() => {
+                    const div = document.createElement('div');
+                    div.className = 'terminal-line';
+                    div.innerHTML = l.html;
+                    terminal.appendChild(div);
+                    terminal.scrollTop = terminal.scrollHeight;
+                    if (l.step !== undefined) {
+                        steps.forEach(id => document.getElementById(id).classList.remove('active'));
+                        document.getElementById(steps[l.step]).classList.add('active');
+                    }
+                }, l.delay);
+            });
+            setTimeout(() => {
+                gwPlaying = false;
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = '';
+            }, 8000);
+        }
+
+        // ===== Colorized Terminal Auto-Play =====
+        const colorLogLines = [
+            '<span class="t-dim">[Gateway]</span> <span class="t-cyan">Model:</span> <span class="t-white">claude-3.5-sonnet</span>',
+            '<span class="t-dim">[Gateway]</span> <span class="t-green">URL:</span> <span class="t-white">https://api.anthropic.com/v1/messages</span>',
+            '<span class="t-dim">[Gateway]</span> <span class="t-magenta">Channel:</span> <span class="t-white">#general</span> <span class="t-magenta">@KKBot</span>',
+            '<span class="t-dim">[Voice]</span>   <span class="t-green">✓ TTS generated</span> <span class="t-yellow">320ms</span> <span class="t-dim">(MiniMax)</span>',
+            '<span class="t-dim">[Voice]</span>   <span class="t-green">✓ Audio playing</span> <span class="t-dim">hello-1710234.mp3</span>',
+            '<span class="t-dim">[Monitor]</span> <span class="t-yellow">CPU: 12%</span> <span class="t-dim">|</span> <span class="t-yellow">Memory: 156MB</span> <span class="t-dim">|</span> <span class="t-yellow">FPS: 60</span>',
+            '<span class="t-dim">[Sync]</span>    <span class="t-magenta">#design</span> <span class="t-white">New message from @Alice</span>',
+            '<span class="t-dim">[Gateway]</span> <span class="t-cyan">Model:</span> <span class="t-white">gpt-4o</span> <span class="t-green">← switched</span>',
+            '<span class="t-dim">[Guard]</span>   <span class="t-green">Health check passed</span> <span class="t-dim">(score: 98)</span>',
+            '<span class="t-dim">[Voice]</span>   <span class="t-red">✗ MiniMax timeout</span> <span class="t-yellow">→ falling back to Edge TTS</span>',
+            '<span class="t-dim">[Voice]</span>   <span class="t-green">✓ Edge TTS generated</span> <span class="t-yellow">180ms</span>',
+            '<span class="t-dim">[Log]</span>     <span class="t-dim">Rotated: gateway.log → gateway.2026-03-12.log.gz</span>',
+        ];
+        let colorIdx = 0;
+        const colorTerminal = document.getElementById('color-terminal');
+        function addColorLine() {
+            if (!colorTerminal) return;
+            const div = document.createElement('div');
+            div.className = 'terminal-line';
+            div.innerHTML = colorLogLines[colorIdx % colorLogLines.length];
+            colorTerminal.appendChild(div);
+            if (colorTerminal.children.length > 15) colorTerminal.removeChild(colorTerminal.firstChild);
+            colorTerminal.scrollTop = colorTerminal.scrollHeight;
+            colorIdx++;
+        }
+        // Start when section is visible
+        const colorObserver = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting && !colorTerminal._started) {
+                    colorTerminal._started = true;
+                    // Initial burst
+                    for (let i = 0; i < 6; i++) setTimeout(() => addColorLine(), i * 200);
+                    // Then slow drip
+                    setInterval(addColorLine, 2500);
+                }
+            });
+        }, { threshold: 0.3 });
+        if (colorTerminal) colorObserver.observe(colorTerminal.closest('section'));
+
+        // ===== Latency Benchmark Demo =====
+        function runLatencyDemo() {
+            const fills = document.querySelectorAll('#latency-bars .latency-fill');
+            // Reset
+            fills.forEach(f => f.style.width = '0');
+            // Animate with stagger
+            fills.forEach((f, i) => {
+                setTimeout(() => {
+                    f.style.width = f.dataset.width;
+                }, 200 + i * 300);
+            });
+        }
+        // Auto-run when visible
+        const latencyObserver = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting && !e.target._ran) {
+                    e.target._ran = true;
+                    setTimeout(runLatencyDemo, 500);
+                }
+            });
+        }, { threshold: 0.5 });
+        const latencySection = document.getElementById('latency-demo');
+        if (latencySection) latencyObserver.observe(latencySection);
     </script>
 
     <style>
