@@ -2,7 +2,8 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 // Whitelisted IPC channels for security
 const VALID_SEND_CHANNELS = [
-  'drag-pet'
+  'drag-pet',
+  'theme-resize-window'
 ];
 
 const VALID_INVOKE_CHANNELS = [
@@ -13,6 +14,19 @@ const VALID_INVOKE_CHANNELS = [
   'openclaw-send',
   'model-current',
   'openclaw-status',
+  'theme-current',
+  'theme-get',
+  'theme-list',
+  'theme-switch',
+  'theme-import',
+  'theme-export',
+  'theme-delete',
+  'theme-open-picker',
+  'theme-open-editor',
+  'theme-save-and-apply',
+  'theme-export-json',
+  'theme-export-package',
+  'theme-ai-generate',
   'model-full-status',
   'model-switch',
   'model-switch-provider',
@@ -58,7 +72,8 @@ const VALID_ON_CHANNELS = [
   'agent-response',
   'status-update',
   'show-lyric',
-  'switch-log-entry'
+  'switch-log-entry',
+  'theme-changed'
 ];
 
 contextBridge.exposeInMainWorld('electronAPI', {

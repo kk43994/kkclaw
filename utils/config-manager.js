@@ -15,7 +15,6 @@ class ConfigManager {
      */
     getConfig() {
         const configPath = pathResolver.getConfigPath();
-
         try {
             const stats = fs.existsSync(configPath) ? fs.statSync(configPath) : null;
             const currentModified = stats ? stats.mtimeMs : 0;

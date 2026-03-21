@@ -1,0 +1,229 @@
+{
+  "id": "pixel-cube",
+  "name": "像素方块",
+  "version": "1.0.0",
+  "author": "kkclaw-community",
+  "description": "复古像素风方形宠物 — 圆角矩形外壳，方形眼睛，绿色终端配色",
+  "type": "css-fluid",
+
+  "size": { "width": 56, "height": 56 },
+
+  "shape": {
+    "borderRadius": "12px",
+    "padding": 2,
+    "highlightRadius": "6px",
+    "glassShell": {
+      "background": "linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)",
+      "boxShadow": "inset -1px -1px 4px rgba(255,255,255,0.05), inset 1px 1px 4px rgba(255,255,255,0.15), 0px 2px 8px rgba(0,0,0,0.2)",
+      "border": "2px solid rgba(255,255,255,0.1)",
+      "highlightTop": {
+        "top": "8%", "left": "15%", "width": "35%", "height": "12%",
+        "background": "rgba(255,255,255,0.3)", "blur": "2px", "rotation": "0deg"
+      }
+    }
+  },
+
+  "eyes": {
+    "count": 2,
+    "gap": "10px",
+    "default": { "w": 8, "h": 8, "br": "2px" },
+    "color": "#b0ffb0",
+    "glow": "0 0 6px rgba(100,255,100,0.6), 0 0 12px rgba(100,255,100,0.2)",
+    "containerPosition": { "top": "20%", "left": "12%", "width": "76%", "height": "45%" },
+    "expressions": {
+      "normal":     { "L": { "w": 8, "h": 8, "br": "2px" } },
+      "lookLeft":   { "L": { "w": 8, "h": 8, "br": "2px", "tx": -3 } },
+      "lookRight":  { "L": { "w": 8, "h": 8, "br": "2px", "tx": 3 } },
+      "lookUp":     { "L": { "w": 8, "h": 8, "br": "2px", "ty": -3 } },
+      "lookDown":   { "L": { "w": 8, "h": 6, "br": "2px", "ty": 3 } },
+      "squint":     { "L": { "w": 10, "h": 3, "br": "1px" } },
+      "talking":    { "L": { "w": 7, "h": 9, "br": "2px" } },
+      "talkBig":    { "L": { "w": 9, "h": 11, "br": "2px" } },
+
+      "blink":      { "L": { "w": 10, "h": 2, "br": "1px" }, "speed": "snap" },
+
+      "halfBlink":  { "L": { "w": 8, "h": 5, "br": "2px" }, "speed": "fast" },
+      "surprised":  { "L": { "w": 10, "h": 10, "br": "2px" }, "speed": "fast" },
+      "wow":        { "L": { "w": 12, "h": 12, "br": "3px" }, "speed": "fast" },
+      "sparkle":    { "L": { "w": 8, "h": 8, "br": "1px", "rot": 45 }, "speed": "fast" },
+      "wink":       { "L": { "w": 10, "h": 3, "br": "1px", "ty": 1 }, "R": { "w": 8, "h": 8, "br": "2px" }, "speed": "fast" },
+      "winkR":      { "L": { "w": 8, "h": 8, "br": "2px" }, "R": { "w": 10, "h": 3, "br": "1px", "ty": 1 }, "speed": "fast" },
+      "dizzy":      { "L": { "w": 7, "h": 7, "br": "2px", "rot": 30, "tx": -1 }, "R": { "w": 7, "h": 7, "br": "2px", "rot": -30, "tx": 1 }, "speed": "fast" },
+      "cross":      { "L": { "w": 8, "h": 2, "br": "1px", "rot": 35 }, "R": { "w": 8, "h": 2, "br": "1px", "rot": -35 }, "speed": "fast" },
+      "flattered":  { "L": { "w": 10, "h": 10, "br": "2px", "sy": 1.05 }, "speed": "fast" },
+      "nervous":    { "L": { "w": 6, "h": 7, "br": "2px", "ty": 1, "sx": 0.85 }, "speed": "fast" },
+
+      "happy":      { "L": { "w": 10, "h": 4, "br": "2px 2px 1px 1px", "ty": 1 }, "speed": "smooth" },
+      "superHappy": { "L": { "w": 12, "h": 3, "br": "2px 2px 1px 1px", "ty": 1, "sx": 1.1 }, "speed": "smooth" },
+      "giggle":     { "L": { "w": 10, "h": 4, "br": "2px 2px 1px 1px", "ty": 1, "rot": -6 }, "R": { "w": 10, "h": 4, "br": "2px 2px 1px 1px", "ty": 1, "rot": 6 }, "speed": "smooth" },
+      "curious":    { "L": { "w": 6, "h": 8, "br": "2px", "ty": -1 }, "R": { "w": 10, "h": 12, "br": "3px", "ty": -1 }, "speed": "smooth" },
+      "thinking":   { "L": { "w": 7, "h": 9, "br": "2px", "ty": -2 }, "speed": "smooth" },
+      "hmm":        { "L": { "w": 8, "h": 8, "br": "2px", "ty": -1, "rot": 8 }, "R": { "w": 6, "h": 6, "br": "2px", "rot": -8 }, "speed": "smooth" },
+      "sad":        { "L": { "w": 7, "h": 8, "br": "2px", "ty": 2, "sy": 0.85 }, "speed": "smooth" },
+      "angry":      { "L": { "w": 9, "h": 6, "br": "1px 2px 2px 1px", "ty": -1, "rot": -10 }, "R": { "w": 9, "h": 6, "br": "2px 1px 1px 2px", "ty": -1, "rot": 10 }, "speed": "smooth" },
+      "love":       { "L": { "w": 9, "h": 8, "br": "4px 1px 4px 1px", "rot": 45, "sx": 1.1 }, "speed": "smooth" },
+      "smug":       { "L": { "w": 9, "h": 4, "br": "2px 2px 1px 1px", "ty": 1 }, "R": { "w": 7, "h": 8, "br": "2px", "tx": 2 }, "speed": "smooth" },
+      "confused":   { "L": { "w": 8, "h": 10, "br": "2px", "ty": -2 }, "R": { "w": 6, "h": 6, "br": "2px", "ty": 2, "rot": 15 }, "speed": "smooth" },
+      "softSmile":  { "L": { "w": 9, "h": 5, "br": "2px 2px 1px 1px", "ty": 1 }, "speed": "smooth" },
+      "focus":      { "L": { "w": 6, "h": 10, "br": "2px", "ty": -1 }, "speed": "smooth" },
+      "pout":       { "L": { "w": 7, "h": 6, "br": "2px", "ty": 2, "sy": 0.8 }, "speed": "smooth" },
+      "peekL":      { "L": { "w": 9, "h": 3, "br": "1px", "ty": 1 }, "R": { "w": 7, "h": 9, "br": "2px", "tx": -2 }, "speed": "smooth" },
+      "peekR":      { "L": { "w": 7, "h": 9, "br": "2px", "tx": 2 }, "R": { "w": 9, "h": 3, "br": "1px", "ty": 1 }, "speed": "smooth" },
+      "mischief":   { "L": { "w": 9, "h": 7, "br": "2px", "rot": -5, "ty": -1 }, "R": { "w": 6, "h": 5, "br": "2px", "rot": 10, "ty": 1 }, "speed": "smooth" },
+      "worried":    { "L": { "w": 8, "h": 8, "br": "2px", "ty": 1, "rot": 5 }, "R": { "w": 8, "h": 8, "br": "2px", "ty": 1, "rot": -5 }, "speed": "smooth" },
+      "sly":        { "L": { "w": 7, "h": 7, "br": "2px", "tx": 2, "rot": -6 }, "R": { "w": 9, "h": 4, "br": "2px 2px 1px 1px", "tx": 2, "ty": 1 }, "speed": "smooth" },
+
+      "sleepy":     { "L": { "w": 10, "h": 2, "br": "1px", "ty": 2 }, "speed": "slow" },
+      "drowsy":     { "L": { "w": 9, "h": 5, "br": "2px", "ty": 1 }, "speed": "slow" },
+      "dead":       { "L": { "w": 8, "h": 2, "br": "1px", "ty": 2 }, "speed": "slow" },
+      "content":    { "L": { "w": 10, "h": 4, "br": "2px 2px 1px 1px", "sy": 1.05 }, "speed": "slow" },
+      "bliss":      { "L": { "w": 11, "h": 3, "br": "2px 2px 1px 1px", "ty": 1, "sx": 1.1 }, "speed": "slow" },
+
+      "daydream":   { "L": { "w": 10, "h": 10, "br": "3px", "ty": -2, "sx": 0.92 }, "speed": "drift" },
+      "blank":      { "L": { "w": 6, "h": 7, "br": "2px" }, "speed": "drift" }
+    }
+  },
+
+  "decorations": {
+    "blush": {
+      "enabled": false
+    },
+    "bubbles": {
+      "enabled": false
+    },
+    "particles": {
+      "colors": ["#00ff88", "#88ff00", "#00ffcc", "#aaffaa", "#ffffff", "#44ff44"],
+      "count": 6,
+      "distance": { "min": 12, "max": 30 },
+      "sizeRange": { "min": 2, "max": 4 }
+    }
+  },
+
+  "moods": {
+    "offline": {
+      "fluid": "linear-gradient(180deg, #1a1a1a, #0d0d0d)",
+      "b1": "radial-gradient(circle at 30% 30%, rgba(40,40,40,0.85), transparent 50%), radial-gradient(circle at 70% 70%, rgba(30,30,30,0.8), transparent 50%)",
+      "b2": "radial-gradient(circle at 50% 50%, rgba(50,50,50,0.3), transparent 45%)",
+      "glow": "0 0 10px rgba(80,80,80,0.15), 0 0 20px rgba(60,60,60,0.05)",
+      "eyes": "sleepy", "scale": 0.94, "bounce": 0, "speed": "30s"
+    },
+    "idle": {
+      "fluid": "linear-gradient(180deg, #1a2f1a, #0a1a0a)",
+      "b1": "radial-gradient(circle at 35% 30%, rgba(0,180,80,0.7), transparent 50%), radial-gradient(circle at 65% 70%, rgba(0,120,60,0.6), transparent 50%)",
+      "b2": "radial-gradient(circle at 50% 40%, rgba(0,255,100,0.2), transparent 45%)",
+      "glow": "0 0 20px rgba(0,200,80,0.2), 0 0 40px rgba(0,255,100,0.08)",
+      "eyes": "normal", "scale": 1, "bounce": 0, "speed": "12s"
+    },
+    "happy": {
+      "fluid": "linear-gradient(180deg, #1a3a1a, #0a2a0a)",
+      "b1": "radial-gradient(circle at 35% 28%, rgba(50,255,100,0.8), transparent 50%), radial-gradient(circle at 65% 68%, rgba(0,200,80,0.75), transparent 50%)",
+      "b2": "radial-gradient(circle at 50% 35%, rgba(100,255,150,0.35), transparent 45%)",
+      "glow": "0 0 35px rgba(50,255,100,0.35), 0 0 70px rgba(0,200,80,0.15)",
+      "eyes": "happy", "scale": 1.05, "bounce": 0.018, "speed": "6s"
+    },
+    "talking": {
+      "fluid": "linear-gradient(180deg, #0f2a1a, #051a0a)",
+      "b1": "radial-gradient(circle at 30% 30%, rgba(0,220,100,0.8), transparent 50%), radial-gradient(circle at 70% 65%, rgba(0,180,80,0.75), transparent 50%)",
+      "b2": "radial-gradient(circle at 55% 30%, rgba(80,255,140,0.3), transparent 45%)",
+      "glow": "0 0 30px rgba(0,220,100,0.3), 0 0 60px rgba(0,180,80,0.12)",
+      "eyes": "talking", "scale": 1, "bounce": 0.012, "speed": "5s"
+    },
+    "thinking": {
+      "fluid": "linear-gradient(180deg, #1a1a2a, #0a0a1a)",
+      "b1": "radial-gradient(circle at 35% 28%, rgba(80,80,255,0.75), transparent 50%), radial-gradient(circle at 65% 68%, rgba(60,60,200,0.7), transparent 50%)",
+      "b2": "radial-gradient(circle at 50% 35%, rgba(100,100,255,0.3), transparent 45%)",
+      "glow": "0 0 30px rgba(80,80,255,0.25), 0 0 60px rgba(60,60,200,0.1)",
+      "eyes": "thinking", "scale": 1, "bounce": 0, "speed": "16s"
+    },
+    "sleepy": {
+      "fluid": "linear-gradient(180deg, #121212, #080808)",
+      "b1": "radial-gradient(circle at 35% 30%, rgba(0,80,40,0.6), transparent 50%), radial-gradient(circle at 65% 70%, rgba(0,60,30,0.5), transparent 50%)",
+      "b2": "radial-gradient(circle at 50% 50%, rgba(0,100,50,0.15), transparent 45%)",
+      "glow": "0 0 15px rgba(0,100,50,0.12), 0 0 30px rgba(0,80,40,0.05)",
+      "eyes": "sleepy", "scale": 0.97, "bounce": 0, "speed": "24s"
+    },
+    "surprised": {
+      "fluid": "linear-gradient(180deg, #1a3a0a, #0a2a00)",
+      "b1": "radial-gradient(circle at 35% 25%, rgba(100,255,0,0.85), transparent 50%), radial-gradient(circle at 65% 70%, rgba(80,220,0,0.8), transparent 50%)",
+      "b2": "radial-gradient(circle at 50% 30%, rgba(150,255,50,0.4), transparent 45%)",
+      "glow": "0 0 50px rgba(100,255,0,0.4), 0 0 100px rgba(80,220,0,0.18)",
+      "eyes": "surprised", "scale": 1.06, "bounce": 0, "speed": "4s"
+    },
+    "sad": {
+      "fluid": "linear-gradient(180deg, #0a1a2a, #050d1a)",
+      "b1": "radial-gradient(circle at 35% 30%, rgba(0,80,180,0.7), transparent 50%), radial-gradient(circle at 65% 70%, rgba(0,60,140,0.65), transparent 50%)",
+      "b2": "radial-gradient(circle at 50% 40%, rgba(0,120,200,0.25), transparent 45%)",
+      "glow": "0 0 25px rgba(0,80,180,0.22), 0 0 50px rgba(0,60,140,0.08)",
+      "eyes": "sad", "scale": 0.96, "bounce": 0, "speed": "18s"
+    },
+    "angry": {
+      "fluid": "linear-gradient(180deg, #2a0a0a, #1a0505)",
+      "b1": "radial-gradient(circle at 35% 28%, rgba(255,50,0,0.85), transparent 50%), radial-gradient(circle at 65% 68%, rgba(200,30,0,0.8), transparent 50%)",
+      "b2": "radial-gradient(circle at 50% 50%, rgba(255,80,30,0.4), transparent 45%)",
+      "glow": "0 0 40px rgba(255,50,0,0.4), 0 0 80px rgba(200,30,0,0.18)",
+      "eyes": "angry", "scale": 1.04, "bounce": 0.01, "speed": "3s"
+    },
+    "fearful": {
+      "fluid": "linear-gradient(180deg, #1a0a2a, #0d051a)",
+      "b1": "radial-gradient(circle at 35% 30%, rgba(150,0,255,0.7), transparent 50%), radial-gradient(circle at 65% 70%, rgba(120,0,200,0.65), transparent 50%)",
+      "b2": "radial-gradient(circle at 50% 40%, rgba(180,50,255,0.25), transparent 45%)",
+      "glow": "0 0 30px rgba(150,0,255,0.25), 0 0 60px rgba(120,0,200,0.1)",
+      "eyes": "nervous", "scale": 0.97, "bounce": 0, "speed": "5s"
+    },
+    "calm": {
+      "fluid": "linear-gradient(180deg, #0a1a15, #05100a)",
+      "b1": "radial-gradient(circle at 35% 28%, rgba(0,200,120,0.75), transparent 50%), radial-gradient(circle at 65% 68%, rgba(0,160,100,0.7), transparent 50%)",
+      "b2": "radial-gradient(circle at 50% 35%, rgba(80,220,160,0.3), transparent 45%)",
+      "glow": "0 0 30px rgba(0,200,120,0.22), 0 0 60px rgba(0,160,100,0.08)",
+      "eyes": "softSmile", "scale": 1, "bounce": 0, "speed": "14s"
+    },
+    "excited": {
+      "fluid": "linear-gradient(180deg, #1a3a0a, #0a2a00)",
+      "b1": "radial-gradient(circle at 30% 25%, rgba(0,255,80,0.9), transparent 50%), radial-gradient(circle at 70% 68%, rgba(50,255,100,0.85), transparent 50%)",
+      "b2": "radial-gradient(circle at 50% 50%, rgba(100,255,150,0.4), transparent 45%)",
+      "glow": "0 0 55px rgba(0,255,80,0.45), 0 0 110px rgba(50,255,100,0.2)",
+      "eyes": "superHappy", "scale": 1.08, "bounce": 0.025, "speed": "3s"
+    },
+    "love": {
+      "fluid": "linear-gradient(180deg, #2a1a2a, #1a0a1a)",
+      "b1": "radial-gradient(circle at 35% 28%, rgba(255,0,128,0.75), transparent 50%), radial-gradient(circle at 65% 68%, rgba(200,0,100,0.7), transparent 50%)",
+      "b2": "radial-gradient(circle at 50% 50%, rgba(255,100,180,0.3), transparent 45%)",
+      "glow": "0 0 40px rgba(255,0,128,0.3), 0 0 80px rgba(200,0,100,0.12)",
+      "eyes": "love", "scale": 1.05, "bounce": 0.015, "speed": "7s"
+    },
+    "focused": {
+      "fluid": "linear-gradient(180deg, #0a2a1a, #051a0d)",
+      "b1": "radial-gradient(circle at 35% 28%, rgba(0,180,140,0.8), transparent 50%), radial-gradient(circle at 65% 68%, rgba(0,140,110,0.75), transparent 50%)",
+      "b2": "radial-gradient(circle at 50% 35%, rgba(0,220,170,0.3), transparent 45%)",
+      "glow": "0 0 30px rgba(0,180,140,0.28), 0 0 60px rgba(0,140,110,0.12)",
+      "eyes": "focus", "scale": 1.02, "bounce": 0, "speed": "12s"
+    }
+  },
+
+  "animation": {
+    "float": {
+      "frequencies": [1.0, 0.5, 1.8],
+      "amplitudes": [2.0, 1.2, 0.4]
+    },
+    "rotation": {
+      "frequencies": [0.6, 0.3],
+      "amplitudes": [0.15, 0.1]
+    },
+    "breath": {
+      "frequency": 2.5,
+      "amplitude": 0.008,
+      "secondaryFreq": 0.9,
+      "secondaryAmp": 0.004
+    },
+    "fidget": {
+      "xFreq": 0.3,
+      "xAmp": 0.4,
+      "rotFreq": 0.2,
+      "rotAmp": 0.08
+    },
+    "deepBreath": {
+      "amplitude": 0.02,
+      "speed": 0.05
+    }
+  }
+}

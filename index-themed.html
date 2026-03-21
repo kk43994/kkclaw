@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Claw 🦞</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+    *::-webkit-scrollbar { display: none; }
+    html, body {
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    }
+    .container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    /* ===== 图标工具栏 ===== */
+    .toolbar {
+        position: absolute;
+        top: calc(50% + 53px);
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 8px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+        z-index: 20;
+    }
+    .container:hover .toolbar {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .tool-icon {
+        width: 26px; height: 26px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.85);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .tool-icon svg {
+        width: 13px; height: 13px;
+        stroke: #666; fill: none;
+        stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .tool-icon:hover {
+        transform: scale(1.2);
+        box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+    }
+    .tool-icon:active { transform: scale(0.9); }
+
+    .model-switch-btn {
+        min-width: 26px;
+        padding: 0 4px;
+        border-radius: 13px;
+    }
+    .model-switch-btn:hover {
+        background: rgba(255,255,255,0.95);
+    }
+    .tool-icon.active {
+        background: rgba(255,255,255,1);
+        box-shadow: 0 0 8px rgba(255,255,255,0.5), 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    /* 输入条 */
+    .input-bar {
+        position: absolute;
+        top: calc(50% + 85px);
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 4px;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        z-index: 20;
+    }
+    .input-bar.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .input-bar input {
+        width: 160px;
+        padding: 4px 10px;
+        border: none;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.85);
+        font-size: 11px;
+        outline: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+    .input-bar button {
+        padding: 4px 8px;
+        border: none;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.85);
+        font-size: 11px;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+
+    /* ===== 共享 Keyframes（所有渲染器可复用）===== */
+    @keyframes fluid-spin {
+        0% { transform: rotate(0deg) scale(1); }
+        50% { transform: rotate(180deg) scale(1.08); }
+        100% { transform: rotate(360deg) scale(1); }
+    }
+    @keyframes fluid-spin-r {
+        0% { transform: rotate(360deg) scale(1.05); }
+        50% { transform: rotate(180deg) scale(0.95); }
+        100% { transform: rotate(0deg) scale(1.05); }
+    }
+    @keyframes bub {
+        0% { opacity: 0; transform: translateY(0) scale(0.3); }
+        15% { opacity: 0.5; }
+        100% { opacity: 0; transform: translateY(-30px) translateX(5px) scale(1); }
+    }
+    @keyframes squish {
+        0% { transform: scale(1, 1); }
+        25% { transform: scale(1.15, 0.85); }
+        50% { transform: scale(0.9, 1.1); }
+        75% { transform: scale(1.05, 0.95); }
+        100% { transform: scale(1, 1); }
+    }
+</style>
+</head>
+<body>
+<div class="container" id="container">
+    <!-- 宠物渲染区域 — 由 PetRenderer 动态生成 -->
+    <div id="pet-mount"></div>
+
+    <!-- 图标工具栏 -->
+    <div class="toolbar" id="toolbar">
+        <div class="tool-icon" id="btnChat" title="发消息" onclick="toggleInput()">
+            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="tool-icon" id="btnVoice" title="语音" onclick="toggleVoice()">
+            <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </div>
+        <div class="tool-icon" id="btnScreenshot" title="截图" onclick="screenshot()">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <div class="tool-icon model-switch-btn" id="btnModelSwitch" title="切换模型" onclick="cycleModel()">
+            <span id="modelBadge" style="font-size:9px;font-weight:700;color:#666;user-select:none;">OP</span>
+        </div>
+        <div class="tool-icon" id="btnTheme" title="切换主题" onclick="openThemePicker()">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        </div>
+    </div>
+
+    <!-- 输入条 -->
+    <div class="input-bar" id="inputBar">
+        <input type="text" id="input" placeholder="说点什么..." onkeypress="if(event.key==='Enter')send()">
+        <button onclick="send()">↑</button>
+    </div>
+</div>
+
+<!-- ===== 渲染器模块 ===== -->
+<script src="renderer/pet-renderer.js"></script>
+<script src="renderer/css-fluid-renderer.js"></script>
+<script src="renderer/sprite-renderer.js"></script>
+<script src="renderer/theme-loader.js"></script>
+<script src="renderer/expression-engine.js"></script>
+
+<script>
+// ===== 全局引用 =====
+const mount = document.getElementById('pet-mount');
+const inputBar = document.getElementById('inputBar');
+const inputEl = document.getElementById('input');
+const btnVoice = document.getElementById('btnVoice');
+const modelBadge = document.getElementById('modelBadge');
+
+let renderer = null;       // PetRenderer 实例（CssFluidRenderer 或 SpriteRenderer）
+let exprEngine = null;      // ExpressionEngine 实例
+let voiceOn = true;
+let isConnected = false;
+let currentModelColor = '#E8A838';
+
+// 全局事件清理追踪
+let _cleanupFns = [];
+
+function _cleanup() {
+    _cleanupFns.forEach(fn => { try { fn(); } catch(e) {} });
+    _cleanupFns = [];
+}
+
+// ===== 主题加载 & 渲染器初始化 =====
+const loader = new ThemeLoader();
+
+async function initPet(themeData) {
+    try {
+        // 清理旧的 document 级事件监听
+        _cleanup();
+
+        // 销毁旧渲染器
+        if (renderer) {
+            renderer.destroy();
+            renderer = null;
+        }
+        if (exprEngine) {
+            exprEngine.stop();
+            exprEngine = null;
+        }
+        // 清空挂载点
+        mount.innerHTML = '';
+
+        // 加载 & 校验主题
+        const theme = loader.load(themeData);
+        console.log(`🎨 initPet: 正在初始化 ${theme.name} (${theme.type})...`);
+
+        // 📐 通知主进程调整窗口大小
+        const sz = theme.size || { width: 67, height: 67 };
+        if (typeof electronAPI !== 'undefined') {
+            electronAPI.send('theme-resize-window', { width: sz.width, height: sz.height });
+        }
+
+        // 动态调整工具栏位置——宠物下方
+        const toolbar = document.getElementById('toolbar');
+        const inputBarEl = document.getElementById('inputBar');
+        if (toolbar) toolbar.style.top = `calc(50% + ${Math.round(sz.height / 2) + 12}px)`;
+        if (inputBarEl) inputBarEl.style.top = `calc(50% + ${Math.round(sz.height / 2) + 44}px)`;
+
+        // 根据类型选择渲染器
+        if (theme.type === 'sprite') {
+            renderer = new SpriteRenderer(mount, theme);
+        } else {
+            renderer = new CssFluidRenderer(mount, theme);
+        }
+
+        // 初始化渲染器
+        renderer.init();
+
+        // CSS-Fluid 特有功能
+        if (renderer instanceof CssFluidRenderer) {
+            renderer.enableMouseTracking();
+            renderer.enableHoverEffect();
+        }
+
+        // 启动表情引擎
+        exprEngine = new ExpressionEngine(renderer);
+        exprEngine.start();
+
+        // 绑定拖拽
+        _bindDrag();
+
+        // 绑定点击
+        _bindClick();
+
+        // 初始状态：离线
+        renderer.setMood('offline');
+
+        console.log(`🎨 主题已加载: ${theme.name} (${theme.type})`);
+    } catch (err) {
+        console.error('❌ initPet 失败:', err);
+    }
+}
+
+// ===== 启动：从主进程获取主题数据 =====
+(async function boot() {
+    let themeData = null;
+
+    if (typeof electronAPI !== 'undefined') {
+        try {
+            themeData = await electronAPI.invoke('theme-current');
+        } catch (e) {
+            console.warn('⚠️ 无法从主进程获取主题，使用内置默认主题');
+        }
+    }
+
+    // 回退：直接 fetch 默认主题文件
+    if (!themeData) {
+        try {
+            const resp = await fetch('themes/fluid-lobster/theme.json');
+            themeData = await resp.json();
+        } catch (e) {
+            console.error('❌ 无法加载默认主题:', e);
+            return;
+        }
+    }
+
+    await initPet(themeData);
+
+    // 连接检查
+    if (typeof electronAPI !== 'undefined') {
+        setTimeout(async () => {
+            const s = await electronAPI.invoke('openclaw-status');
+            isConnected = s.connected;
+            if (isConnected) {
+                renderer.setMood('happy');
+                renderer.squish();
+                renderer.spawnParticles();
+                setTimeout(() => renderer.setMood('idle'), 2000);
+            }
+        }, 1500);
+    }
+})();
+
+// ===== 拖拽 =====
+function _bindDrag() {
+    const petEl = renderer.getElement();
+    if (!petEl) return;
+
+    let isDrag = false, startX, startY, dragOffsetX, dragOffsetY;
+
+    petEl.addEventListener('mousedown', e => {
+        isDrag = false;
+        startX = e.screenX;
+        startY = e.screenY;
+        dragOffsetX = e.clientX;
+        dragOffsetY = e.clientY;
+    });
+
+    const onMove = e => {
+        if (startX !== undefined) {
+            if (Math.abs(e.screenX - startX) > 3 || Math.abs(e.screenY - startY) > 3) isDrag = true;
+        }
+        if (isDrag && typeof electronAPI !== 'undefined') {
+            electronAPI.send('drag-pet', {
+                x: e.screenX,
+                y: e.screenY,
+                offsetX: dragOffsetX,
+                offsetY: dragOffsetY
+            });
+        }
+    };
+    const onUp = () => {
+        setTimeout(() => { isDrag = false; startX = undefined; }, 30);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    // 注册清理函数，切换主题时移除
+    _cleanupFns.push(() => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+    });
+}
+
+// ===== 点击 =====
+function _bindClick() {
+    const petEl = renderer.getElement();
+    if (!petEl) return;
+
+    let clickCount = 0, clickTimer = null;
+
+    petEl.addEventListener('click', () => {
+        // 拖拽中不触发
+        clickCount++;
+        clearTimeout(clickTimer);
+        renderer.squish();
+        renderer.spawnParticles();
+        renderer._mouseTracking = false;
+
+        if (clickCount >= 3) {
+            // 三击超开心
+            renderer.playExpression('superHappy');
+            const blush = renderer.getBlush?.() || {};
+            if (blush.left) {
+                blush.left.style.background = 'rgba(255,100,100,0.6)';
+                blush.right.style.background = 'rgba(255,100,100,0.6)';
+            }
+            renderer._targetScale = 1.1;
+
+            if (typeof electronAPI !== 'undefined') electronAPI.invoke('show-history');
+            setTimeout(() => {
+                _resetClick();
+                clickCount = 0;
+            }, 1200);
+        } else {
+            const rr = ['happy','wink','winkR','surprised','curious','giggle','sparkle','wow'];
+            renderer.playExpression(rr[Math.floor(Math.random() * rr.length)]);
+            clickTimer = setTimeout(() => { _resetClick(); clickCount = 0; }, 800);
+        }
+    });
+
+    function _resetClick() {
+        renderer.applyMoodEyes();
+        const blush = renderer.getBlush?.() || {};
+        if (blush.left) { blush.left.style.background = ''; blush.right.style.background = ''; }
+        const m = renderer.theme.moods[renderer.currentMood];
+        renderer._targetScale = m?.scale || 1;
+        renderer._mouseTracking = true;
+    }
+}
+
+// ===== 工具栏 =====
+function toggleInput() {
+    inputBar.classList.toggle('show');
+    if (inputBar.classList.contains('show')) inputEl.focus();
+}
+
+function toggleVoice() {
+    voiceOn = !voiceOn;
+    btnVoice.innerHTML = voiceOn
+        ? '<svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'
+        : '<svg viewBox="0 0 24 24"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2c0 .76-.12 1.5-.35 2.18"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+    btnVoice.classList.toggle('active', voiceOn);
+    if (typeof electronAPI !== 'undefined') electronAPI.invoke('set-voice-enabled', voiceOn);
+    renderer?.setMood('happy');
+    setTimeout(() => renderer?.setMood('idle'), 1500);
+}
+
+// ===== 模型切换 =====
+async function cycleModel() {
+    if (typeof electronAPI === 'undefined') return;
+    renderer?.setMood('thinking');
+    const raw = await electronAPI.invoke('model-next');
+    const model = (raw && typeof raw === 'object' && ('success' in raw || 'model' in raw || 'error' in raw))
+        ? (raw.success ? raw.model : null) : raw;
+    if (model) {
+        updateModelBadge(model);
+        renderer?.flashColor?.(model.color);
+        renderer?.setMood('happy');
+        setTimeout(() => renderer?.setMood('idle'), 2000);
+    } else {
+        renderer?.setMood('idle');
+    }
+}
+
+function updateModelBadge(model) {
+    if (!modelBadge || !model) return;
+    modelBadge.textContent = model.icon;
+    modelBadge.style.color = model.color;
+    currentModelColor = model.color;
+}
+
+// 初始化模型状态
+if (typeof electronAPI !== 'undefined') {
+    electronAPI.invoke('model-current').then(model => {
+        if (model) updateModelBadge(model);
+    });
+    electronAPI.on('model-changed', (model) => {
+        updateModelBadge(model);
+        renderer?.flashColor?.(model.color);
+    });
+}
+
+// ===== 主题切换 =====
+function openThemePicker() {
+    if (typeof electronAPI !== 'undefined') {
+        electronAPI.invoke('theme-open-picker');
+    }
+}
+
+// 监听主题切换事件
+if (typeof electronAPI !== 'undefined') {
+    electronAPI.on('theme-changed', async (themeData) => {
+        console.log('🎨 收到主题切换事件');
+        await initPet(themeData);
+        // 恢复连接状态
+        const s = await electronAPI.invoke('openclaw-status');
+        isConnected = s.connected;
+        if (isConnected) {
+            renderer?.setMood('happy');
+            setTimeout(() => renderer?.setMood('idle'), 2000);
+        }
+    });
+}
+
+// ===== 截图 =====
+async function screenshot() {
+    if (typeof electronAPI === 'undefined') return;
+    renderer?.setMood('thinking');
+    const result = await electronAPI.invoke('take-screenshot', 'manual');
+    if (result.success) {
+        renderer?.setMood('happy');
+        setTimeout(() => renderer?.setMood('idle'), 2000);
+    } else { renderer?.setMood('idle'); }
+}
+
+// ===== 发送消息 =====
+async function send() {
+    const msg = inputEl.value.trim();
+    if (!msg || typeof electronAPI === 'undefined') return;
+    inputEl.value = '';
+    inputBar.classList.remove('show');
+    renderer?.setMood('thinking');
+    const reply = await electronAPI.invoke('openclaw-send', msg);
+    if (reply) { renderer?.setMood('happy'); setTimeout(() => renderer?.setMood('idle'), 3000); }
+}
+
+// ===== IPC 事件 =====
+if (typeof electronAPI !== 'undefined') {
+    electronAPI.on('new-message', (msg) => {
+        renderer?.setMood('talking');
+        setTimeout(() => renderer?.setMood('idle'), 3000);
+    });
+
+    electronAPI.on('agent-response', (res) => {
+        if (exprEngine) exprEngine.lastTone = exprEngine.detectTone(res.content);
+
+        const emotionMoodMap = {
+            happy: 'happy', surprised: 'surprised', sad: 'sad',
+            fearful: 'fearful', angry: 'angry', thinking: 'thinking',
+            calm: 'calm', disgusted: 'angry', excited: 'excited',
+            love: 'love', focused: 'focused'
+        };
+        const mood = emotionMoodMap[res.emotion] || 'calm';
+        renderer?.setMood(mood);
+        const recoveryTime = (mood === 'thinking') ? 8000 : (mood === 'sad') ? 7000 : (mood === 'fearful') ? 6000 : 5000;
+        setTimeout(() => renderer?.setMood('idle'), recoveryTime);
+    });
+
+    electronAPI.on('status-update', (s) => {
+        const wasConnected = isConnected;
+        isConnected = s.connected;
+        if (!wasConnected && isConnected) {
+            renderer?.setMood('happy');
+            renderer?.squish();
+            renderer?.spawnParticles();
+            renderer?.spawnParticles();
+            setTimeout(() => renderer?.setMood('idle'), 3000);
+        } else if (wasConnected && !isConnected) {
+            renderer?.setMood('offline');
+        }
+    });
+
+    // 状态轮询
+    setInterval(async () => {
+        const s = await electronAPI.invoke('openclaw-status');
+        const wasConnected = isConnected;
+        isConnected = s.connected;
+        if (!wasConnected && isConnected && renderer?.currentMood === 'offline') {
+            renderer?.setMood('happy');
+            renderer?.squish();
+            renderer?.spawnParticles();
+            renderer?.spawnParticles();
+            setTimeout(() => renderer?.setMood('idle'), 3000);
+        } else if (!isConnected && renderer?.currentMood !== 'offline') {
+            renderer?.setMood('offline');
+        }
+    }, 10000);
+}
+
+// 互动追踪
+document.addEventListener('keydown', () => {
+    if (renderer) renderer.lastInteraction = Date.now();
+});
+</script>
+</body>
+</html>
