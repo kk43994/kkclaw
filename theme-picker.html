@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>主题选择</title>
+<style>
+:root {
+    --primary: #FF6B4A;
+    --primary-light: #FF8A6A;
+    --primary-dark: #E85530;
+    --bg: #0a0a0a;
+    --bg-alt: #111;
+    --card: #141414;
+    --card-hover: #1a1a1a;
+    --card-border: #222;
+    --text: #e8e8e8;
+    --text-dim: #888;
+    --text-muted: #555;
+    --accent-blue: #6B8AFF;
+    --accent-purple: #A855F7;
+    --accent-pink: #FF6B9D;
+    --accent-green: #34D399;
+    --accent-yellow: #FBBF24;
+    --gutter: 2rem;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+*::-webkit-scrollbar { width: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overflow-y: auto;
+}
+
+/* ===== Header ===== */
+.header {
+    padding: 32px var(--gutter) 0;
+    max-width: 960px;
+    margin: 0 auto;
+}
+.header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+.header h1 {
+    font-size: clamp(1.4rem, 3vw, 1.8rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--primary), var(--accent-pink));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.header .subtitle {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    margin-bottom: 28px;
+}
+.theme-count {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: rgba(255,255,255,0.04);
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* ===== Content ===== */
+.content {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 var(--gutter) var(--gutter);
+}
+
+/* ===== Grid ===== */
+.theme-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.2rem;
+    margin-bottom: 28px;
+}
+
+/* ===== Card ===== */
+.theme-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 22px 18px 18px;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+.theme-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.theme-card:hover {
+    border-color: rgba(255,107,74,0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+}
+.theme-card:hover::before { opacity: 1; }
+
+.theme-card.active {
+    border-color: rgba(255,107,74,0.5);
+    background: rgba(255,107,74,0.04);
+}
+.theme-card.active::before { opacity: 1; }
+
+.check-mark {
+    display: none;
+    position: absolute;
+    top: 10px; right: 10px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--primary);
+    align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(255,107,74,0.4);
+}
+.theme-card.active .check-mark {
+    display: flex;
+}
+.check-mark svg {
+    width: 12px; height: 12px;
+    stroke: white; fill: none;
+    stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* ===== Preview ===== */
+.theme-preview {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 14px;
+    position: relative;
+    border-radius: 50%;
+}
+.theme-preview.fluid-preview {
+    overflow: hidden;
+}
+.theme-preview.sprite-preview {
+    background: rgba(255,255,255,0.04);
+    border: 1px dashed rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    border-radius: 14px;
+}
+.theme-preview .glass-overlay {
+    position: absolute; inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.12), rgba(255,255,255,0.03));
+    border: 1px solid rgba(255,255,255,0.25);
+    pointer-events: none;
+    z-index: 2;
+    box-shadow: inset -2px -2px 8px rgba(255,255,255,0.08), inset 2px 2px 8px rgba(255,255,255,0.35);
+}
+.theme-preview .glass-overlay::before {
+    content: '';
+    position: absolute;
+    top: 12%; left: 18%; width: 28%; height: 14%;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.55);
+    filter: blur(1px);
+    transform: rotate(-40deg);
+}
+.theme-preview .eyes-mini {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    z-index: 3;
+}
+.theme-preview .eye-mini {
+    border-radius: 4px;
+    box-shadow: 0 0 6px rgba(255,255,255,0.8);
+}
+
+/* ===== Card Info ===== */
+.theme-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 4px;
+    color: var(--text);
+}
+.theme-meta {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.5;
+}
+.badge-row {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin-top: 8px;
+}
+.theme-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.68rem;
+    font-weight: 600;
+}
+.badge-builtin {
+    background: rgba(107,138,255,0.12);
+    color: var(--accent-blue);
+    border: 1px solid rgba(107,138,255,0.2);
+}
+.badge-user {
+    background: rgba(255,107,74,0.12);
+    color: var(--primary);
+    border: 1px solid rgba(255,107,74,0.2);
+}
+.badge-sprite {
+    background: rgba(52,211,153,0.12);
+    color: var(--accent-green);
+    border: 1px solid rgba(52,211,153,0.2);
+}
+
+/* ===== Action Bar ===== */
+.action-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 16px 20px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+}
+
+/* ===== Buttons ===== */
+.btn {
+    padding: 0.55rem 1.1rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+}
+.btn:active { transform: scale(0.96); }
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    box-shadow: 0 4px 15px rgba(255,107,74,0.25);
+}
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(255,107,74,0.35);
+}
+.btn-outline {
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    border: 1.5px solid rgba(255,255,255,0.12);
+}
+.btn-outline:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(255,107,74,0.05);
+}
+.btn-danger {
+    background: rgba(255,70,70,0.08);
+    color: #ff6b6b;
+    border: 1.5px solid rgba(255,70,70,0.15);
+}
+.btn-danger:hover {
+    background: rgba(255,70,70,0.15);
+    border-color: rgba(255,70,70,0.3);
+}
+.btn-spacer { flex: 1; }
+
+/* ===== Toast ===== */
+.toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    padding: 10px 22px;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 999;
+    pointer-events: none;
+}
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+.toast.success {
+    background: rgba(52,211,153,0.15);
+    color: var(--accent-green);
+    border: 1px solid rgba(52,211,153,0.2);
+    box-shadow: 0 4px 20px rgba(52,211,153,0.1);
+}
+.toast.error {
+    background: rgba(255,70,70,0.15);
+    color: #ff6b6b;
+    border: 1px solid rgba(255,70,70,0.2);
+    box-shadow: 0 4px 20px rgba(255,70,70,0.1);
+}
+
+/* ===== Hint ===== */
+.usage-hint {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 16px;
+}
+
+/* ===== Empty State ===== */
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+.empty-state .icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+.empty-state p { font-size: 0.9rem; }
+
+/* ===== Reveal ===== */
+.reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ===== Fluid Animation ===== */
+@keyframes fluid-spin {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.08); }
+    100% { transform: rotate(360deg) scale(1); }
+}
+@keyframes glow-pulse {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-top">
+        <h1>主题选择</h1>
+        <span class="theme-count" id="themeCount">0 个主题</span>
+    </div>
+    <div class="subtitle">双击卡片切换主题 · 单击选中后可导出或删除</div>
+</div>
+
+<div class="content">
+    <div class="theme-grid" id="themeGrid"></div>
+
+    <div class="action-bar reveal">
+        <button class="btn btn-outline" onclick="importTheme()">导入主题</button>
+        <button class="btn btn-outline" onclick="exportTheme()">导出主题包</button>
+        <button class="btn btn-danger" id="btnDelete" style="display:none" onclick="deleteTheme()">删除选中</button>
+        <span class="btn-spacer"></span>
+        <button class="btn btn-primary" onclick="openEditor()">创作新主题</button>
+    </div>
+
+    <div class="usage-hint">单击选中 · 双击应用 · 导出会连同素材一起打包</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const grid = document.getElementById('themeGrid');
+const toastEl = document.getElementById('toast');
+const btnDelete = document.getElementById('btnDelete');
+const themeCount = document.getElementById('themeCount');
+
+let themes = [];
+let selectedId = null;
+
+// Reveal on load
+setTimeout(() => {
+    document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+}, 100);
+
+function showToast(msg, type = 'success') {
+    toastEl.textContent = msg;
+    toastEl.className = `toast show ${type}`;
+    setTimeout(() => { toastEl.className = 'toast'; }, 3000);
+}
+
+async function loadThemes() {
+    if (typeof electronAPI === 'undefined') return;
+    themes = await electronAPI.invoke('theme-list');
+    themeCount.textContent = `${themes.length} 个主题`;
+    renderGrid();
+}
+
+function renderGrid() {
+    grid.innerHTML = '';
+    if (themes.length === 0) {
+        grid.innerHTML = '<div class="empty-state"><div class="icon">&#x2728;</div><p>还没有主题，点击右下角创作一个</p></div>';
+        return;
+    }
+
+    themes.forEach((t, idx) => {
+        const card = document.createElement('div');
+        card.className = `theme-card reveal${t.isActive ? ' active' : ''}`;
+        card.onclick = () => selectTheme(t.id);
+        card.ondblclick = () => applyTheme(t.id);
+
+        let previewHTML = '';
+        if (t.preview?.imageSrc) {
+            const glow = t.preview.imageGlow || 'none';
+            const glowFilter = glow !== 'none' ? `filter: drop-shadow(${glow});` : '';
+            previewHTML = `
+                <div class="theme-preview" style="background:transparent;border-radius:14px;">
+                    <img src="${t.preview.imageSrc}" style="width:90%;height:90%;object-fit:contain;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);${glowFilter}" />
+                </div>`;
+        } else if (t.type === 'css-fluid' && t.preview) {
+            const p = t.preview;
+            const br = p.borderRadius || '50%';
+            const eyeW = Math.round((p.eyeW || 11) * 0.5);
+            const eyeH = Math.round((p.eyeH || 19) * 0.5);
+            previewHTML = `
+                <div class="theme-preview fluid-preview" style="border-radius:${br};background:${p.fluid};box-shadow:${p.glow || 'none'};">
+                    <div style="position:absolute;width:130%;height:130%;top:-15%;left:-15%;background:${p.b1};animation:fluid-spin ${p.speed || '8s'} linear infinite;border-radius:${br};"></div>
+                    <div class="glass-overlay"></div>
+                    <div class="eyes-mini" style="gap:${p.eyeGap || '5px'};">
+                        <div class="eye-mini" style="width:${eyeW}px;height:${eyeH}px;background:${p.eyeColor || 'white'};"></div>
+                        <div class="eye-mini" style="width:${eyeW}px;height:${eyeH}px;background:${p.eyeColor || 'white'};"></div>
+                    </div>
+                </div>`;
+        } else {
+            previewHTML = `<div class="theme-preview sprite-preview">&#x1f3a8;</div>`;
+        }
+
+        const badges = [];
+        if (t.isBuiltin) badges.push('<span class="theme-badge badge-builtin">Built-in</span>');
+        else badges.push('<span class="theme-badge badge-user">Custom</span>');
+        if (t.type === 'sprite') badges.push('<span class="theme-badge badge-sprite">Sprite</span>');
+
+        card.innerHTML = `
+            <div class="check-mark"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+            ${previewHTML}
+            <div class="theme-name">${t.name}</div>
+            <div class="theme-meta">${t.author} &middot; v${t.version}</div>
+            <div class="badge-row">${badges.join('')}</div>`;
+        grid.appendChild(card);
+
+        // Staggered reveal
+        setTimeout(() => card.classList.add('visible'), 80 + idx * 60);
+    });
+}
+
+function selectTheme(id) {
+    selectedId = id;
+    const t = themes.find(x => x.id === id);
+    document.querySelectorAll('.theme-card').forEach((card, i) => {
+        card.classList.toggle('active', themes[i].id === id);
+    });
+    btnDelete.style.display = (t && !t.isBuiltin) ? 'inline-flex' : 'none';
+}
+
+async function applyTheme(id) {
+    if (typeof electronAPI === 'undefined') return;
+    const result = await electronAPI.invoke('theme-switch', id);
+    if (result.success) {
+        showToast(`已切换: ${result.theme.name}`);
+        await loadThemes();
+    } else {
+        showToast(`切换失败: ${result.error}`, 'error');
+    }
+}
+
+async function importTheme() {
+    if (typeof electronAPI === 'undefined') return;
+    const result = await electronAPI.invoke('theme-import');
+    if (result.success) {
+        showToast(`导入成功: ${result.name}`);
+        await loadThemes();
+    } else if (result.error !== 'cancelled') {
+        showToast(`导入失败: ${result.error}`, 'error');
+    }
+}
+
+async function exportTheme() {
+    const id = selectedId || themes.find(t => t.isActive)?.id;
+    if (!id) { showToast('请先选择要导出的主题', 'error'); return; }
+    if (typeof electronAPI === 'undefined') return;
+    const result = await electronAPI.invoke('theme-export', id);
+    if (result.success) {
+        showToast(`导出成功: ${result.path}`);
+    } else if (result.error !== 'cancelled') {
+        showToast(`导出失败: ${result.error}`, 'error');
+    } else {
+        showToast('已取消导出');
+    }
+}
+
+async function deleteTheme() {
+    if (!selectedId) return;
+    const t = themes.find(x => x.id === selectedId);
+    if (!t || t.isBuiltin) return;
+    if (!confirm(`确定要删除主题 "${t.name}" 吗？`)) return;
+    if (typeof electronAPI === 'undefined') return;
+    const result = await electronAPI.invoke('theme-delete', selectedId);
+    if (result.success) {
+        showToast('已删除');
+        selectedId = null;
+        await loadThemes();
+    } else {
+        showToast(`删除失败: ${result.error}`, 'error');
+    }
+}
+
+function openEditor() {
+    if (typeof electronAPI !== 'undefined') {
+        electronAPI.invoke('theme-open-editor');
+    }
+}
+
+loadThemes();
+</script>
+</body>
+</html>

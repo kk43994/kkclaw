@@ -1,0 +1,242 @@
+{
+  "id": "fluid-lobster",
+  "name": "流体龙虾球",
+  "version": "1.0.0",
+  "author": "kk43994",
+  "description": "KKClaw 默认主题 — 琉璃质感流体球，14 情绪配色 + 40+ 眼睛表情",
+  "type": "css-fluid",
+
+  "size": { "width": 67, "height": 67 },
+
+  "shape": {
+    "borderRadius": "50%",
+    "glassShell": {
+      "background": "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.12), rgba(255,255,255,0.03))",
+      "boxShadow": "inset -2px -2px 8px rgba(255,255,255,0.08), inset 2px 2px 8px rgba(255,255,255,0.35), 0px 2px 6px rgba(220,80,80,0.08)",
+      "border": "1px solid rgba(255,255,255,0.25)",
+      "highlightTop": {
+        "top": "12%", "left": "18%", "width": "28%", "height": "14%",
+        "background": "rgba(255,255,255,0.55)", "blur": "1px", "rotation": "-40deg"
+      },
+      "highlightBottom": {
+        "bottom": "22%", "right": "20%", "width": "16%", "height": "10%",
+        "background": "rgba(255,255,255,0.2)", "blur": "1px", "rotation": "25deg"
+      }
+    }
+  },
+
+  "eyes": {
+    "count": 2,
+    "gap": "12px",
+    "default": { "w": 11, "h": 19, "br": "6px" },
+    "color": "white",
+    "glow": "0 0 8px rgba(255,255,255,0.9), 0 0 16px rgba(255,255,255,0.4)",
+    "containerPosition": { "top": "16%", "left": "10%", "width": "80%", "height": "50%" },
+    "expressions": {
+      "normal":     { "L": { "w": 11, "h": 19, "br": "6px" } },
+      "lookLeft":   { "L": { "w": 11, "h": 19, "br": "6px", "tx": -4 } },
+      "lookRight":  { "L": { "w": 11, "h": 19, "br": "6px", "tx": 4 } },
+      "lookUp":     { "L": { "w": 11, "h": 19, "br": "6px", "ty": -5 } },
+      "lookDown":   { "L": { "w": 11, "h": 15, "br": "6px", "ty": 4 } },
+      "squint":     { "L": { "w": 12, "h": 6, "br": "4px", "ty": 1 } },
+      "talking":    { "L": { "w": 10, "h": 17, "br": "5px" } },
+      "talkBig":    { "L": { "w": 12, "h": 20, "br": "6px" } },
+
+      "blink":      { "L": { "w": 12, "h": 3, "br": "3px" }, "speed": "snap" },
+
+      "halfBlink":  { "L": { "w": 11, "h": 10, "br": "5px" }, "speed": "fast" },
+      "surprised":  { "L": { "w": 13, "h": 21, "br": "7px" }, "speed": "fast" },
+      "wow":        { "L": { "w": 16, "h": 16, "br": "8px" }, "speed": "fast" },
+      "sparkle":    { "L": { "w": 12, "h": 12, "br": "3px", "rot": 45 }, "speed": "fast" },
+      "wink":       { "L": { "w": 13, "h": 7, "br": "7px 7px 3px 3px", "ty": 1 }, "R": { "w": 11, "h": 19, "br": "6px" }, "speed": "fast" },
+      "winkR":      { "L": { "w": 11, "h": 19, "br": "6px" }, "R": { "w": 13, "h": 7, "br": "7px 7px 3px 3px", "ty": 1 }, "speed": "fast" },
+      "dizzy":      { "L": { "w": 10, "h": 10, "br": "5px", "rot": 25, "tx": -2 }, "R": { "w": 10, "h": 10, "br": "5px", "rot": -25, "tx": 2 }, "speed": "fast" },
+      "cross":      { "L": { "w": 10, "h": 3, "br": "2px", "rot": 30 }, "R": { "w": 10, "h": 3, "br": "2px", "rot": -30 }, "speed": "fast" },
+      "flattered":  { "L": { "w": 14, "h": 20, "br": "7px", "sy": 1.05 }, "speed": "fast" },
+      "nervous":    { "L": { "w": 9, "h": 14, "br": "5px", "ty": 1, "sx": 0.9 }, "speed": "fast" },
+
+      "happy":      { "L": { "w": 13, "h": 7, "br": "7px 7px 3px 3px", "ty": 1 }, "speed": "smooth" },
+      "superHappy": { "L": { "w": 15, "h": 5, "br": "8px 8px 3px 3px", "ty": 1, "sx": 1.1 }, "speed": "smooth" },
+      "giggle":     { "L": { "w": 13, "h": 7, "br": "7px 7px 3px 3px", "ty": 1, "rot": -8 }, "R": { "w": 13, "h": 7, "br": "7px 7px 3px 3px", "ty": 1, "rot": 8 }, "speed": "smooth" },
+      "curious":    { "L": { "w": 9, "h": 16, "br": "5px", "ty": -1 }, "R": { "w": 13, "h": 21, "br": "7px", "ty": -1 }, "speed": "smooth" },
+      "thinking":   { "L": { "w": 10, "h": 17, "br": "5px", "ty": -3 }, "speed": "smooth" },
+      "hmm":        { "L": { "w": 11, "h": 16, "br": "5px", "ty": -1, "rot": 8 }, "R": { "w": 9, "h": 13, "br": "5px", "ty": 0, "rot": -8 }, "speed": "smooth" },
+      "sad":        { "L": { "w": 10, "h": 16, "br": "5px", "ty": 3, "sy": 0.9 }, "speed": "smooth" },
+      "angry":      { "L": { "w": 12, "h": 14, "br": "3px 6px 6px 3px", "ty": -2, "rot": -12 }, "R": { "w": 12, "h": 14, "br": "6px 3px 3px 6px", "ty": -2, "rot": 12 }, "speed": "smooth" },
+      "love":       { "L": { "w": 14, "h": 13, "br": "7px 1px 7px 1px", "rot": 45, "sx": 1.1 }, "speed": "smooth" },
+      "smug":       { "L": { "w": 11, "h": 7, "br": "6px 6px 3px 3px", "ty": 1 }, "R": { "w": 9, "h": 15, "br": "5px", "tx": 3 }, "speed": "smooth" },
+      "confused":   { "L": { "w": 11, "h": 19, "br": "6px", "ty": -2 }, "R": { "w": 9, "h": 12, "br": "5px", "ty": 2, "rot": 15 }, "speed": "smooth" },
+      "softSmile":  { "L": { "w": 12, "h": 9, "br": "6px 6px 3px 3px", "ty": 1 }, "speed": "smooth" },
+      "focus":      { "L": { "w": 9, "h": 18, "br": "4px", "ty": -1 }, "speed": "smooth" },
+      "pout":       { "L": { "w": 10, "h": 11, "br": "5px", "ty": 2, "sy": 0.85 }, "speed": "smooth" },
+      "peekL":      { "L": { "w": 11, "h": 6, "br": "4px", "ty": 1 }, "R": { "w": 10, "h": 17, "br": "5px", "tx": -3 }, "speed": "smooth" },
+      "peekR":      { "L": { "w": 10, "h": 17, "br": "5px", "tx": 3 }, "R": { "w": 11, "h": 6, "br": "4px", "ty": 1 }, "speed": "smooth" },
+      "mischief":   { "L": { "w": 13, "h": 14, "br": "7px", "rot": -5, "ty": -1 }, "R": { "w": 9, "h": 10, "br": "5px", "rot": 10, "ty": 1 }, "speed": "smooth" },
+      "worried":    { "L": { "w": 11, "h": 16, "br": "5px", "ty": 1, "rot": 5 }, "R": { "w": 11, "h": 16, "br": "5px", "ty": 1, "rot": -5 }, "speed": "smooth" },
+      "sly":        { "L": { "w": 10, "h": 14, "br": "5px", "tx": 3, "rot": -6 }, "R": { "w": 12, "h": 8, "br": "6px 6px 3px 3px", "tx": 3, "ty": 1 }, "speed": "smooth" },
+
+      "sleepy":     { "L": { "w": 12, "h": 4, "br": "4px", "ty": 2 }, "speed": "slow" },
+      "drowsy":     { "L": { "w": 11, "h": 10, "br": "5px", "ty": 1 }, "speed": "slow" },
+      "dead":       { "L": { "w": 10, "h": 3, "br": "2px", "ty": 3 }, "speed": "slow" },
+      "content":    { "L": { "w": 13, "h": 8, "br": "7px 7px 4px 4px", "ty": 0, "sx": 1.05 }, "speed": "slow" },
+      "bliss":      { "L": { "w": 14, "h": 5, "br": "7px 7px 2px 2px", "ty": 1, "sx": 1.1 }, "speed": "slow" },
+
+      "daydream":   { "L": { "w": 13, "h": 20, "br": "7px", "ty": -3, "sx": 0.95 }, "speed": "drift" },
+      "blank":      { "L": { "w": 8, "h": 15, "br": "4px" }, "speed": "drift" }
+    }
+  },
+
+  "decorations": {
+    "blush": {
+      "enabled": true,
+      "color": "rgba(255,130,130,0.25)",
+      "size": { "width": 14, "height": 8 },
+      "blur": 3,
+      "positions": [
+        { "top": "58%", "left": "8%" },
+        { "top": "58%", "right": "8%" }
+      ]
+    },
+    "bubbles": {
+      "enabled": true,
+      "items": [
+        { "size": 5, "left": "-5px", "top": "60%", "duration": "5s", "delay": "0s" },
+        { "size": 3, "right": "-4px", "top": "40%", "duration": "6.5s", "delay": "2s" }
+      ]
+    },
+    "particles": {
+      "colors": ["#ff6b6b", "#ffa07a", "#ffb347", "#ff69b4", "#fff", "#ffd700"],
+      "count": 8,
+      "distance": { "min": 15, "max": 40 },
+      "sizeRange": { "min": 2, "max": 5 }
+    }
+  },
+
+  "moods": {
+    "offline": {
+      "fluid": "linear-gradient(135deg,#ccc,#ddd)",
+      "b1": "radial-gradient(circle at 30% 30%,rgba(160,160,160,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(180,180,180,0.8),transparent 40%)",
+      "b2": "radial-gradient(circle at 60% 30%,rgba(200,200,200,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(140,140,140,0.3),transparent 35%)",
+      "glow": "0 0 20px rgba(160,160,160,0.15), 0 0 40px rgba(160,160,160,0.05)",
+      "eyes": "sleepy", "scale": 0.93, "bounce": 0, "speed": "20s"
+    },
+    "idle": {
+      "fluid": "linear-gradient(135deg,#ffb3b3,#fed6e3)",
+      "b1": "radial-gradient(circle at 30% 30%,rgba(235,87,87,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(255,154,108,0.8),transparent 40%)",
+      "b2": "radial-gradient(circle at 60% 30%,rgba(255,200,150,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(220,60,60,0.3),transparent 35%)",
+      "glow": "0 0 40px rgba(255,107,74,0.25), 0 0 80px rgba(255,107,74,0.1)",
+      "eyes": "normal", "scale": 1, "bounce": 0, "speed": "8s"
+    },
+    "happy": {
+      "fluid": "linear-gradient(135deg,#ffe0b2,#fff3e0)",
+      "b1": "radial-gradient(circle at 30% 30%,rgba(255,193,7,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(255,152,0,0.8),transparent 40%)",
+      "b2": "radial-gradient(circle at 60% 30%,rgba(255,235,59,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(255,183,77,0.3),transparent 35%)",
+      "glow": "0 0 40px rgba(255,193,7,0.3), 0 0 80px rgba(255,152,0,0.15)",
+      "eyes": "happy", "scale": 1.05, "bounce": 0.02, "speed": "5s"
+    },
+    "talking": {
+      "fluid": "linear-gradient(135deg,#f8bbd0,#fce4ec)",
+      "b1": "radial-gradient(circle at 30% 30%,rgba(233,30,99,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(255,105,180,0.8),transparent 40%)",
+      "b2": "radial-gradient(circle at 60% 30%,rgba(255,182,193,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(219,68,85,0.3),transparent 35%)",
+      "glow": "0 0 40px rgba(255,105,180,0.3), 0 0 80px rgba(233,30,99,0.15)",
+      "eyes": "talking", "scale": 1, "bounce": 0.015, "speed": "4s"
+    },
+    "thinking": {
+      "fluid": "linear-gradient(135deg,#d1c4e9,#ede7f6)",
+      "b1": "radial-gradient(circle at 30% 30%,rgba(103,58,183,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(123,104,238,0.8),transparent 40%)",
+      "b2": "radial-gradient(circle at 60% 30%,rgba(179,157,219,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(94,53,177,0.3),transparent 35%)",
+      "glow": "0 0 40px rgba(123,104,238,0.3), 0 0 80px rgba(103,58,183,0.15)",
+      "eyes": "thinking", "scale": 1, "bounce": 0, "speed": "12s"
+    },
+    "sleepy": {
+      "fluid": "linear-gradient(135deg,#e8d5e0,#f0e6ef)",
+      "b1": "radial-gradient(circle at 30% 30%,rgba(186,147,170,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(200,170,190,0.8),transparent 40%)",
+      "b2": "radial-gradient(circle at 60% 30%,rgba(220,200,215,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(170,130,160,0.3),transparent 35%)",
+      "glow": "0 0 30px rgba(186,147,170,0.2), 0 0 60px rgba(186,147,170,0.08)",
+      "eyes": "sleepy", "scale": 0.97, "bounce": 0, "speed": "16s"
+    },
+    "surprised": {
+      "fluid": "linear-gradient(135deg,#fff9c4,#fff3e0)",
+      "b1": "radial-gradient(circle at 30% 30%,rgba(255,215,0,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(255,165,0,0.8),transparent 40%)",
+      "b2": "radial-gradient(circle at 60% 30%,rgba(255,235,59,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(255,87,34,0.3),transparent 35%)",
+      "glow": "0 0 50px rgba(255,215,0,0.35), 0 0 100px rgba(255,165,0,0.15)",
+      "eyes": "surprised", "scale": 1.06, "bounce": 0, "speed": "6s"
+    },
+    "sad": {
+      "fluid": "linear-gradient(135deg,#90caf9,#bbdefb)",
+      "b1": "radial-gradient(circle at 30% 30%,rgba(30,136,229,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(66,165,245,0.8),transparent 40%)",
+      "b2": "radial-gradient(circle at 60% 30%,rgba(144,202,249,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(21,101,192,0.3),transparent 35%)",
+      "glow": "0 0 40px rgba(66,165,245,0.3), 0 0 80px rgba(30,136,229,0.15)",
+      "eyes": "sad", "scale": 0.96, "bounce": 0, "speed": "14s"
+    },
+    "angry": {
+      "fluid": "linear-gradient(135deg,#ef5350,#e53935)",
+      "b1": "radial-gradient(circle at 30% 30%,rgba(211,47,47,0.9),transparent 40%),radial-gradient(circle at 70% 65%,rgba(244,67,54,0.85),transparent 40%)",
+      "b2": "radial-gradient(circle at 50% 50%,rgba(255,82,82,0.45),transparent 35%),radial-gradient(circle at 35% 70%,rgba(183,28,28,0.35),transparent 35%)",
+      "glow": "0 0 50px rgba(244,67,54,0.4), 0 0 100px rgba(211,47,47,0.2)",
+      "eyes": "angry", "scale": 1.04, "bounce": 0.01, "speed": "3s"
+    },
+    "fearful": {
+      "fluid": "linear-gradient(135deg,#ce93d8,#e1bee7)",
+      "b1": "radial-gradient(circle at 30% 30%,rgba(156,39,176,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(186,104,200,0.8),transparent 40%)",
+      "b2": "radial-gradient(circle at 60% 30%,rgba(206,147,216,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(123,31,162,0.3),transparent 35%)",
+      "glow": "0 0 40px rgba(156,39,176,0.3), 0 0 80px rgba(123,31,162,0.15)",
+      "eyes": "nervous", "scale": 0.97, "bounce": 0, "speed": "5s"
+    },
+    "calm": {
+      "fluid": "linear-gradient(135deg,#b2dfdb,#e0f2f1)",
+      "b1": "radial-gradient(circle at 30% 30%,rgba(77,182,172,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(128,203,196,0.8),transparent 40%)",
+      "b2": "radial-gradient(circle at 60% 30%,rgba(178,223,219,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(0,137,123,0.3),transparent 35%)",
+      "glow": "0 0 40px rgba(77,182,172,0.25), 0 0 80px rgba(0,137,123,0.1)",
+      "eyes": "softSmile", "scale": 1, "bounce": 0, "speed": "10s"
+    },
+    "excited": {
+      "fluid": "linear-gradient(135deg,#f48fb1,#f8bbd0)",
+      "b1": "radial-gradient(circle at 30% 30%,rgba(233,30,99,0.9),transparent 40%),radial-gradient(circle at 70% 65%,rgba(255,64,129,0.85),transparent 40%)",
+      "b2": "radial-gradient(circle at 50% 50%,rgba(248,187,208,0.45),transparent 35%),radial-gradient(circle at 35% 70%,rgba(194,24,91,0.35),transparent 35%)",
+      "glow": "0 0 55px rgba(233,30,99,0.4), 0 0 110px rgba(255,64,129,0.2)",
+      "eyes": "superHappy", "scale": 1.08, "bounce": 0.025, "speed": "3s"
+    },
+    "love": {
+      "fluid": "linear-gradient(135deg,#ff8a80,#ffcdd2)",
+      "b1": "radial-gradient(circle at 30% 30%,rgba(229,57,53,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(255,82,82,0.8),transparent 40%)",
+      "b2": "radial-gradient(circle at 50% 50%,rgba(255,138,128,0.45),transparent 35%),radial-gradient(circle at 35% 70%,rgba(198,40,40,0.3),transparent 35%)",
+      "glow": "0 0 45px rgba(229,57,53,0.35), 0 0 90px rgba(255,82,82,0.15)",
+      "eyes": "love", "scale": 1.05, "bounce": 0.015, "speed": "6s"
+    },
+    "focused": {
+      "fluid": "linear-gradient(135deg,#80deea,#b2ebf2)",
+      "b1": "radial-gradient(circle at 30% 30%,rgba(0,151,167,0.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(38,166,154,0.8),transparent 40%)",
+      "b2": "radial-gradient(circle at 60% 30%,rgba(128,222,234,0.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(0,131,143,0.3),transparent 35%)",
+      "glow": "0 0 40px rgba(0,151,167,0.3), 0 0 80px rgba(38,166,154,0.15)",
+      "eyes": "focus", "scale": 1.02, "bounce": 0, "speed": "10s"
+    }
+  },
+
+  "animation": {
+    "float": {
+      "frequencies": [1.3, 0.67, 2.3],
+      "amplitudes": [3.5, 2, 0.6]
+    },
+    "rotation": {
+      "frequencies": [0.9, 0.37],
+      "amplitudes": [0.3, 0.2]
+    },
+    "breath": {
+      "frequency": 2,
+      "amplitude": 0.01,
+      "secondaryFreq": 0.8,
+      "secondaryAmp": 0.005
+    },
+    "fidget": {
+      "xFreq": 0.23,
+      "xAmp": 0.6,
+      "rotFreq": 0.17,
+      "rotAmp": 0.12
+    },
+    "deepBreath": {
+      "amplitude": 0.025,
+      "speed": 0.04
+    }
+  }
+}

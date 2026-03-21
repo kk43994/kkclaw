@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>主题创作工具</title>
+<style>
+:root {
+    --primary: #FF6B4A;
+    --primary-light: #FF8A6A;
+    --primary-dark: #E85530;
+    --bg: #0a0a0a;
+    --bg-alt: #111;
+    --card: #141414;
+    --card-hover: #1a1a1a;
+    --card-border: #222;
+    --text: #e8e8e8;
+    --text-dim: #888;
+    --text-muted: #555;
+    --accent-blue: #6B8AFF;
+    --accent-purple: #A855F7;
+    --accent-pink: #FF6B9D;
+    --accent-green: #34D399;
+    --accent-yellow: #FBBF24;
+    --gutter: 2rem;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+*::-webkit-scrollbar { width: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+/* ===== Step Nav (glass-morphism like landing page nav) ===== */
+.steps {
+    display: flex;
+    justify-content: center;
+    padding: 0 var(--gutter);
+    height: 52px;
+    align-items: center;
+    background: rgba(10,10,10,0.88);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    gap: 4px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.step {
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    user-select: none;
+}
+.step:hover { color: var(--text-dim); background: rgba(255,255,255,0.04); }
+.step .num {
+    width: 20px; height: 20px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.68rem;
+    transition: all 0.3s;
+}
+.step.active {
+    color: white;
+    background: rgba(255,107,74,0.1);
+}
+.step.active .num {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 2px 8px rgba(255,107,74,0.3);
+}
+.step.done { color: var(--accent-green); }
+.step.done .num {
+    background: rgba(52,211,153,0.15);
+    color: var(--accent-green);
+}
+
+/* ===== Main ===== */
+.main { max-width: 900px; margin: 0 auto; padding: 2rem var(--gutter); }
+.page { display: none; }
+.page.active { display: block; }
+.page h2 {
+    font-size: clamp(1.3rem, 3vw, 1.6rem);
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--primary), var(--accent-pink));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.page .desc { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 24px; }
+
+/* ===== Step 1: Mode Grid ===== */
+.mode-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.mode-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 24px 18px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+.mode-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.mode-card:hover {
+    border-color: rgba(255,107,74,0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+}
+.mode-card:hover::before { opacity: 1; }
+.mode-card.selected {
+    border-color: rgba(255,107,74,0.5);
+    background: rgba(255,107,74,0.04);
+}
+.mode-card.selected::before { opacity: 1; }
+.mode-card .icon { font-size: 32px; margin-bottom: 10px; }
+.mode-card h3 { font-size: 0.88rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+.mode-card p { font-size: 0.72rem; color: var(--text-dim); line-height: 1.6; }
+.mode-card .tags { margin-top: 10px; display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; }
+.mode-card .tag {
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: 0.62rem;
+    font-weight: 600;
+    background: rgba(255,255,255,0.04);
+    color: var(--text-muted);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* ===== AI Section (feature-card style from landing page) ===== */
+.ai-section {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+    border-left: 3px solid var(--accent-purple);
+}
+.ai-section::before {
+    content: '';
+    position: absolute; top: 0; left: -3px; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent-purple), var(--primary), transparent);
+    opacity: 0.6;
+}
+.ai-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.ai-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: rgba(168,85,247,0.08);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+}
+.ai-header h3 { font-size: 0.95rem; font-weight: 600; color: var(--text); margin: 0; }
+.ai-header p { font-size: 0.75rem; color: var(--text-dim); margin: 0; }
+
+.ai-input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.ai-input-row input {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--card-border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.3s;
+}
+.ai-input-row input:focus { border-color: var(--primary); }
+.ai-input-row input::placeholder { color: var(--text-muted); }
+
+.ai-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
+.ai-tags > span { font-size: 0.68rem; color: var(--accent-purple); }
+.ai-suggest {
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(168,85,247,0.15);
+    background: rgba(168,85,247,0.06);
+    color: var(--accent-purple);
+    font-size: 0.68rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.ai-suggest:hover {
+    background: rgba(168,85,247,0.15);
+    border-color: rgba(168,85,247,0.3);
+    color: #c084fc;
+}
+
+#aiStatus { font-size: 0.72rem; color: var(--accent-purple); display: none; }
+@keyframes ai-breathe { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+.ai-loading { animation: ai-breathe 1.5s ease-in-out infinite; }
+
+.ai-result {
+    display: none;
+    margin-top: 14px;
+    background: var(--bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 16px;
+}
+.ai-result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.ai-result-header > span { font-size: 0.82rem; color: var(--accent-green); font-weight: 600; }
+.ai-result-actions { display: flex; gap: 6px; }
+.ai-result-preview { display: flex; align-items: center; gap: 16px; }
+.ai-preview-ball {
+    width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
+}
+@keyframes float { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-5px) scale(1.02); } }
+.ai-preview-ball { animation: float 3s ease-in-out infinite; }
+.ai-preview-info { font-size: 0.72rem; color: var(--text-dim); line-height: 1.7; }
+
+/* ===== Divider ===== */
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 22px;
+}
+.divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--card-border);
+}
+.divider span { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
+
+/* ===== Step 2: Upload ===== */
+.drop-zone {
+    border: 2px dashed rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 20px;
+    background: var(--card);
+}
+.drop-zone:hover, .drop-zone.dragover {
+    border-color: rgba(255,107,74,0.3);
+    background: rgba(255,107,74,0.03);
+}
+.drop-zone .icon { font-size: 28px; margin-bottom: 10px; opacity: 0.6; }
+.drop-zone p { color: var(--text-dim); font-size: 0.82rem; margin-bottom: 2px; }
+.drop-zone small { color: var(--text-muted); font-size: 0.72rem; }
+
+.upload-hint {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    line-height: 1.7;
+}
+
+/* ===== Step 3: Mood Grid ===== */
+.mood-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(125px, 1fr)); gap: 10px; }
+.mood-slot {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+    transition: all 0.3s;
+}
+.mood-slot:hover { border-color: rgba(255,255,255,0.1); }
+.mood-slot.has-image { border-color: rgba(255,107,74,0.3); }
+.mood-slot .mood-label { font-size: 0.72rem; font-weight: 600; margin-bottom: 8px; color: var(--text-dim); }
+.mood-slot .mood-preview {
+    width: 50px; height: 50px;
+    margin: 0 auto 8px;
+    border-radius: 50%;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.04);
+}
+.mood-slot .mood-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.mood-slot .mood-preview .placeholder { font-size: 20px; opacity: 0.3; }
+.mood-slot select {
+    width: 100%;
+    border: 1px solid var(--card-border);
+    background: var(--bg);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 3px 6px;
+    font-size: 0.65rem;
+    outline: none;
+}
+.mood-slot select:focus { border-color: var(--primary); }
+
+/* ===== Step 4: Config ===== */
+.config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.config-section {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 20px;
+}
+.config-section h3 {
+    font-size: 0.85rem;
+    margin-bottom: 14px;
+    color: var(--text);
+    font-weight: 600;
+}
+.field { margin-bottom: 12px; }
+.field label {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+.field input, .field select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.82rem;
+    outline: none;
+    transition: border-color 0.3s;
+}
+.field input:focus, .field select:focus { border-color: var(--primary); }
+.field-row { display: flex; gap: 10px; }
+.field-row .field { flex: 1; }
+
+.color-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.color-row input[type="color"] {
+    width: 30px; height: 26px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: transparent;
+}
+.color-row span { font-size: 0.75rem; color: var(--text-dim); flex: 1; }
+.color-row input[type="range"] {
+    flex: 2;
+    accent-color: var(--primary);
+    height: 4px;
+}
+
+/* ===== Step 5: Preview ===== */
+.final-row { display: flex; gap: 24px; align-items: flex-start; }
+.final-preview {
+    flex: 0 0 240px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 28px 24px;
+    text-align: center;
+}
+.final-preview-pet {
+    width: 120px; height: 120px;
+    margin: 0 auto 16px;
+    position: relative;
+}
+.final-preview-pet img { width: 100%; height: 100%; object-fit: contain; }
+.final-preview-pet .fluid-ball {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    position: relative;
+    overflow: hidden;
+}
+.final-preview-moods {
+    display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; margin-top: 14px;
+}
+.final-preview-moods button {
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--card-border);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.final-preview-moods button:hover { background: rgba(255,255,255,0.04); color: var(--text-dim); }
+.final-preview-moods button.active {
+    background: rgba(255,107,74,0.1);
+    border-color: rgba(255,107,74,0.3);
+    color: var(--primary);
+}
+
+.final-info { flex: 1; min-width: 0; }
+.final-info h3 { margin-bottom: 14px; font-size: 0.9rem; color: var(--text); font-weight: 600; }
+.json-preview {
+    background: #0d1117;
+    border-radius: 12px;
+    padding: 16px;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.68rem;
+    max-height: 300px;
+    overflow-y: auto;
+    color: #79c0ff;
+    white-space: pre;
+    border: 1px solid #21262d;
+    margin-bottom: 16px;
+    line-height: 1.8;
+}
+
+/* ===== Buttons ===== */
+.btn {
+    padding: 0.55rem 1.1rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.btn:active { transform: scale(0.96); }
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    box-shadow: 0 4px 15px rgba(255,107,74,0.25);
+}
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(255,107,74,0.35);
+}
+.btn-outline {
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    border: 1.5px solid rgba(255,255,255,0.12);
+}
+.btn-outline:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(255,107,74,0.05);
+}
+.btn-success {
+    background: linear-gradient(135deg, #059669, #10b981);
+    color: white;
+    box-shadow: 0 4px 15px rgba(52,211,153,0.25);
+}
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(52,211,153,0.35);
+}
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.nav-actions { display: flex; justify-content: space-between; margin-top: 32px; }
+
+/* ===== Toast ===== */
+.toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    padding: 10px 22px;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 999;
+    pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.ok {
+    background: rgba(52,211,153,0.15);
+    color: var(--accent-green);
+    border: 1px solid rgba(52,211,153,0.2);
+}
+.toast.err {
+    background: rgba(255,70,70,0.15);
+    color: #ff6b6b;
+    border: 1px solid rgba(255,70,70,0.2);
+}
+
+/* ===== Animations ===== */
+@keyframes fluid-spin {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.05); }
+    100% { transform: rotate(360deg) scale(1); }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== Step Nav ===== -->
+<div class="steps" id="stepNav">
+  <div class="step active" data-step="1"><span class="num">1</span> 选择模式</div>
+  <div class="step" data-step="2"><span class="num">2</span> 添加素材</div>
+  <div class="step" data-step="3"><span class="num">3</span> 分配表情</div>
+  <div class="step" data-step="4"><span class="num">4</span> 调整细节</div>
+  <div class="step" data-step="5"><span class="num">5</span> 预览导出</div>
+</div>
+
+<div class="main">
+
+<!-- ========== Step 1 ========== -->
+<div class="page active" id="page1">
+  <h2>创建你的专属宠物</h2>
+
+  <!-- AI Section -->
+  <div class="ai-section">
+    <div class="ai-header">
+      <div class="ai-icon">&#x2728;</div>
+      <div>
+        <h3>AI 一键创作</h3>
+        <p>描述你想要的宠物，OpenClaw 帮你生成完整主题</p>
+      </div>
+    </div>
+    <div class="ai-input-row">
+      <input type="text" id="aiPrompt" placeholder="例: 一个海洋风格的蓝绿色宠物球，像水母一样发光">
+      <button class="btn btn-primary" id="aiGenBtn" onclick="aiGenerate()" style="white-space:nowrap">生成</button>
+    </div>
+    <div class="ai-tags">
+      <span>试试:</span>
+      <button class="ai-suggest" onclick="aiSuggest(this)">赛博朋克风格的紫色球</button>
+      <button class="ai-suggest" onclick="aiSuggest(this)">森林精灵绿色主题</button>
+      <button class="ai-suggest" onclick="aiSuggest(this)">火焰岩浆红色球</button>
+      <button class="ai-suggest" onclick="aiSuggest(this)">冰雪水晶蓝白配色</button>
+      <button class="ai-suggest" onclick="aiSuggest(this)">樱花粉色少女风</button>
+      <button class="ai-suggest" onclick="aiSuggest(this)">暗黑哥特风紫黑色</button>
+      <button class="ai-suggest" onclick="aiSuggest(this)">彩虹糖果色可爱风</button>
+    </div>
+    <div id="aiStatus"></div>
+    <div class="ai-result" id="aiResult">
+      <div class="ai-result-header">
+        <span>AI 已生成主题</span>
+        <div class="ai-result-actions">
+          <button class="btn btn-outline" onclick="aiPreview()" style="padding:5px 12px;font-size:0.72rem">预览</button>
+          <button class="btn btn-success" onclick="aiApply()" style="padding:5px 12px;font-size:0.72rem">直接使用</button>
+          <button class="btn btn-primary" onclick="aiEditMore()" style="padding:5px 12px;font-size:0.72rem">继续编辑</button>
+        </div>
+      </div>
+      <div class="ai-result-preview">
+        <div class="ai-preview-ball" id="aiPreviewWidget"></div>
+        <div class="ai-preview-info" id="aiPreviewInfo"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Divider -->
+  <div class="divider"><span>或手动创作</span></div>
+
+  <p class="desc">选择宠物类型，不同类型决定了渲染方式和交互效果</p>
+  <div class="mode-grid">
+    <div class="mode-card" data-mode="fluid" onclick="selectMode('fluid')">
+      <div class="icon">&#x1f52e;</div>
+      <h3>流体球</h3>
+      <p>纯 CSS 渲染，14 种情绪变色，45 种眼睛表情</p>
+      <div class="tags"><span class="tag">零素材</span><span class="tag">选配色即可</span><span class="tag">最轻量</span></div>
+    </div>
+    <div class="mode-card" data-mode="single-image" onclick="selectMode('single-image')">
+      <div class="icon">&#x1f5bc;&#xfe0f;</div>
+      <h3>单图宠物</h3>
+      <p>一张透明图，通过光晕和滤镜表达情绪</p>
+      <div class="tags"><span class="tag">只需1张图</span><span class="tag">最简单</span><span class="tag">适合头像</span></div>
+    </div>
+    <div class="mode-card" data-mode="clone" onclick="selectMode('clone')">
+      <div class="icon">&#x1f4cb;</div>
+      <h3>从现有主题修改</h3>
+      <p>复制已有主题作为起点，改改就能用</p>
+      <div class="tags"><span class="tag">最快上手</span><span class="tag">改改就能用</span></div>
+    </div>
+  </div>
+  <div class="nav-actions">
+    <div></div>
+    <button class="btn btn-primary" onclick="goStep(2)">下一步 &rarr;</button>
+  </div>
+</div>
+
+<!-- ========== Step 2 ========== -->
+<div class="page" id="page2">
+  <h2>添加素材</h2>
+  <p class="desc" id="step2Desc">上传你的宠物图片</p>
+  <div id="upload-fluid" style="display:none">
+    <div class="upload-hint">&#x1f52e; 流体球模式不需要上传图片，直接进入下一步设置配色。</div>
+  </div>
+  <div id="upload-single" style="display:none">
+    <div class="upload-hint">上传一张<b>透明背景</b>的 PNG / WebP / SVG 图片。建议正方形，200&times;200 以上。</div>
+    <div class="drop-zone" id="dropSingle">
+      <div class="icon">&#x1f4c2;</div>
+      <p>拖拽图片到这里，或点击选择</p>
+      <small>PNG / WebP / SVG / GIF</small>
+      <input type="file" accept="image/*" style="display:none" id="fileSingle">
+    </div>
+    <div id="previewSingle" style="text-align:center"></div>
+  </div>
+  <div id="upload-clone" style="display:none">
+    <div class="upload-hint">选择一个已有主题作为起点：</div>
+    <div id="cloneList" style="display:flex;gap:12px;flex-wrap:wrap"></div>
+  </div>
+  <div class="nav-actions">
+    <button class="btn btn-outline" onclick="goStep(1)">&larr; 上一步</button>
+    <button class="btn btn-primary" onclick="goStep(3)">下一步 &rarr;</button>
+  </div>
+</div>
+
+<!-- ========== Step 3 ========== -->
+<div class="page" id="page3">
+  <h2>分配表情</h2>
+  <p class="desc">把图片分配给不同情绪，没分配的会自动使用默认图</p>
+  <div class="mood-grid" id="moodGrid"></div>
+  <div class="nav-actions">
+    <button class="btn btn-outline" onclick="goStep(2)">&larr; 上一步</button>
+    <button class="btn btn-primary" onclick="goStep(4)">下一步 &rarr;</button>
+  </div>
+</div>
+
+<!-- ========== Step 4 ========== -->
+<div class="page" id="page4">
+  <h2>调整细节</h2>
+  <p class="desc">微调宠物的外观和动画效果</p>
+  <div class="config-grid">
+    <div class="config-section">
+      <h3>基本信息</h3>
+      <div class="field"><label>主题名称</label><input type="text" id="cfgName" value="我的宠物"></div>
+      <div class="field"><label>作者</label><input type="text" id="cfgAuthor" value="me"></div>
+      <div class="field-row">
+        <div class="field"><label>宽 (px)</label><input type="number" id="cfgW" value="80" min="16" max="200"></div>
+        <div class="field"><label>高 (px)</label><input type="number" id="cfgH" value="80" min="16" max="200"></div>
+      </div>
+      <div class="field"><label>形状</label>
+        <select id="cfgShape">
+          <option value="50%">圆形</option>
+          <option value="16px">圆角方形</option>
+          <option value="0">方形</option>
+          <option value="50% 50% 50% 0">对话气泡</option>
+          <option value="50% 0 50% 50%">叶子形</option>
+        </select>
+      </div>
+    </div>
+    <div class="config-section">
+      <h3>浮动动画</h3>
+      <div class="color-row"><span>浮动幅度</span><input type="range" id="cfgFloat" min="0" max="8" step="0.5" value="3.5"><span id="cfgFloatVal" style="width:28px;text-align:right">3.5</span></div>
+      <div class="color-row"><span>呼吸幅度</span><input type="range" id="cfgBreath" min="0" max="0.03" step="0.002" value="0.01"><span id="cfgBreathVal" style="width:32px;text-align:right">0.01</span></div>
+      <div class="color-row"><span>微动幅度</span><input type="range" id="cfgFidget" min="0" max="1.5" step="0.1" value="0.6"><span id="cfgFidgetVal" style="width:28px;text-align:right">0.6</span></div>
+    </div>
+    <div class="config-section" id="cfgFluidSection">
+      <h3>流体球配色</h3>
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:12px">选择情绪编辑配色</div>
+      <div class="field"><label>当前情绪</label><select id="cfgMoodSelect" onchange="loadMoodConfig()"></select></div>
+      <div class="color-row"><input type="color" id="cfgC1" value="#ffb3b3"><span>主色 1</span></div>
+      <div class="color-row"><input type="color" id="cfgC2" value="#fed6e3"><span>主色 2</span></div>
+      <div class="color-row"><input type="color" id="cfgGlow" value="#ff6b4a"><span>光晕颜色</span></div>
+      <div class="color-row"><span>缩放</span><input type="range" id="cfgScale" min="0.85" max="1.15" step="0.01" value="1"><span id="cfgScaleVal" style="width:32px;text-align:right">1.00</span></div>
+      <button class="btn btn-outline" onclick="saveMoodConfig()" style="width:100%;margin-top:8px;justify-content:center">应用配色</button>
+    </div>
+    <div class="config-section" id="cfgImageSection" style="display:none">
+      <h3>图片效果</h3>
+      <div class="field"><label>当前情绪</label><select id="cfgImgMoodSelect" onchange="loadImgMoodConfig()"></select></div>
+      <div class="color-row"><input type="color" id="cfgImgGlow" value="#ffc107"><span>光晕颜色</span></div>
+      <div class="color-row"><span>光晕强度</span><input type="range" id="cfgImgGlowSize" min="0" max="30" step="1" value="12"><span id="cfgImgGlowSizeVal" style="width:28px;text-align:right">12</span></div>
+      <div class="color-row"><span>缩放</span><input type="range" id="cfgImgScale" min="0.85" max="1.15" step="0.01" value="1"><span id="cfgImgScaleVal" style="width:32px;text-align:right">1.00</span></div>
+      <div class="field"><label>CSS 滤镜</label>
+        <select id="cfgImgFilter" onchange="document.getElementById('cfgImgFilterCustom').value=this.value">
+          <option value="">无</option>
+          <option value="grayscale(0.8) brightness(0.7)">灰暗（离线）</option>
+          <option value="brightness(1.12) saturate(1.2)">鲜艳（开心）</option>
+          <option value="saturate(0.5) brightness(0.85) hue-rotate(180deg)">冷蓝（悲伤）</option>
+          <option value="saturate(1.5) hue-rotate(-15deg)">偏红（生气）</option>
+          <option value="brightness(0.8) saturate(0.7)">暗淡（困倦）</option>
+          <option value="brightness(1.2) contrast(1.1)">高亮（惊讶）</option>
+          <option value="sepia(0.2) brightness(0.95)">复古（思考）</option>
+          <option value="hue-rotate(-20deg) saturate(1.3)">偏粉（爱心）</option>
+        </select>
+      </div>
+      <div class="field"><label>自定义滤镜</label><input type="text" id="cfgImgFilterCustom" placeholder="如: brightness(1.1) hue-rotate(30deg)"></div>
+      <button class="btn btn-outline" onclick="saveImgMoodConfig()" style="width:100%;margin-top:8px;justify-content:center">应用效果</button>
+    </div>
+  </div>
+  <div class="nav-actions">
+    <button class="btn btn-outline" onclick="goStep(3)">&larr; 上一步</button>
+    <button class="btn btn-primary" onclick="goStep(5)">下一步 &rarr;</button>
+  </div>
+</div>
+
+<!-- ========== Step 5 ========== -->
+<div class="page" id="page5">
+  <h2>预览 &amp; 导出</h2>
+  <p class="desc">检查效果，满意后导出</p>
+  <div class="final-row">
+    <div class="final-preview">
+      <div class="final-preview-pet" id="finalPet" style="animation:float 3s ease-in-out infinite"></div>
+      <div id="finalMoodName" style="font-size:0.78rem;color:var(--primary);margin-bottom:8px;font-weight:600">idle</div>
+      <div class="final-preview-moods" id="finalMoods"></div>
+    </div>
+    <div class="final-info">
+      <h3>theme.json</h3>
+      <div class="json-preview" id="jsonPreview"></div>
+      <div class="actions">
+        <button class="btn btn-success" onclick="doExport()">导出主题包</button>
+        <button class="btn btn-outline" onclick="doCopy()">复制</button>
+        <button class="btn btn-primary" onclick="doSaveApply()">保存并应用</button>
+      </div>
+    </div>
+  </div>
+  <div class="nav-actions">
+    <button class="btn btn-outline" onclick="goStep(4)">&larr; 上一步</button>
+    <div></div>
+  </div>
+</div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== Global State =====
+const MOODS = ['offline','idle','happy','talking','thinking','sleepy','surprised','sad','angry','fearful','calm','excited','love','focused'];
+const MOOD_LABELS = {offline:'离线',idle:'待机',happy:'开心',talking:'说话',thinking:'思考',sleepy:'瞌睡',surprised:'惊讶',sad:'难过',angry:'生气',fearful:'害怕',calm:'平静',excited:'兴奋',love:'爱心',focused:'专注'};
+const MOOD_EMOJI = {offline:'\u{1f4a4}',idle:'\u{1f60a}',happy:'\u{1f604}',talking:'\u{1f5e3}\ufe0f',thinking:'\u{1f914}',sleepy:'\u{1f634}',surprised:'\u{1f62e}',sad:'\u{1f622}',angry:'\u{1f620}',fearful:'\u{1f630}',calm:'\u{1f60c}',excited:'\u{1f929}',love:'\u{1f60d}',focused:'\u{1f3af}'};
+
+let mode = 'fluid';
+let uploadedFiles = [];
+let moodAssign = {};
+let moodConfigs = {};
+let currentStep = 1;
+
+const FLUID_DEFAULTS = {
+  offline:{c1:'#cccccc',c2:'#dddddd',glow:'#a0a0a0',scale:.93},
+  idle:{c1:'#ffb3b3',c2:'#fed6e3',glow:'#ff6b4a',scale:1},
+  happy:{c1:'#ffe0b2',c2:'#fff3e0',glow:'#ffc107',scale:1.05},
+  talking:{c1:'#f8bbd0',c2:'#fce4ec',glow:'#ff69b4',scale:1},
+  thinking:{c1:'#d1c4e9',c2:'#ede7f6',glow:'#7b68ee',scale:1},
+  sleepy:{c1:'#e8d5e0',c2:'#f0e6ef',glow:'#ba93aa',scale:.97},
+  surprised:{c1:'#fff9c4',c2:'#fff3e0',glow:'#ffd700',scale:1.06},
+  sad:{c1:'#90caf9',c2:'#bbdefb',glow:'#42a5f5',scale:.96},
+  angry:{c1:'#ef5350',c2:'#e53935',glow:'#f44336',scale:1.04},
+  fearful:{c1:'#ce93d8',c2:'#e1bee7',glow:'#9c27b0',scale:.97},
+  calm:{c1:'#b2dfdb',c2:'#e0f2f1',glow:'#4db6ac',scale:1},
+  excited:{c1:'#f48fb1',c2:'#f8bbd0',glow:'#e91e63',scale:1.08},
+  love:{c1:'#ff8a80',c2:'#ffcdd2',glow:'#e53935',scale:1.05},
+  focused:{c1:'#80deea',c2:'#b2ebf2',glow:'#0097a7',scale:1.02},
+};
+for(const [k,v] of Object.entries(FLUID_DEFAULTS)) moodConfigs[k]={...v};
+
+// ===== Step Navigation =====
+document.querySelectorAll('.step').forEach(s=>{
+  s.onclick=()=>goStep(parseInt(s.dataset.step));
+});
+
+function goStep(n){
+  currentStep = n;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page'+n).classList.add('active');
+  document.querySelectorAll('.step').forEach(s=>{
+    const sn=parseInt(s.dataset.step);
+    s.classList.toggle('active',sn===n);
+    s.classList.toggle('done',sn<n);
+  });
+  if(n===2) showUploadUI();
+  if(n===3) buildMoodGrid();
+  if(n===4) buildConfigUI();
+  if(n===5) buildFinalPreview();
+}
+
+// ===== Step 1 =====
+function selectMode(m){
+  mode=m;
+  document.querySelectorAll('.mode-card').forEach(c=>c.classList.toggle('selected',c.dataset.mode===m));
+  if(m==='fluid'){document.getElementById('cfgW').value=67;document.getElementById('cfgH').value=67}
+  else{document.getElementById('cfgW').value=80;document.getElementById('cfgH').value=80}
+}
+
+// ===== Step 2 =====
+function showUploadUI(){
+  ['fluid','single','clone'].forEach(id=>{
+    document.getElementById('upload-'+id).style.display='none';
+  });
+  const map={fluid:'fluid','single-image':'single',clone:'clone'};
+  document.getElementById('upload-'+(map[mode]||'single')).style.display='block';
+  if(mode==='clone') loadCloneList();
+}
+function setupDropZone(dropId,fileId,multi,callback){
+  const drop=document.getElementById(dropId);
+  const input=document.getElementById(fileId);
+  if(!drop||!input) return;
+  drop.onclick=()=>input.click();
+  drop.ondragover=e=>{e.preventDefault();drop.classList.add('dragover')};
+  drop.ondragleave=()=>drop.classList.remove('dragover');
+  drop.ondrop=e=>{e.preventDefault();drop.classList.remove('dragover');handleFiles(e.dataTransfer.files,callback)};
+  input.onchange=()=>{handleFiles(input.files,callback)};
+}
+function handleFiles(files,cb){
+  for(const f of files){
+    const reader=new FileReader();
+    reader.onload=e=>{
+      uploadedFiles.push({name:f.name,dataUrl:e.target.result,file:f});
+      if(cb) cb();
+    };
+    reader.readAsDataURL(f);
+  }
+}
+function renderPreviews(containerId){
+  const c=document.getElementById(containerId);
+  c.innerHTML='';
+  uploadedFiles.forEach((f,i)=>{
+    const d=document.createElement('div');
+    d.style.cssText='width:60px;height:60px;border-radius:10px;background:var(--card);border:1px solid var(--card-border);overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center';
+    const img=document.createElement('img');
+    img.src=f.dataUrl;img.style.cssText='max-width:100%;max-height:100%;object-fit:contain';
+    d.appendChild(img);
+    const label=document.createElement('div');
+    label.style.cssText='position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);font-size:8px;text-align:center;padding:2px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+    label.textContent=f.name;
+    d.appendChild(label);
+    c.appendChild(d);
+  });
+}
+setupDropZone('dropSingle','fileSingle',false,()=>renderPreviews('previewSingle'));
+
+async function loadCloneList(){
+  if(typeof electronAPI==='undefined')return;
+  const list=await electronAPI.invoke('theme-list');
+  const c=document.getElementById('cloneList');
+  c.innerHTML='';
+  let selectedClone=null;
+  list.forEach(t=>{
+    const d=document.createElement('div');
+    d.style.cssText='background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:14px;cursor:pointer;text-align:center;width:120px;transition:all .3s';
+    d.innerHTML=`<div style="font-size:24px;margin-bottom:6px">${t.type==='css-fluid'?'\u{1f52e}':'\u{1f5bc}\ufe0f'}</div><div style="font-size:0.78rem;color:var(--text)">${t.name}</div>`;
+    d.onmouseenter=()=>{d.style.borderColor='rgba(255,107,74,0.3)'};
+    d.onmouseleave=()=>{if(selectedClone!==t.id)d.style.borderColor='var(--card-border)'};
+    d.onclick=async()=>{
+      // Read theme data without switching the active theme
+      const full=await electronAPI.invoke('theme-get',t.id);
+      if(!full){toast('无法读取主题数据',true);return}
+      // Highlight selected card
+      selectedClone=t.id;
+      c.querySelectorAll('div').forEach(el=>{el.style.borderColor='var(--card-border)';el.style.background='var(--card)'});
+      d.style.borderColor='rgba(255,107,74,0.5)';d.style.background='rgba(255,107,74,0.04)';
+      // Populate editor with cloned theme data
+      _fillFromClonedTheme(full);
+      toast('已加载 '+t.name+'，可继续编辑');
+    };
+    c.appendChild(d);
+  });
+}
+
+function _fillFromClonedTheme(t){
+  // Set mode based on theme type
+  if(t.type==='css-fluid'&&!t.shape?.image) selectMode('fluid');
+  else selectMode('single-image');
+  // Fill basic info (append "副本" to name to avoid ID collision)
+  document.getElementById('cfgName').value=(t.name||'Clone')+' 副本';
+  document.getElementById('cfgAuthor').value=t.author||'me';
+  document.getElementById('cfgW').value=t.size?.width||67;
+  document.getElementById('cfgH').value=t.size?.height||67;
+  // Fill shape
+  const brVal=t.shape?.borderRadius||'50%';
+  const shapeSelect=document.getElementById('cfgShape');
+  for(const opt of shapeSelect.options){if(opt.value===brVal){shapeSelect.value=brVal;break;}}
+  // Fill animation params
+  if(t.animation){
+    const fa=t.animation.float?.amplitudes;
+    if(fa&&fa[0]){document.getElementById('cfgFloat').value=fa[0];document.getElementById('cfgFloatVal').textContent=fa[0];}
+    if(t.animation.breath?.amplitude){document.getElementById('cfgBreath').value=t.animation.breath.amplitude;document.getElementById('cfgBreathVal').textContent=t.animation.breath.amplitude;}
+    if(t.animation.fidget?.xAmp){document.getElementById('cfgFidget').value=t.animation.fidget.xAmp;document.getElementById('cfgFidgetVal').textContent=t.animation.fidget.xAmp;}
+  }
+  // Fill mood configs
+  if(t.type==='css-fluid'&&t.moods){
+    for(const [m,cfg] of Object.entries(t.moods)){
+      if(!moodConfigs[m])moodConfigs[m]={};
+      const colors=(cfg.fluid||'').match(/#[0-9a-fA-F]{6}/g)||[];
+      if(colors.length>=2){moodConfigs[m].c1=colors[0];moodConfigs[m].c2=colors[1];}
+      else if(colors.length===1){moodConfigs[m].c1=colors[0];moodConfigs[m].c2=colors[0];}
+      const glowColors=(cfg.glow||'').match(/#[0-9a-fA-F]{6}/g)||(cfg.glow||'').match(/rgba?\([^)]+\)/g)||[];
+      if(glowColors.length>0){
+        const rgbaM=glowColors[0].match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+        if(rgbaM){moodConfigs[m].glow='#'+[rgbaM[1],rgbaM[2],rgbaM[3]].map(n=>parseInt(n).toString(16).padStart(2,'0')).join('');}
+      }
+      moodConfigs[m].scale=cfg.scale||1;
+    }
+  }
+}
+
+// ===== Step 3 =====
+function buildMoodGrid(){
+  const grid=document.getElementById('moodGrid');
+  grid.innerHTML='';
+  const isFluid=mode==='fluid';
+  for(const m of MOODS){
+    const slot=document.createElement('div');
+    slot.className='mood-slot'+(moodAssign[m]?' has-image':'');
+    let previewContent='';
+    if(isFluid){
+      const cfg=moodConfigs[m]||FLUID_DEFAULTS.idle;
+      previewContent=`<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,${cfg.c1},${cfg.c2});box-shadow:0 0 12px ${cfg.glow}40"></div>`;
+    } else if(moodAssign[m]!==undefined && uploadedFiles[moodAssign[m]]){
+      previewContent=`<img src="${uploadedFiles[moodAssign[m]].dataUrl}" style="max-width:100%;max-height:100%">`;
+    } else if(uploadedFiles.length>0){
+      previewContent=`<img src="${uploadedFiles[0].dataUrl}" style="max-width:100%;max-height:100%;opacity:.4">`;
+    } else {
+      previewContent=`<span class="placeholder">${MOOD_EMOJI[m]}</span>`;
+    }
+    slot.innerHTML=`
+      <div class="mood-label">${MOOD_EMOJI[m]} ${MOOD_LABELS[m]}</div>
+      <div class="mood-preview">${previewContent}</div>
+      ${!isFluid && uploadedFiles.length>0?`
+        <select onchange="moodAssign['${m}']=this.value===''?undefined:parseInt(this.value);buildMoodGrid()">
+          <option value="">默认</option>
+          ${uploadedFiles.map((f,i)=>`<option value="${i}"${moodAssign[m]===i?' selected':''}>${f.name}</option>`).join('')}
+        </select>
+      `:''}
+    `;
+    grid.appendChild(slot);
+  }
+}
+
+// ===== Step 4 =====
+function buildConfigUI(){
+  const isFluid=mode==='fluid';
+  document.getElementById('cfgFluidSection').style.display=isFluid?'block':'none';
+  document.getElementById('cfgImageSection').style.display=isFluid?'none':'block';
+  const sel=document.getElementById(isFluid?'cfgMoodSelect':'cfgImgMoodSelect');
+  sel.innerHTML='';
+  for(const m of MOODS){
+    const opt=document.createElement('option');
+    opt.value=m;opt.textContent=`${MOOD_EMOJI[m]} ${MOOD_LABELS[m]}`;
+    sel.appendChild(opt);
+  }
+  sel.value='idle';
+  if(isFluid) loadMoodConfig(); else loadImgMoodConfig();
+  ['cfgFloat','cfgBreath','cfgFidget','cfgScale','cfgImgGlowSize','cfgImgScale'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.oninput=()=>{const v=document.getElementById(id+'Val');if(v)v.textContent=el.value};
+  });
+}
+function loadMoodConfig(){
+  const m=document.getElementById('cfgMoodSelect').value;
+  const cfg=moodConfigs[m]||FLUID_DEFAULTS[m]||FLUID_DEFAULTS.idle;
+  document.getElementById('cfgC1').value=cfg.c1;
+  document.getElementById('cfgC2').value=cfg.c2;
+  document.getElementById('cfgGlow').value=cfg.glow;
+  document.getElementById('cfgScale').value=cfg.scale||1;
+  document.getElementById('cfgScaleVal').textContent=(cfg.scale||1).toFixed(2);
+}
+function saveMoodConfig(){
+  const m=document.getElementById('cfgMoodSelect').value;
+  moodConfigs[m]={c1:document.getElementById('cfgC1').value,c2:document.getElementById('cfgC2').value,glow:document.getElementById('cfgGlow').value,scale:parseFloat(document.getElementById('cfgScale').value)};
+  toast('已保存 '+MOOD_LABELS[m]+' 配色');
+}
+function loadImgMoodConfig(){
+  const m=document.getElementById('cfgImgMoodSelect').value;
+  const cfg=moodConfigs[m]||{};
+  document.getElementById('cfgImgGlow').value=cfg.imgGlowColor||'#ffc107';
+  document.getElementById('cfgImgGlowSize').value=cfg.imgGlowSize||12;
+  document.getElementById('cfgImgGlowSizeVal').textContent=cfg.imgGlowSize||12;
+  document.getElementById('cfgImgScale').value=cfg.scale||1;
+  document.getElementById('cfgImgScaleVal').textContent=(cfg.scale||1).toFixed(2);
+  document.getElementById('cfgImgFilterCustom').value=cfg.imageFilter||'';
+}
+function saveImgMoodConfig(){
+  const m=document.getElementById('cfgImgMoodSelect').value;
+  if(!moodConfigs[m]) moodConfigs[m]={};
+  moodConfigs[m].imgGlowColor=document.getElementById('cfgImgGlow').value;
+  moodConfigs[m].imgGlowSize=parseInt(document.getElementById('cfgImgGlowSize').value);
+  moodConfigs[m].scale=parseFloat(document.getElementById('cfgImgScale').value);
+  moodConfigs[m].imageFilter=document.getElementById('cfgImgFilterCustom').value;
+  toast('已保存 '+MOOD_LABELS[m]+' 效果');
+}
+
+// ===== Step 5 =====
+function buildFinalPreview(){
+  const pet=document.getElementById('finalPet');
+  const isFluid=mode==='fluid';
+  const w=parseInt(document.getElementById('cfgW').value)||80;
+  const h=parseInt(document.getElementById('cfgH').value)||80;
+  const br=document.getElementById('cfgShape').value;
+  if(isFluid){
+    const cfg=moodConfigs.idle||FLUID_DEFAULTS.idle;
+    pet.innerHTML=`<div style="width:${w}px;height:${h}px;border-radius:${br};background:linear-gradient(135deg,${cfg.c1},${cfg.c2});box-shadow:0 0 20px ${cfg.glow}40;position:relative;overflow:hidden">
+      <div style="position:absolute;inset:3px;border-radius:inherit;overflow:hidden;background:linear-gradient(135deg,${cfg.c1},${cfg.c2})">
+        <div style="position:absolute;width:130%;height:130%;top:-15%;left:-15%;border-radius:inherit;animation:fluid-spin 8s linear infinite;background:radial-gradient(circle at 30% 30%,${cfg.c1}dd,transparent 40%),radial-gradient(circle at 70% 65%,${cfg.c2}cc,transparent 40%)"></div>
+      </div>
+      <div style="position:absolute;inset:0;border-radius:inherit;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.12),transparent);border:1px solid rgba(255,255,255,.2)"></div>
+    </div>`;
+  } else {
+    const src=uploadedFiles.length>0?uploadedFiles[0].dataUrl:'';
+    const cfg=moodConfigs.idle||{};
+    const gc=cfg.imgGlowColor||'#ffc107';
+    const gs=cfg.imgGlowSize||12;
+    if(src) pet.innerHTML=`<img src="${src}" style="width:${w}px;height:${h}px;object-fit:contain;filter:drop-shadow(0 0 ${gs}px ${gc})">`;
+    else pet.innerHTML=`<div style="width:${w}px;height:${h}px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:32px">?</div>`;
+  }
+  const moods=document.getElementById('finalMoods');
+  moods.innerHTML='';
+  for(const m of MOODS){
+    const btn=document.createElement('button');
+    btn.textContent=MOOD_EMOJI[m];
+    btn.title=MOOD_LABELS[m];
+    btn.className=m==='idle'?'active':'';
+    btn.onclick=()=>{
+      moods.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('finalMoodName').textContent=MOOD_LABELS[m];
+      previewMood(m);
+    };
+    moods.appendChild(btn);
+  }
+  document.getElementById('jsonPreview').textContent=JSON.stringify(generateJSON(),null,2).substring(0,2000)+'...';
+}
+function previewMood(m){
+  const pet=document.getElementById('finalPet');
+  const isFluid=mode==='fluid';
+  if(isFluid){
+    const cfg=moodConfigs[m]||FLUID_DEFAULTS[m]||FLUID_DEFAULTS.idle;
+    const inner=pet.querySelector('div');
+    if(inner){inner.style.background=`linear-gradient(135deg,${cfg.c1},${cfg.c2})`;inner.style.boxShadow=`0 0 20px ${cfg.glow}40`;inner.style.transform=`scale(${cfg.scale||1})`;}
+  } else {
+    const idx=moodAssign[m];
+    const src=idx!==undefined&&uploadedFiles[idx]?uploadedFiles[idx].dataUrl:(uploadedFiles[0]?.dataUrl||'');
+    const img=pet.querySelector('img');
+    if(img&&src){img.src=src;const cfg=moodConfigs[m]||{};const gc=cfg.imgGlowColor||'#ffc107';const gs=cfg.imgGlowSize||12;const filters=[`drop-shadow(0 0 ${gs}px ${gc})`];if(cfg.imageFilter)filters.push(cfg.imageFilter);img.style.filter=filters.join(' ');img.style.transform=`scale(${cfg.scale||1})`;}
+  }
+}
+
+// ===== Generate JSON =====
+function generateJSON(){
+  const isFluid=mode==='fluid';
+  const w=parseInt(document.getElementById('cfgW').value)||80;const h=parseInt(document.getElementById('cfgH').value)||80;
+  const br=document.getElementById('cfgShape').value;
+  let id=(document.getElementById('cfgName').value||'my-pet').toLowerCase().replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');
+  if(!id)id='custom-'+Date.now().toString(36);
+  const theme={id,name:document.getElementById('cfgName').value||'My Pet',version:'1.0.0',author:document.getElementById('cfgAuthor').value||'me',
+    description:`自定义${isFluid?'流体球':'图片'}主题`,type:'css-fluid',size:{width:w,height:h},
+    shape:{borderRadius:br,padding:isFluid?3:0},
+    animation:{float:{frequencies:[1.3,.67,2.3],amplitudes:[parseFloat(document.getElementById('cfgFloat').value)||3.5,2,.6]},rotation:{frequencies:[.9,.37],amplitudes:[.3,.2]},breath:{frequency:2,amplitude:parseFloat(document.getElementById('cfgBreath').value)||.01,secondaryFreq:.8,secondaryAmp:.005},fidget:{xFreq:.23,xAmp:parseFloat(document.getElementById('cfgFidget').value)||.6,rotFreq:.17,rotAmp:.12},deepBreath:{amplitude:.025,speed:.04}},
+    decorations:{blush:{enabled:isFluid},bubbles:{enabled:false},particles:{colors:['#fff'],count:6,distance:{min:15,max:40},sizeRange:{min:2,max:5}}},moods:{}};
+  if(!isFluid&&uploadedFiles.length>0){theme.shape.image={src:uploadedFiles[0].name,size:'95%',fit:'contain',glow:'0 0 12px rgba(255,200,0,0.5)'};theme.eyes={count:0};}
+  else if(isFluid){theme.eyes={count:2,gap:'12px',default:{w:11,h:19,br:'6px'},color:'white',glow:'0 0 8px rgba(255,255,255,.9), 0 0 16px rgba(255,255,255,.4)'};}
+  for(const m of MOODS){
+    if(isFluid){
+      const c=moodConfigs[m]||FLUID_DEFAULTS[m]||FLUID_DEFAULTS.idle;
+      const hexToRgb=hex=>{hex=hex.replace('#','');const n=parseInt(hex,16);return[(n>>16)&255,(n>>8)&255,n&255]};
+      const [r1,g1,b1]=hexToRgb(c.c1),[r2,g2,b2]=hexToRgb(c.c2),[rg,gg,bg]=hexToRgb(c.glow);
+      theme.moods[m]={fluid:`linear-gradient(135deg,${c.c1},${c.c2})`,b1:`radial-gradient(circle at 30% 30%,rgba(${r1},${g1},${b1},.85),transparent 40%),radial-gradient(circle at 70% 65%,rgba(${r2},${g2},${b2},.8),transparent 40%)`,b2:`radial-gradient(circle at 60% 30%,rgba(${r2},${g2},${b2},.4),transparent 35%),radial-gradient(circle at 35% 70%,rgba(${r1},${g1},${b1},.3),transparent 35%)`,glow:`0 0 40px rgba(${rg},${gg},${bg},.25), 0 0 80px rgba(${rg},${gg},${bg},.12)`,eyes:FLUID_DEFAULTS[m]?.eyes||'normal',scale:c.scale||1,bounce:FLUID_DEFAULTS[m]?.bounce||0,speed:FLUID_DEFAULTS[m]?.speed||'8s'};
+    } else {
+      const c=moodConfigs[m]||{};const gc=c.imgGlowColor||'#ffc107';const gs=c.imgGlowSize||12;
+      const hexToRgb=hex=>{hex=hex.replace('#','');const n=parseInt(hex,16);return[(n>>16)&255,(n>>8)&255,n&255]};
+      const [rg,gg,bg]=hexToRgb(gc);
+      const mood={fluid:'none',b1:'none',b2:'none',glow:'none',eyes:'normal',scale:c.scale||1,bounce:0,speed:'8s',imageGlow:`0 0 ${gs}px rgba(${rg},${gg},${bg},.5)`};
+      if(c.imageFilter)mood.imageFilter=c.imageFilter;const idx=moodAssign[m];if(idx!==undefined&&uploadedFiles[idx])mood.image=uploadedFiles[idx].name;theme.moods[m]=mood;
+    }
+  }
+  if(isFluid){theme.eyes.expressions=generateExpressions({w:11,h:19,br:'6px'});}
+  return theme;
+}
+function generateExpressions(d){
+  return{normal:{L:{w:d.w,h:d.h,br:d.br}},blink:{L:{w:d.w+1,h:3,br:'3px'},speed:'snap'},happy:{L:{w:d.w+2,h:Math.round(d.h*.37),br:`${Math.round(d.w*.6)}px ${Math.round(d.w*.6)}px 3px 3px`,ty:1},speed:'smooth'},sad:{L:{w:d.w-1,h:Math.round(d.h*.84),br:'5px',ty:3,sy:.9},speed:'smooth'},surprised:{L:{w:d.w+2,h:d.h+2,br:`${Math.round(d.w*.6)}px`},speed:'fast'},thinking:{L:{w:d.w-1,h:Math.round(d.h*.9),br:'5px',ty:-3},speed:'smooth'},angry:{L:{w:d.w+1,h:Math.round(d.h*.74),br:'3px 6px 6px 3px',ty:-2,rot:-12},R:{w:d.w+1,h:Math.round(d.h*.74),br:'6px 3px 3px 6px',ty:-2,rot:12},speed:'smooth'},sleepy:{L:{w:d.w+1,h:4,br:'4px',ty:2},speed:'slow'},love:{L:{w:d.w+3,h:Math.round(d.h*.68),br:`${Math.round(d.w*.6)}px 1px ${Math.round(d.w*.6)}px 1px`,rot:45,sx:1.1},speed:'smooth'},talking:{L:{w:d.w-1,h:Math.round(d.h*.9),br:'5px'}},talkBig:{L:{w:d.w+1,h:d.h+1,br:d.br}},nervous:{L:{w:d.w-2,h:Math.round(d.h*.74),br:'5px',ty:1,sx:.9},speed:'fast'},superHappy:{L:{w:d.w+4,h:Math.round(d.h*.26),br:`${Math.round(d.w*.7)}px ${Math.round(d.w*.7)}px 3px 3px`,ty:1,sx:1.1},speed:'smooth'},softSmile:{L:{w:d.w+1,h:Math.round(d.h*.47),br:'6px 6px 3px 3px',ty:1},speed:'smooth'},focus:{L:{w:d.w-2,h:Math.round(d.h*.95),br:'4px',ty:-1},speed:'smooth'},sparkle:{L:{w:d.w+1,h:d.w+1,br:'3px',rot:45},speed:'fast'},wink:{L:{w:d.w+2,h:Math.round(d.h*.37),br:`${Math.round(d.w*.6)}px ${Math.round(d.w*.6)}px 3px 3px`,ty:1},R:{w:d.w,h:d.h,br:d.br},speed:'fast'},lookLeft:{L:{w:d.w,h:d.h,br:d.br,tx:-4}},lookRight:{L:{w:d.w,h:d.h,br:d.br,tx:4}},halfBlink:{L:{w:d.w,h:Math.round(d.h/2),br:'5px'},speed:'fast'},curious:{L:{w:d.w-2,h:Math.round(d.h*.84),br:'5px',ty:-1},R:{w:d.w+2,h:d.h+2,br:`${Math.round(d.w*.6)}px`,ty:-1},speed:'smooth'}};
+}
+
+// ===== Export =====
+function doExport(){
+  if(typeof electronAPI!=='undefined'){
+    const files=uploadedFiles.map(f=>({name:f.name,dataUrl:f.dataUrl}));
+    electronAPI.invoke('theme-export-package',generateJSON(),files).then(r=>{
+      if(r?.success) toast('主题包已导出到 '+r.path);
+      else if(r?.error!=='cancelled') toast(r?.error||'导出失败',true);
+    }).catch(e=>toast(e.message,true));
+  }
+  else{const json=JSON.stringify(generateJSON(),null,2);const blob=new Blob([json],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=generateJSON().id+'-theme.json';a.click();toast('已下载 JSON');}
+}
+function doCopy(){navigator.clipboard.writeText(JSON.stringify(generateJSON(),null,2)).then(()=>toast('已复制'));}
+async function doSaveApply(){
+  if(typeof electronAPI==='undefined'){toast('仅在应用内可用',true);return}
+  try{
+    // 收集上传的文件数据（base64）一起发送
+    const files=uploadedFiles.map(f=>({name:f.name,dataUrl:f.dataUrl}));
+    const r=await electronAPI.invoke('theme-save-and-apply',generateJSON(),files);
+    toast(r?.success?'已保存并应用！':(r?.error||'失败'),!r?.success);
+  }catch(e){toast(e.message,true)}
+}
+
+// ===== Toast =====
+function toast(msg,isErr){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast show '+(isErr?'err':'ok');
+  setTimeout(()=>el.className='toast',2500);
+}
+
+// Init
+selectMode('fluid');
+
+// ===== AI Creation =====
+let aiGeneratedTheme = null;
+function aiSuggest(btn){document.getElementById('aiPrompt').value=btn.textContent;}
+async function aiGenerate(){
+  const prompt=document.getElementById('aiPrompt').value.trim();
+  if(!prompt){toast('请输入描述',true);return}
+  if(typeof electronAPI==='undefined'){toast('需要在应用内使用 AI 功能',true);return}
+  const btn=document.getElementById('aiGenBtn');const status=document.getElementById('aiStatus');const result=document.getElementById('aiResult');
+  btn.disabled=true;btn.textContent='生成中...';status.style.display='block';status.innerHTML='<span class="ai-loading">OpenClaw 正在创作主题...</span>';result.style.display='none';
+  try{
+    const r=await electronAPI.invoke('theme-ai-generate',prompt);
+    if(r.success&&r.theme){
+      aiGeneratedTheme=r.theme;status.style.display='none';result.style.display='block';
+      const t=r.theme;const idle=t.moods?.idle||{};const widget=document.getElementById('aiPreviewWidget');
+      widget.style.background=idle.fluid||'linear-gradient(135deg,#ccc,#ddd)';widget.style.boxShadow=idle.glow||'none';widget.style.borderRadius=t.shape?.borderRadius||'50%';widget.style.width=(t.size?.width||64)+'px';widget.style.height=(t.size?.height||64)+'px';
+      document.getElementById('aiPreviewInfo').innerHTML=`<b>${t.name||t.id}</b><br>${t.description||''}<br>尺寸: ${t.size?.width}\u00d7${t.size?.height} | 情绪: ${Object.keys(t.moods||{}).length}`;
+      toast('AI 主题已生成');
+    } else {status.innerHTML=`生成失败: ${r.error||'未知错误'}`;toast(r.error||'生成失败',true);}
+  }catch(e){status.innerHTML=`错误: ${e.message}`;toast(e.message,true);}
+  btn.disabled=false;btn.textContent='生成';
+}
+function aiPreview(){if(!aiGeneratedTheme)return;_fillFromAITheme(aiGeneratedTheme);goStep(5);}
+async function aiApply(){
+  if(!aiGeneratedTheme)return;if(typeof electronAPI==='undefined'){toast('需要在应用内使用',true);return}
+  try{const r=await electronAPI.invoke('theme-save-and-apply',aiGeneratedTheme);toast(r?.success?'主题已应用！':(r?.error||'失败'),!r?.success);}catch(e){toast(e.message,true);}
+}
+function aiEditMore(){if(!aiGeneratedTheme)return;_fillFromAITheme(aiGeneratedTheme);selectMode('fluid');goStep(4);toast('AI 主题已加载到编辑器');}
+function _fillFromAITheme(t){
+  document.getElementById('cfgName').value=t.name||'AI Pet';document.getElementById('cfgAuthor').value=t.author||'ai-generated';
+  document.getElementById('cfgW').value=t.size?.width||67;document.getElementById('cfgH').value=t.size?.height||67;
+  for(const [m,cfg] of Object.entries(t.moods||{})){
+    if(!moodConfigs[m])moodConfigs[m]={};
+    const colors=(cfg.fluid||'').match(/#[0-9a-fA-F]{6}/g)||[];
+    if(colors.length>=2){moodConfigs[m].c1=colors[0];moodConfigs[m].c2=colors[1];}else if(colors.length===1){moodConfigs[m].c1=colors[0];moodConfigs[m].c2=colors[0];}
+    const glowColors=(cfg.glow||'').match(/#[0-9a-fA-F]{6}/g)||(cfg.glow||'').match(/rgba?\([^)]+\)/g)||[];
+    if(glowColors.length>0){const rgbaM=glowColors[0].match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);if(rgbaM){moodConfigs[m].glow='#'+[rgbaM[1],rgbaM[2],rgbaM[3]].map(n=>parseInt(n).toString(16).padStart(2,'0')).join('');}}
+    moodConfigs[m].scale=cfg.scale||1;
+  }
+}
+</script>
+</body>
+</html>

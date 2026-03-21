@@ -1,0 +1,227 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "KKClaw Pet Theme",
+  "description": "Theme definition for KKClaw desktop pet",
+  "type": "object",
+  "required": ["id", "name", "version", "type"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Unique theme identifier (lowercase, hyphens only)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable theme name"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "author": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["css-fluid", "sprite", "lottie"],
+      "description": "Renderer type: css-fluid (gradient ball), sprite (frame animation), lottie (vector animation)"
+    },
+    "size": {
+      "type": "object",
+      "properties": {
+        "width": { "type": "number", "minimum": 16, "maximum": 256 },
+        "height": { "type": "number", "minimum": 16, "maximum": 256 }
+      },
+      "required": ["width", "height"]
+    },
+    "shape": {
+      "type": "object",
+      "description": "CSS-fluid specific: shape definition",
+      "properties": {
+        "borderRadius": { "type": "string", "description": "CSS border-radius, e.g. '50%' for circle, '16px' for rounded rect, '0' for square" },
+        "padding": { "type": "number", "description": "Inner padding in px between shell and fluid layer (default: 3)" },
+        "highlightRadius": { "type": "string", "description": "Border-radius for highlight elements (default: '50%')" },
+        "glassShell": {
+          "type": "object",
+          "properties": {
+            "background": { "type": "string" },
+            "boxShadow": { "type": "string" },
+            "border": { "type": "string" },
+            "highlightTop": { "type": "object" },
+            "highlightBottom": { "type": "object" }
+          }
+        }
+      }
+    },
+    "eyes": {
+      "type": "object",
+      "description": "Eye configuration (css-fluid type)",
+      "properties": {
+        "count": { "type": "number", "enum": [0, 1, 2] },
+        "gap": { "type": "string" },
+        "default": { "$ref": "#/definitions/eyeShape" },
+        "color": { "type": "string" },
+        "glow": { "type": "string" },
+        "expressions": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/expression" }
+        }
+      }
+    },
+    "decorations": {
+      "type": "object",
+      "properties": {
+        "blush": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "color": { "type": "string" },
+            "positions": {
+              "type": "array",
+              "items": { "type": "object" }
+            }
+          }
+        },
+        "bubbles": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "count": { "type": "number" }
+          }
+        },
+        "particles": {
+          "type": "object",
+          "properties": {
+            "colors": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "count": { "type": "number" },
+            "distance": { "type": "number" }
+          }
+        }
+      }
+    },
+    "moods": {
+      "type": "object",
+      "description": "Mood definitions — at minimum must include: offline, idle, happy, talking, thinking, sleepy, sad",
+      "additionalProperties": { "$ref": "#/definitions/mood" }
+    },
+    "animation": {
+      "type": "object",
+      "description": "Global animation parameters for the main loop",
+      "properties": {
+        "float": {
+          "type": "object",
+          "properties": {
+            "frequencies": { "type": "array", "items": { "type": "number" } },
+            "amplitudes": { "type": "array", "items": { "type": "number" } }
+          }
+        },
+        "rotation": {
+          "type": "object",
+          "properties": {
+            "frequencies": { "type": "array", "items": { "type": "number" } },
+            "amplitudes": { "type": "array", "items": { "type": "number" } }
+          }
+        },
+        "breath": {
+          "type": "object",
+          "properties": {
+            "frequency": { "type": "number" },
+            "amplitude": { "type": "number" },
+            "secondaryFreq": { "type": "number" },
+            "secondaryAmp": { "type": "number" }
+          }
+        },
+        "fidget": {
+          "type": "object",
+          "properties": {
+            "xFreq": { "type": "number" },
+            "xAmp": { "type": "number" },
+            "rotFreq": { "type": "number" },
+            "rotAmp": { "type": "number" }
+          }
+        },
+        "deepBreath": {
+          "type": "object",
+          "properties": {
+            "amplitude": { "type": "number" },
+            "speed": { "type": "number" }
+          }
+        }
+      }
+    },
+    "sprite": {
+      "type": "object",
+      "description": "Sprite-type specific config",
+      "properties": {
+        "sheet": { "type": "string", "description": "Relative path to sprite sheet image" },
+        "frameWidth": { "type": "number" },
+        "frameHeight": { "type": "number" },
+        "animations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "frames": { "type": "array", "items": { "type": "number" } },
+              "fps": { "type": "number" },
+              "loop": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "idleActions": {
+      "type": "object",
+      "description": "Override idle action pools (optional, falls back to built-in if omitted)",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    }
+  },
+  "definitions": {
+    "eyeShape": {
+      "type": "object",
+      "properties": {
+        "w": { "type": "number" },
+        "h": { "type": "number" },
+        "br": { "type": "string" },
+        "tx": { "type": "number" },
+        "ty": { "type": "number" },
+        "sx": { "type": "number" },
+        "sy": { "type": "number" },
+        "rot": { "type": "number" }
+      }
+    },
+    "expression": {
+      "type": "object",
+      "properties": {
+        "L": { "$ref": "#/definitions/eyeShape" },
+        "R": { "$ref": "#/definitions/eyeShape" },
+        "speed": {
+          "type": "string",
+          "enum": ["snap", "fast", "normal", "smooth", "slow", "drift"]
+        }
+      }
+    },
+    "mood": {
+      "type": "object",
+      "properties": {
+        "fluid": { "type": "string" },
+        "b1": { "type": "string" },
+        "b2": { "type": "string" },
+        "glow": { "type": "string" },
+        "eyes": { "type": "string" },
+        "scale": { "type": "number" },
+        "bounce": { "type": "number" },
+        "speed": { "type": "string" },
+        "animation": { "type": "string", "description": "Sprite animation name (sprite type only)" }
+      }
+    }
+  }
+}
