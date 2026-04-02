@@ -6,6 +6,16 @@ const fs = require('fs');
 const path = require('path');
 
 class TTSChecker {
+    static getPythonInstallCommand() {
+        if (process.platform === 'darwin') {
+            return 'brew install python';
+        }
+        if (process.platform === 'win32') {
+            return 'winget install --id Python.Python.3.12 -e';
+        }
+        return 'sudo apt-get install -y python3 python3-pip || sudo yum install -y python3 python3-pip';
+    }
+
     /**
      * 检测 Python 环境
      */
@@ -18,6 +28,7 @@ class TTSChecker {
                     timeout: 3000, 
                     windowsHide: true 
                 });
+                const raw = `${stdout || ''} ${stderr || ''}`.trim();
                 const verMatch = raw.match(/Python (\d+)\.(\d+)/); const version = verMatch ? verMatch[1] + '.' + verMatch[2] : null;
                 if (version && verMatch && (parseInt(verMatch[1]) > 3 || (parseInt(verMatch[1]) === 3 && parseInt(verMatch[2]) >= 6))) {
                     return { 
@@ -34,7 +45,7 @@ class TTSChecker {
         return { 
             available: false, 
             error: 'Python 3.6+ 未安装或不在PATH中',
-            fix: 'https://www.python.org/downloads/'
+            fix: this.getPythonInstallCommand()
         };
     }
     
@@ -275,6 +286,45 @@ class TTSChecker {
             }
         } catch (e) {
             return { success: false, error: e.message };
+        }
+    }
+
+    /**
+     * 一键安装 Python
+     */
+    static async installPython() {
+        const installCmd = this.getPythonInstallCommand();
+
+        try {
+            if (process.platform === 'darwin') {
+                await execAsync('brew --version', { timeout: 5000, windowsHide: true });
+                await execAsync(installCmd, {
+                    timeout: 300000,
+                    windowsHide: true
+                });
+            } else if (process.platform === 'win32') {
+                await execAsync(installCmd, {
+                    timeout: 300000,
+                    windowsHide: true
+                });
+            } else {
+                await execAsync(installCmd, {
+                    timeout: 300000,
+                    windowsHide: true
+                });
+            }
+
+            const check = await this.checkPython();
+            if (check.available) {
+                return { success: true, command: check.command, version: check.version };
+            }
+
+            return { success: false, error: '安装完成，但仍未检测到 Python', fix: installCmd };
+        } catch (e) {
+            const prefix = process.platform === 'darwin'
+                ? '自动安装失败，请先确认 Homebrew 已安装'
+                : '自动安装失败';
+            return { success: false, error: `${prefix}: ${e.message}`, fix: installCmd };
         }
     }
 }

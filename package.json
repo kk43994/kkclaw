@@ -13,6 +13,7 @@
     "test": "jest --verbose",
     "test:ci": "jest --ci --coverage",
     "shortcut": "node scripts/create-shortcut.js",
+    "console": "node scripts/open-terminal.js",
     "kill": "taskkill /IM electron.exe /F 2>nul || echo No running instance"
   },
   "keywords": [

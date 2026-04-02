@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer, shell } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
 
 // Setup Wizard 专用 IPC 桥接
 const VALID_INVOKE_CHANNELS = [
@@ -29,6 +29,7 @@ const VALID_INVOKE_CHANNELS = [
   'wizard-start-gateway',
   'wizard-save-voice-id',
   'check-tts',
+  'install-python',
   'install-edge-tts',
   'install-dashscope',
   'wizard-install-missing-deps',
@@ -58,7 +59,13 @@ contextBridge.exposeInMainWorld('wizardAPI', {
   },
   openExternal: (url) => {
     if (typeof url === 'string' && (url.startsWith('https://') || url.startsWith('http://'))) {
-      shell.openExternal(url);
+      return ipcRenderer.invoke('open-external', url).then((result) => {
+        if (result?.success) {
+          return true;
+        }
+        throw new Error(result?.error || 'Failed to open external URL');
+      });
     }
+    return Promise.reject(new Error('Invalid external URL'));
   }
 });

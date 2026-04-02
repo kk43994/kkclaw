@@ -9,6 +9,10 @@ const pathResolver = require('./path-resolver');
 const openclawDetector = require('./openclaw-detector');
 
 class DependencyChecker {
+  _isPackagedElectronRuntime() {
+    return Boolean(process.resourcesPath && __dirname.includes('app.asar'));
+  }
+
   /**
    * 执行完整依赖检测
    * @returns {Promise<Object>} 每项依赖的检测结果
@@ -180,6 +184,23 @@ class DependencyChecker {
   // ─── 项目依赖 ──────────────────────────
 
   async _checkProjectDeps() {
+    if (this._isPackagedElectronRuntime()) {
+      return {
+        nodeModules: {
+          ok: true,
+          required: false,
+          source: 'asar-bundle',
+          installHint: null,
+        },
+        electron: {
+          ok: true,
+          required: false,
+          source: 'bundled-runtime',
+          installHint: null,
+        },
+      };
+    }
+
     const projectRoot = pathResolver.getProjectRoot();
     const nodeModulesExists = fs.existsSync(path.join(projectRoot, 'node_modules'));
     const electronExists = fs.existsSync(path.join(projectRoot, 'node_modules', 'electron'));

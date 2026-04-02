@@ -20,9 +20,39 @@ if (process.env.ELECTRON_RUN_AS_NODE === '1') {
   }
 }
 
+const fs = require('fs');
+
+// macOS GUI apps inherit a minimal PATH from launchd, so Homebrew-installed
+// tools like npm/openclaw disappear unless we re-add the common prefixes.
+if (process.platform === 'darwin') {
+  const extraPathEntries = [
+    '/opt/homebrew/bin',
+    '/opt/homebrew/opt/node@24/bin',
+    '/usr/local/bin',
+    '/Library/Developer/CommandLineTools/usr/bin',
+  ].filter((dir) => {
+    try {
+      return fs.existsSync(dir);
+    } catch (_) {
+      return false;
+    }
+  });
+
+  if (extraPathEntries.length > 0) {
+    const currentPathEntries = String(process.env.PATH || '')
+      .split(':')
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+    const mergedPathEntries = [
+      ...extraPathEntries,
+      ...currentPathEntries.filter((entry) => !extraPathEntries.includes(entry)),
+    ];
+    process.env.PATH = mergedPathEntries.join(':');
+  }
+}
+
 const { app, BrowserWindow, ipcMain, screen, Menu, Tray, Notification, shell } = require('electron');
 const path = require('path');
-const fs = require('fs');
 const { spawn } = require('child_process');
 const OpenClawClient = require('./openclaw-client');
 const SmartVoiceSystem = require('./smart-voice'); // 🎙️ 智能语音系统
@@ -1598,6 +1628,15 @@ ipcMain.handle('check-tts', async (event, config = {}) => {
 ipcMain.handle('install-edge-tts', async (event, pythonCmd) => {
   try {
     const result = await TTSChecker.installEdgeTTS(pythonCmd);
+    return result;
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('install-python', async () => {
+  try {
+    const result = await TTSChecker.installPython();
     return result;
   } catch (err) {
     return { success: false, error: err.message };
