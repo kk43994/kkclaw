@@ -1,0 +1,85 @@
+name: Bug report
+description: Report a reproducible problem in KKClaw.
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please include concrete repro details so we can triage quickly.
+  - type: input
+    id: version
+    attributes:
+      label: KKClaw version
+      description: For example `3.6.0`
+      placeholder: 3.6.0
+    validations:
+      required: true
+  - type: input
+    id: openclaw_version
+    attributes:
+      label: OpenClaw version
+      description: The installed OpenClaw version KKClaw is using
+      placeholder: OpenClaw 2026.4.1
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Windows
+        - Linux
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: A short description of the bug
+      placeholder: Describe the problem
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the exact commands, clicks, and setup details
+      placeholder: |
+        1. Run `kkclaw gateway`
+        2. Open ...
+        3. See error ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: What actually happened?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or screenshots
+      description: Paste key lines from `kkclaw doctor`, `kkclaw gateway status`, or screenshots
+      render: shell
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues first
+          required: true
+        - label: I included enough detail to reproduce the problem
+          required: true

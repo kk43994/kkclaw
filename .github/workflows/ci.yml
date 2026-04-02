@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [master]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
@@ -20,7 +27,7 @@ jobs:
         registry-url: 'https://registry.npmjs.org'
 
     - name: Install dependencies
-      run: npm install --registry https://registry.npmjs.org
+      run: npm ci --registry https://registry.npmjs.org
 
     - name: Syntax check — core modules
       run: |

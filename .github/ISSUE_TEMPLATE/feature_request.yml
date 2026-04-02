@@ -1,0 +1,42 @@
+name: Feature request
+description: Propose a new capability or workflow improvement for KKClaw.
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for net-new features, UX improvements, or workflow enhancements.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+      description: What user need or friction does this solve?
+      placeholder: Describe the pain point or opportunity
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      placeholder: Describe the behavior you want
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      placeholder: List other approaches you considered
+  - type: textarea
+    id: context
+    attributes:
+      label: Extra context
+      description: Mockups, references, command examples, or rollout concerns
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Checklist
+      options:
+        - label: I checked for an existing request first
+          required: true

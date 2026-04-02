@@ -96,6 +96,16 @@ kkclaw/
 
 5. Open a Pull Request against `master`
 
+## Release Discipline
+
+KKClaw is a continuously maintained project, so every meaningful iteration should be traceable.
+
+- Update `CHANGELOG.md` for every user-facing change
+- Bump the version when shipping an iteration
+- Tag every shipped release
+- Push both commit and tag to GitHub
+- Use [RELEASE.md](RELEASE.md) as the release checklist
+
 ## Code Style
 
 - **No semicolons** (project uses ASI)

@@ -1,0 +1,27 @@
+name: Maintenance task
+description: Track release work, dependency upkeep, repo hygiene, or operational follow-up.
+title: "[Maintenance] "
+labels:
+  - maintenance
+body:
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      placeholder: Describe the maintenance task
+    validations:
+      required: true
+  - type: textarea
+    id: checklist
+    attributes:
+      label: Success checklist
+      description: Break the work into verifiable outcomes
+      placeholder: |
+        - [ ] Update version metadata
+        - [ ] Update changelog
+        - [ ] Verify release workflow
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Risks, release windows, dependencies, or links
