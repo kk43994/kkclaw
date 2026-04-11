@@ -54,7 +54,7 @@ if (process.platform === 'darwin') {
 const { app, BrowserWindow, ipcMain, screen, Menu, Tray, Notification, shell } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
-const OpenClawClient = require('./openclaw-client');
+const GatewayClient = require('./gateway-client');
 const SmartVoiceSystem = require('./smart-voice'); // 🎙️ 智能语音系统
 const MessageSyncSystem = require('./message-sync');
 const WorkLogger = require('./work-logger');
@@ -72,6 +72,7 @@ const GatewayGuardian = require('./gateway-guardian'); // 🛡️ Gateway 进程
 const ModelSwitcher = require('./model-switcher'); // 🔄 模型切换器
 const SetupWizard = require('./setup-wizard'); // 🧙 首次运行向导
 const configManager = require('./utils/config-manager'); // 🔒 配置管理
+const backendCompat = require('./utils/backend-compat');
 const SecureStorage = require('./utils/secure-storage'); // 🔒 安全存储
 const pathResolver = require('./utils/openclaw-path-resolver'); // 🔧 路径解析
 const SessionLockManager = require('./utils/session-lock-manager');
@@ -86,6 +87,15 @@ if (process.platform === 'win32') {
 // 读取 OpenClaw 配置获取 token 和端口
 function getGatewayConfig() {
   try {
+    const compat = backendCompat.resolve();
+    if (compat.active.mode === 'hermes') {
+      const port = Number.parseInt(String(compat.active.apiHost || '').split(':').pop(), 10);
+      return {
+        port: Number.isInteger(port) && port > 0 ? port : 8642,
+        token: compat.active.apiKey || ''
+      };
+    }
+
     const config = configManager.getConfig();
     const configPath = pathResolver.getConfigPath();
     const token = SecureStorage.getSecureToken(configPath) || config.gateway?.auth?.token || '';
@@ -102,7 +112,34 @@ function getGatewayConfig() {
   }
 }
 
+function getBackendUiInfo() {
+  const compat = backendCompat.resolve();
+  const label = compat.active.label || 'Gateway';
+  const gatewayLabel = `${label} Gateway`;
+
+  return {
+    mode: compat.active.mode,
+    label,
+    gatewayLabel,
+    serviceStatusTitle: `${label} 服务状态`,
+    disconnectedTitle: `${label} 服务已断开`,
+    disconnectedSpeech: `${label}服务断开连接`,
+    connectedSpeech: `${label}服务已连接`,
+    anomalyTitle: `${label} Gateway 异常`,
+    backendCliLabel: `${label} CLI`,
+    backendConfigLabel: `${label} 配置`,
+    backendConfigPath: compat.active.configPath || '',
+    installHint: `安装并配置 ${label} CLI`,
+    configHint: compat.active.mode === 'hermes'
+      ? '配置 ~/.hermes/config.yaml，并在 ~/.hermes/.env 中开启 API_SERVER_ENABLED=true'
+      : '运行 openclaw 配置命令生成 Token',
+  };
+}
+
 function buildGatewayDashboardUrl(port, token) {
+  if (backendCompat.resolve().active.mode === 'hermes') {
+    return backendCompat.resolve().active.apiHost || `http://127.0.0.1:${port}`;
+  }
   const parsedPort = Number.parseInt(port, 10);
   const safePort = Number.isInteger(parsedPort) ? parsedPort : 18789;
   const baseUrl = `http://127.0.0.1:${safePort}/`;
@@ -112,6 +149,12 @@ function buildGatewayDashboardUrl(port, token) {
 
 function resolveDashboardUrlFromCli() {
   return new Promise((resolve, reject) => {
+    const compat = backendCompat.resolve();
+    if (compat.active.mode === 'hermes') {
+      resolve(compat.active.apiHost || null);
+      return;
+    }
+
     const invocation = pathResolver.resolveOpenClawInvocation(['dashboard', '--no-open']);
     if (!invocation) {
       reject(new Error('openclaw command not found'));
@@ -182,7 +225,7 @@ let mainWindow;
 let lyricsWindow;
 let lyricsReady = false; // 歌词窗口是否加载完成
 let tray;
-let openclawClient;
+let gatewayClient;
 let voiceSystem;
 let messageSync;
 let workLogger;
@@ -303,10 +346,10 @@ async function createWindow() {
   await petConfig.load();
   
   // 初始化所有系统
-  openclawClient = new OpenClawClient();
+  gatewayClient = new GatewayClient();
   voiceSystem = new SmartVoiceSystem(petConfig); // 🎙️ 智能语音系统
   workLogger = new WorkLogger();
-  messageSync = new MessageSyncSystem(openclawClient);
+  messageSync = new MessageSyncSystem(gatewayClient);
   desktopNotifier = new DesktopNotifier(18788);
   await desktopNotifier.start(); // 异步启动，自动处理端口冲突
   petConfig.set('notifierPort', desktopNotifier.getPort()); // 保存实际端口供 wizard/bridge 使用
@@ -386,7 +429,7 @@ async function createWindow() {
   logRotation.start();
 
   // 连接 OpenClaw 客户端的错误处理到服务管理器
-  openclawClient.setErrorHandler((error) => {
+  gatewayClient.setErrorHandler((error) => {
     serviceManager.onCommunicationError(error);
     performanceMonitor.recordError('openclaw', error.message);
   });
@@ -418,6 +461,7 @@ async function createWindow() {
   });
 
   gatewayGuardian.on('restart-limit-reached', (info) => {
+    const backendUi = getBackendUiInfo();
     colorLog('❌ Gateway 重启次数过多，进入低频监控');
     if (voiceSystem) {
       voiceSystem.speak('Gateway频繁异常，进入低频监控', { priority: 'high' });
@@ -425,7 +469,7 @@ async function createWindow() {
     workLogger.logError(`Gateway 重启次数过多 (${info.restartHistory.length} 次)，进入低频监控`);
 
     new Notification({
-      title: 'OpenClaw Gateway 异常',
+      title: backendUi.anomalyTitle,
       body: info.lastError
         ? `原因: ${info.lastError}\n已重启 ${info.restartHistory.length} 次，进入低频监控。`
         : `Gateway 已重启 ${info.restartHistory.length} 次，进入低频监控。`,
@@ -487,6 +531,7 @@ async function createWindow() {
 
   // 监听服务状态变化
   serviceManager.on('status-change', (change) => {
+    const backendUi = getBackendUiInfo();
     colorLog(`🔧 服务状态变化: ${change.service} ${change.previousStatus} -> ${change.currentStatus}`);
 
     // 更新托盘图标提示
@@ -494,27 +539,28 @@ async function createWindow() {
 
     // 🎙️ 服务状态播报
     if (change.currentStatus === 'stopped' && change.previousStatus === 'running') {
-      showServiceNotification('OpenClaw 服务已断开', '点击托盘图标可重启服务');
+      showServiceNotification(backendUi.disconnectedTitle, '点击托盘图标可重启服务');
       if (voiceSystem) {
-        voiceSystem.speak('OpenClaw服务断开连接', { priority: 'high' });
+        voiceSystem.speak(backendUi.disconnectedSpeech, { priority: 'high' });
       }
     } else if (change.currentStatus === 'running' && change.previousStatus !== 'running') {
       // 🦞 Gateway 就绪 — 打印 Ready Banner
       if (change.service === 'gateway') {
-        const configMgr = require('./utils/config-manager');
-        const port = (() => { try { const p = Number.parseInt(configMgr.getConfig()?.gateway?.port, 10); return p > 0 ? p : 18789; } catch { return 18789; } })();
-        printReady(port);
+        const compat = backendCompat.resolve();
+        printReady(compat.active.apiHost || serviceManager.getGatewayHost(), {
+          backendMode: compat.active.mode,
+        });
       }
 
       if (voiceSystem) {
-        voiceSystem.speak('OpenClaw服务已连接', { priority: 'normal' });
+        voiceSystem.speak(backendUi.connectedSpeech, { priority: 'normal' });
       }
 
       // 🔄 Gateway 重启后自动重连
       if (change.service === 'gateway') {
         setTimeout(async () => {
           try {
-            await openclawClient.checkConnection();
+            await gatewayClient.checkConnection();
             colorLog('✅ Gateway 重启后已重新连接');
             workLogger.log('success', 'Gateway 重启后已重新连接');
           } catch (err) {
@@ -760,20 +806,22 @@ async function createWindow() {
         {
           label: '📊 服务状态',
           click: () => {
+            const backendUi = getBackendUiInfo();
             const status = serviceManager.getStatus();
             const gatewayStatus = status.gateway.status === 'running' ? '✅ 运行中' : '❌ 已停止';
             const uptime = serviceManager.formatUptime(serviceManager.getUptime('gateway'));
-            showServiceNotification('OpenClaw 服务状态', `Gateway: ${gatewayStatus}\n运行时间: ${uptime}`);
+            showServiceNotification(backendUi.serviceStatusTitle, `Gateway: ${gatewayStatus}\n运行时间: ${uptime}`);
           }
         },
         { type: 'separator' },
         {
           label: '▶️ 启动 Gateway',
           click: async () => {
-            showServiceNotification('正在启动...', 'OpenClaw Gateway');
+            const backendUi = getBackendUiInfo();
+            showServiceNotification('正在启动...', backendUi.gatewayLabel);
             const result = await serviceManager.startGateway();
             if (result.success) {
-              showServiceNotification('启动成功', 'OpenClaw Gateway 已启动');
+              showServiceNotification('启动成功', `${backendUi.gatewayLabel} 已启动`);
             } else {
               showServiceNotification('启动失败', result.error || '未知错误');
             }
@@ -782,18 +830,20 @@ async function createWindow() {
         {
           label: '⏹️ 停止 Gateway',
           click: async () => {
-            showServiceNotification('正在停止...', 'OpenClaw Gateway');
+            const backendUi = getBackendUiInfo();
+            showServiceNotification('正在停止...', backendUi.gatewayLabel);
             await serviceManager.stopGateway();
-            showServiceNotification('已停止', 'OpenClaw Gateway');
+            showServiceNotification('已停止', backendUi.gatewayLabel);
           }
         },
         {
           label: '🔄 重启 Gateway',
           click: async () => {
-            showServiceNotification('正在重启...', 'OpenClaw Gateway');
+            const backendUi = getBackendUiInfo();
+            showServiceNotification('正在重启...', backendUi.gatewayLabel);
             const result = await serviceManager.restartGateway();
             if (result.success) {
-              showServiceNotification('重启成功', 'OpenClaw Gateway 已重新启动');
+              showServiceNotification('重启成功', `${backendUi.gatewayLabel} 已重新启动`);
             } else {
               showServiceNotification('重启失败', result.error || '未知错误');
             }
@@ -815,8 +865,8 @@ async function createWindow() {
             {
               label: '📊 查看会话状态',
               click: async () => {
-                const info = await openclawClient.getSessionInfo();
-                const contextCheck = await openclawClient.checkContextLength('');
+                const info = await gatewayClient.getSessionInfo();
+                const contextCheck = await gatewayClient.checkContextLength('');
                 const percentage = contextCheck.percentage || 0;
                 const statusIcon = percentage > 80 ? '🔴' : percentage > 50 ? '🟡' : '🟢';
 
@@ -833,7 +883,7 @@ async function createWindow() {
               label: '🗑️ 清理当前会话',
               click: async () => {
                 showServiceNotification('正在清理...', '删除会话文件');
-                const result = await openclawClient.clearCurrentSession();
+                const result = await gatewayClient.clearCurrentSession();
                 if (result.success) {
                   showServiceNotification('清理成功', result.message);
                   if (voiceSystem) {
@@ -847,8 +897,8 @@ async function createWindow() {
             {
               label: '🔍 诊断会话问题',
               click: async () => {
-                const info = await openclawClient.getSessionInfo();
-                const contextCheck = await openclawClient.checkContextLength('');
+                const info = await gatewayClient.getSessionInfo();
+                const contextCheck = await gatewayClient.checkContextLength('');
 
                 let diagnosis = '会话诊断报告:\n\n';
 
@@ -890,7 +940,7 @@ async function createWindow() {
             {
               label: '📊 完整诊断报告',
               click: async () => {
-                const diagnostics = await openclawClient.getDiagnostics();
+                const diagnostics = await gatewayClient.getDiagnostics();
 
                 let report = '=== OpenClaw 诊断报告 ===\n\n';
 
@@ -927,7 +977,7 @@ async function createWindow() {
             {
               label: '❌ 查看最近错误',
               click: async () => {
-                const errors = openclawClient.getRecentErrors(10);
+                const errors = gatewayClient.getRecentErrors(10);
 
                 if (errors.length === 0) {
                   showServiceNotification('最近错误', '✅ 没有错误记录');
@@ -948,7 +998,7 @@ async function createWindow() {
             {
               label: '📝 查看最近请求',
               click: async () => {
-                const requests = openclawClient.getRecentRequests(10);
+                const requests = gatewayClient.getRecentRequests(10);
 
                 if (requests.length === 0) {
                   showServiceNotification('最近请求', '没有请求记录');
@@ -975,7 +1025,7 @@ async function createWindow() {
               click: async () => {
                 showServiceNotification('正在检查...', 'Gateway 健康状态');
 
-                const isConnected = await openclawClient.checkConnection();
+                const isConnected = await gatewayClient.checkConnection();
                 const status = serviceManager.getStatus();
                 const uptime = serviceManager.formatUptime(serviceManager.getUptime('gateway'));
 
@@ -1107,36 +1157,40 @@ function rebuildTrayMenu() {
         {
           label: '📊 服务状态',
           click: () => {
+            const backendUi = getBackendUiInfo();
             const status = serviceManager.getStatus();
             const gatewayStatus = status.gateway.status === 'running' ? '✅ 运行中' : '❌ 已停止';
             const uptime = serviceManager.formatUptime(serviceManager.getUptime('gateway'));
-            showServiceNotification('OpenClaw 服务状态', `Gateway: ${gatewayStatus}\n运行时间: ${uptime}`);
+            showServiceNotification(backendUi.serviceStatusTitle, `Gateway: ${gatewayStatus}\n运行时间: ${uptime}`);
           }
         },
         { type: 'separator' },
         {
           label: '▶️ 启动 Gateway',
           click: async () => {
-            showServiceNotification('正在启动...', 'OpenClaw Gateway');
+            const backendUi = getBackendUiInfo();
+            showServiceNotification('正在启动...', backendUi.gatewayLabel);
             const result = await serviceManager.startGateway();
-            if (result.success) showServiceNotification('启动成功', 'OpenClaw Gateway 已启动');
+            if (result.success) showServiceNotification('启动成功', `${backendUi.gatewayLabel} 已启动`);
             else showServiceNotification('启动失败', result.error || '未知错误');
           }
         },
         {
           label: '⏹️ 停止 Gateway',
           click: async () => {
-            showServiceNotification('正在停止...', 'OpenClaw Gateway');
+            const backendUi = getBackendUiInfo();
+            showServiceNotification('正在停止...', backendUi.gatewayLabel);
             await serviceManager.stopGateway();
-            showServiceNotification('已停止', 'OpenClaw Gateway');
+            showServiceNotification('已停止', backendUi.gatewayLabel);
           }
         },
         {
           label: '🔄 重启 Gateway',
           click: async () => {
-            showServiceNotification('正在重启...', 'OpenClaw Gateway');
+            const backendUi = getBackendUiInfo();
+            showServiceNotification('正在重启...', backendUi.gatewayLabel);
             const result = await serviceManager.restartGateway();
-            if (result.success) showServiceNotification('重启成功', 'OpenClaw Gateway 已重新启动');
+            if (result.success) showServiceNotification('重启成功', `${backendUi.gatewayLabel} 已重新启动`);
             else showServiceNotification('重启失败', result.error || '未知错误');
           }
         },
@@ -1156,8 +1210,8 @@ function rebuildTrayMenu() {
             {
               label: '📊 查看会话状态',
               click: async () => {
-                const info = await openclawClient.getSessionInfo();
-                const contextCheck = await openclawClient.checkContextLength('');
+                const info = await gatewayClient.getSessionInfo();
+                const contextCheck = await gatewayClient.checkContextLength('');
                 const percentage = contextCheck.percentage || 0;
                 const statusIcon = percentage > 80 ? '🔴' : percentage > 50 ? '🟡' : '🟢';
 
@@ -1174,7 +1228,7 @@ function rebuildTrayMenu() {
               label: '🗑️ 清理当前会话',
               click: async () => {
                 showServiceNotification('正在清理...', '删除会话文件');
-                const result = await openclawClient.clearCurrentSession();
+                const result = await gatewayClient.clearCurrentSession();
                 if (result.success) {
                   showServiceNotification('清理成功', result.message);
                   if (voiceSystem) {
@@ -1188,8 +1242,8 @@ function rebuildTrayMenu() {
             {
               label: '🔍 诊断会话问题',
               click: async () => {
-                const info = await openclawClient.getSessionInfo();
-                const contextCheck = await openclawClient.checkContextLength('');
+                const info = await gatewayClient.getSessionInfo();
+                const contextCheck = await gatewayClient.checkContextLength('');
 
                 let diagnosis = '会话诊断报告:\n\n';
 
@@ -1231,7 +1285,7 @@ function rebuildTrayMenu() {
             {
               label: '📊 完整诊断报告',
               click: async () => {
-                const diagnostics = await openclawClient.getDiagnostics();
+                const diagnostics = await gatewayClient.getDiagnostics();
 
                 let report = '=== OpenClaw 诊断报告 ===\n\n';
 
@@ -1268,7 +1322,7 @@ function rebuildTrayMenu() {
             {
               label: '❌ 查看最近错误',
               click: async () => {
-                const errors = openclawClient.getRecentErrors(10);
+                const errors = gatewayClient.getRecentErrors(10);
 
                 if (errors.length === 0) {
                   showServiceNotification('最近错误', '✅ 没有错误记录');
@@ -1289,7 +1343,7 @@ function rebuildTrayMenu() {
             {
               label: '📝 查看最近请求',
               click: async () => {
-                const requests = openclawClient.getRecentRequests(10);
+                const requests = gatewayClient.getRecentRequests(10);
 
                 if (requests.length === 0) {
                   showServiceNotification('最近请求', '没有请求记录');
@@ -1316,7 +1370,7 @@ function rebuildTrayMenu() {
               click: async () => {
                 showServiceNotification('正在检查...', 'Gateway 健康状态');
 
-                const isConnected = await openclawClient.checkConnection();
+                const isConnected = await gatewayClient.checkConnection();
                 const status = serviceManager.getStatus();
                 const uptime = serviceManager.formatUptime(serviceManager.getUptime('gateway'));
 
@@ -1574,13 +1628,13 @@ ipcMain.handle('openclaw-send', async (event, message) => {
     workLogger.logMessage('用户', message);
     workLogger.logTask(`处理消息: ${message}`);
 
-    let response = await openclawClient.sendMessage(message);
+    let response = await gatewayClient.sendMessage(message);
 
     // 兼容上游偶发流事件乱序：Unexpected event order
     if (typeof response === 'string' && response.includes('Unexpected event order')) {
       workLogger.log('warn', '检测到流事件乱序，正在自动重试一次');
       await new Promise(resolve => setTimeout(resolve, 600));
-      response = await openclawClient.sendMessage(message);
+      response = await gatewayClient.sendMessage(message);
     }
 
     if (response && !response.startsWith('请求失败') && !response.startsWith('连接失败') && !response.startsWith('错误')) {
@@ -1600,8 +1654,8 @@ ipcMain.handle('openclaw-send', async (event, message) => {
 });
 
 ipcMain.handle('openclaw-status', async () => {
-  const connected = await openclawClient.checkConnection();
-  const status = await openclawClient.getStatus();
+  const connected = await gatewayClient.checkConnection();
+  const status = await gatewayClient.getStatus();
   return { connected, status };
 });
 
@@ -1860,7 +1914,10 @@ function fixTokenEncryptedField() {
 
 app.whenReady().then(async () => {
   const pkg = require('./package.json');
-  await printHero(pkg.version);
+  const compat = backendCompat.resolve();
+  await printHero(pkg.version, true, {
+    backendMode: compat.active.mode,
+  });
 
   // 首先修复配置
   fixTokenEncryptedField();
@@ -1892,9 +1949,10 @@ function showServiceNotification(title, body) {
 // 🔧 更新托盘提示
 function updateTrayTooltip() {
   if (!tray || !serviceManager) return;
+  const backendUi = getBackendUiInfo();
   const status = serviceManager.getStatus();
   const gatewayStatus = status.gateway.status === 'running' ? '✅' : '❌';
-  tray.setToolTip(`Claw 🦞 | Gateway: ${gatewayStatus}`);
+  tray.setToolTip(`Claw 🦞 | ${backendUi.label}: ${gatewayStatus}`);
 }
 
 // 🔄 模型切换 IPC
@@ -2142,32 +2200,40 @@ ipcMain.handle('model-sync-preset', async (event, providerName) => {
 // 🏥 诊断工具箱 IPC
 ipcMain.handle('diag-full-status', async () => {
   try {
+    const compat = backendCompat.resolve();
     const health = performanceMonitor ? performanceMonitor.calculateHealthScore() : { score: 0, status: 'unknown', issues: [] };
     const stats = performanceMonitor ? performanceMonitor.getCurrentStats() : {};
     const gwStatus = serviceManager ? serviceManager.getStatus() : { gateway: {} };
     const guardian = gatewayGuardian ? gatewayGuardian.getStats() : {};
     let connection = { connected: false };
-    try { connection = { connected: await openclawClient.checkConnection() }; } catch(e) { console.warn('[diag-status] checkConnection 失败:', e?.message || e); }
+    try { connection = { connected: await gatewayClient.checkConnection() }; } catch(e) { console.warn('[diag-status] checkConnection 失败:', e?.message || e); }
     let session = { activeSessions: 0, estimatedTokens: 0, contextPercentage: 0 };
     let requests = { total: 0, recentCount: 0, recent: [] };
     try {
-      const diag = await openclawClient.getDiagnostics();
+      const diag = await gatewayClient.getDiagnostics();
       session = diag.session || session;
       requests = diag.requests || requests;
     } catch(e) {
       console.warn('[diag-status] getDiagnostics 失败:', e?.message || e);
     }
-    const ocErrors = openclawClient ? openclawClient.getRecentErrors(10) : [];
+    const gatewayErrors = gatewayClient ? gatewayClient.getRecentErrors(10) : [];
     const globalErrors = errorHandler ? errorHandler.getErrorHistory(10) : [];
     const gwUptime = serviceManager ? serviceManager.formatUptime(serviceManager.getUptime('gateway')) : '--';
     return {
+      backend: {
+        mode: compat.active.mode,
+        label: compat.active.label,
+        cliPath: compat.active.cliPath,
+        configPath: compat.active.configPath,
+        apiHost: compat.active.apiHost,
+      },
       health,
       stats,
       gateway: { ...gwStatus.gateway, uptimeFormatted: gwUptime },
       guardian,
       connection,
       session,
-      errors: { openclaw: ocErrors, global: globalErrors },
+      errors: { gateway: gatewayErrors, openclaw: gatewayErrors, global: globalErrors },
       requests: { total: requests.total, recentCount: requests.recentCount, recent: requests.recent || [] }
     };
   } catch (err) {
@@ -2209,8 +2275,8 @@ ipcMain.handle('gateway-clear-metrics', async () => {
 });
 
 ipcMain.handle('diag-clear-session', async () => {
-  if (!openclawClient) return { success: false, error: 'openclawClient 未初始化' };
-  return await openclawClient.clearCurrentSession();
+  if (!gatewayClient) return { success: false, error: 'gatewayClient 未初始化' };
+  return await gatewayClient.clearCurrentSession();
 });
 
 ipcMain.handle('diag-cleanup-cache', async () => {
@@ -2238,6 +2304,9 @@ ipcMain.handle('diag-kill-port', async () => {
 // 🩺 Doctor 自检
 ipcMain.handle('diag-doctor', async () => {
   const checks = [];
+  const backendUi = getBackendUiInfo();
+  const compat = backendCompat.resolve();
+  const activeConfigPath = backendUi.backendConfigPath;
 
   // 1. 主窗口
   checks.push({
@@ -2271,14 +2340,14 @@ ipcMain.handle('diag-doctor', async () => {
       name: 'Gateway 进程',
       status: running ? 'pass' : 'fail',
       message: running ? '运行中' : '未运行',
-      fix: running ? null : '尝试「重启 Gateway」或检查 OpenClaw CLI 是否安装'
+      fix: running ? null : `尝试「重启 Gateway」或检查 ${backendUi.backendCliLabel} 是否安装`
     });
   } catch { checks.push({ name: 'Gateway 进程', status: 'fail', message: '检测异常', fix: '检查 service-manager 模块' }); }
 
   // 5. Gateway 通信
   try {
     const { port } = getGatewayConfig();
-    const connected = openclawClient ? await openclawClient.checkConnection() : false;
+    const connected = gatewayClient ? await gatewayClient.checkConnection() : false;
     checks.push({
       name: 'Gateway 通信',
       status: connected ? 'pass' : 'fail',
@@ -2287,23 +2356,48 @@ ipcMain.handle('diag-doctor', async () => {
     });
   } catch { checks.push({ name: 'Gateway 通信', status: 'fail', message: '连接超时', fix: '检查网络或重启 Gateway' }); }
 
-  // 6. OpenClaw CLI
+  // 6. 当前后端 CLI / 配置
   try {
-    const ocConfigPath = path.join(process.env.HOME || process.env.USERPROFILE, '.openclaw', 'openclaw.json');
-    const fs = require('fs');
-    if (fs.existsSync(ocConfigPath)) {
-      const ocConfig = JSON.parse(fs.readFileSync(ocConfigPath, 'utf-8'));
-      const hasToken = !!(ocConfig.gateway?.auth?.token);
+    const cliDetected = Boolean(compat.active.cliPath);
+    checks.push({
+      name: backendUi.backendCliLabel,
+      status: cliDetected ? 'pass' : 'fail',
+      message: cliDetected ? `已检测到 ${compat.active.cliPath}` : `${backendUi.backendCliLabel} 未找到`,
+      fix: cliDetected ? null : backendUi.installHint
+    });
+
+    const configExists = Boolean(activeConfigPath) && fs.existsSync(activeConfigPath);
+    if (compat.active.mode === 'hermes') {
       checks.push({
-        name: 'OpenClaw CLI',
-        status: hasToken ? 'pass' : 'warn',
-        message: hasToken ? 'openclaw.json 已配置，Token 存在' : 'openclaw.json 存在但缺少 Token',
-        fix: hasToken ? null : '运行 openclaw 配置命令生成 Token'
+        name: backendUi.backendConfigLabel,
+        status: !configExists ? 'fail' : compat.active.apiServerEnabled ? 'pass' : 'warn',
+        message: !configExists
+          ? 'config.yaml 不存在'
+          : compat.active.apiServerEnabled
+          ? 'config.yaml 已配置，API Server 已启用'
+          : 'config.yaml 已配置，但 API Server 未启用',
+        fix: !configExists
+          ? backendUi.configHint
+          : compat.active.apiServerEnabled
+          ? null
+          : '在 ~/.hermes/.env 中设置 API_SERVER_ENABLED=true'
       });
     } else {
-      checks.push({ name: 'OpenClaw CLI', status: 'fail', message: 'openclaw.json 不存在', fix: '安装并配置 OpenClaw CLI' });
+      const hasToken = !!getGatewayConfig().token;
+      checks.push({
+        name: backendUi.backendConfigLabel,
+        status: !configExists ? 'fail' : hasToken ? 'pass' : 'warn',
+        message: !configExists
+          ? 'openclaw.json 不存在'
+          : hasToken
+          ? 'openclaw.json 已配置，Token 存在'
+          : 'openclaw.json 已存在，但缺少 Token',
+        fix: !configExists ? backendUi.installHint : hasToken ? null : backendUi.configHint
+      });
     }
-  } catch { checks.push({ name: 'OpenClaw CLI', status: 'fail', message: '检测异常' }); }
+  } catch {
+    checks.push({ name: backendUi.backendCliLabel, status: 'fail', message: '检测异常' });
+  }
 
   // 7. 通知服务
   try {

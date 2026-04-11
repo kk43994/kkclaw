@@ -5,6 +5,7 @@
   },
   "mood": "idle",
   "theme": "default",
+  "compatMode": "auto",
   "voiceEnabled": true,
   "ttsEngine": "minimax",
   "minimax": {

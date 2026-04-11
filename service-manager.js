@@ -1,15 +1,14 @@
-// OpenClaw 服务管理模块 - 按需检测版
+// Gateway 服务管理模块 - 按需检测版
 const { spawn, exec } = require('child_process');
 const EventEmitter = require('events');
-const configManager = require('./utils/config-manager');
-const openClawPathResolver = require('./utils/openclaw-path-resolver');
+const backendCompat = require('./utils/backend-compat');
 
 class ServiceManager extends EventEmitter {
     constructor() {
         super();
         this.services = {
             gateway: {
-                name: 'OpenClaw Gateway',
+                name: this._getGatewayDisplayName(),
                 status: 'unknown', // unknown, running, stopped, error
                 pid: null,
                 lastCheck: 0,
@@ -23,10 +22,18 @@ class ServiceManager extends EventEmitter {
         this._startupState = null; // 启动状态追踪: { pid, startedAt, child }
     }
 
+    _getBackendLabel() {
+        return backendCompat.resolve().active.label || 'Gateway';
+    }
+
+    _getGatewayDisplayName() {
+        return `${this._getBackendLabel()} Gateway`;
+    }
+
     _getGatewayPort() {
         try {
-            const config = configManager.getConfig();
-            const parsed = Number.parseInt(config.gateway?.port, 10);
+            const host = backendCompat.resolve().active.apiHost || '';
+            const parsed = Number.parseInt(host.split(':').pop(), 10);
             return Number.isInteger(parsed) && parsed > 0 ? parsed : 18789;
         } catch {
             return 18789;
@@ -34,7 +41,7 @@ class ServiceManager extends EventEmitter {
     }
 
     _getGatewayHost() {
-        return `http://127.0.0.1:${this._getGatewayPort()}`;
+        return backendCompat.resolve().active.apiHost || `http://127.0.0.1:${this._getGatewayPort()}`;
     }
 
     getGatewayHost() {
@@ -94,25 +101,23 @@ class ServiceManager extends EventEmitter {
     async checkGateway() {
         const service = this.services.gateway;
         const previousStatus = service.status;
-        const gatewayHost = this._getGatewayHost();
 
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            const probe = await backendCompat.probeGateway();
 
-            const response = await fetch(gatewayHost, {
-                method: 'GET',
-                signal: controller.signal
-            });
-
-            clearTimeout(timeoutId);
-
-            // 任何HTTP响应（包括404）都说明gateway在运行
-            service.status = 'running';
-            service.lastError = null;
-            if (previousStatus !== 'running') {
-                service.uptime = Date.now();
-                this.log('success', 'Gateway 已连接', 'gateway');
+            if (probe.ok) {
+                service.status = 'running';
+                service.lastError = null;
+                if (previousStatus !== 'running') {
+                    service.uptime = Date.now();
+                    this.log('success', 'Gateway 已连接', 'gateway');
+                }
+            } else {
+                service.status = 'stopped';
+                service.lastError = probe.error || 'unknown';
+                if (previousStatus === 'running') {
+                    this.log('error', `Gateway 连接断开: ${service.lastError}`, 'gateway');
+                }
             }
         } catch (err) {
             service.status = 'stopped';
@@ -256,19 +261,24 @@ class ServiceManager extends EventEmitter {
             }
         }
 
-        const invocation = openClawPathResolver.resolveOpenClawInvocation(['gateway', '--port', String(gatewayPort)]);
+        const compat = backendCompat.resolve();
+        const gatewayArgs = compat.active.mode === 'hermes'
+            ? ['gateway', 'run', '--replace']
+            : ['gateway', '--port', String(gatewayPort)];
+        const invocation = compat.active.invocation(gatewayArgs);
 
         if (!invocation) {
-            this.log('error', 'openclaw 未找到！请确认已安装: npm/pnpm install -g openclaw', 'gateway');
+            const label = compat.active.label || 'compatible backend';
+            this.log('error', `${label} 未找到！请确认已安装对应 CLI`, 'gateway');
             return {
                 success: false,
-                error: 'openclaw 未找到，请先安装: npm install -g openclaw 或 pnpm install -g openclaw'
+                error: `${label} CLI 未找到，请先安装并确保命令可用`
             };
         }
 
         this.log(
             'info',
-            `使用已安装 OpenClaw: ${invocation.cliPath}`,
+            `使用已安装 ${compat.active.label}: ${invocation.cliPath}`,
             'gateway'
         );
 
@@ -403,6 +413,25 @@ class ServiceManager extends EventEmitter {
         this.log('info', '正在停止 Gateway...', 'gateway');
         this._startupState = null; // 主动停止时清除启动状态
         const gatewayPort = this._getGatewayPort();
+        const compat = backendCompat.resolve();
+
+        if (compat.active.mode === 'hermes') {
+            try {
+                const invocation = compat.active.invocation(['gateway', 'stop']);
+                if (invocation) {
+                    await new Promise((resolve) => {
+                        const child = spawn(invocation.command, invocation.args, {
+                            cwd: invocation.cwd,
+                            stdio: 'ignore',
+                            shell: invocation.shell ?? false,
+                            windowsHide: invocation.windowsHide ?? true,
+                        });
+                        child.on('close', () => resolve());
+                        child.on('error', () => resolve());
+                    });
+                }
+            } catch (_) {}
+        }
 
         await this._forceKillPort(gatewayPort);
 
@@ -538,6 +567,7 @@ class ServiceManager extends EventEmitter {
 
     // 获取所有服务状态
     getStatus() {
+        this.services.gateway.name = this._getGatewayDisplayName();
         return {
             gateway: { ...this.services.gateway },
             timestamp: Date.now()

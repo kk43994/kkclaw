@@ -229,7 +229,7 @@ openclaw gateway
 desktop-pet/
 ├── main.js              # Electron 主进程
 ├── index.html           # 前端界面 (透明窗口 + 动画)
-├── openclaw-client.js   # Gateway 通信客户端
+├── gateway-client.js    # Gateway 通信客户端
 ├── message-sync.js      # 消息同步系统
 ├── voice-system.js      # Windows TTS 语音
 ├── work-logger.js       # 工作日志记录
@@ -268,13 +268,13 @@ npm install
 
 ### 4.4 核心代码示例
 
-#### openclaw-client.js (Gateway 通信)
+#### gateway-client.js (Gateway 通信)
 
 ```javascript
 const OPENCLAW_HOST = 'http://127.0.0.1:18789';
 const OPENCLAW_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN || 'your-token';
 
-class OpenClawClient {
+class GatewayClient {
     async sendMessage(message) {
         const response = await fetch(`${OPENCLAW_HOST}/v1/chat/completions`, {
             method: 'POST',

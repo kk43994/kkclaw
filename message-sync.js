@@ -2,9 +2,9 @@
 const EventEmitter = require('events');
 
 class MessageSyncSystem extends EventEmitter {
-    constructor(openclawClient) {
+    constructor(gatewayClient) {
         super();
-        this.openclawClient = openclawClient;
+        this.gatewayClient = gatewayClient;
         this.isConnected = true;
         this.messageHistory = [];
     }

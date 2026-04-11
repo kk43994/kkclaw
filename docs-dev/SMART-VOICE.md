@@ -4,6 +4,25 @@
 
 升级桌面龙虾的语音系统，让播报更智能、更人性化、涵盖更多场景。
 
+## 语音播报触发机制
+
+这一套智能语音能力，最终是否真的播出来，不是单靠 TTS 配置就能保证的。对 AI 回复场景来说，完整链路依赖 3 层：
+
+1. TTS 服务本身可用
+2. `desktop-bridge.js` 已生成，并且当前 workspace 可以执行
+3. 当前 agent / 模型遵循 `AGENTS.md`，在每次回复前主动调用：`node desktop-bridge.js agent-response "要播报的内容"`
+
+其中第 3 层尤其关键。`setup-wizard.js` 生成的 `AGENTS.md` 已经把这条规则写成第一优先级：先触发 bridge，再输出文字回复。也就是说，如果 TTS 和 bridge 都正常，但模型没有真的执行这条命令，桌面端依然会完全没有声音。
+
+排查时建议先手动跑一次下面这条命令，确认 bridge -> 桌面播报链路是通的：
+
+```bash
+node desktop-bridge.js agent-response "这是一次手动播报测试"
+```
+
+- 手动执行能播报：更可能是 agent 没有遵循 `AGENTS.md`
+- 手动执行也没声音：优先排查 TTS 配置、bridge 文件位置、运行环境
+
 ## 核心模块
 
 ### **smart-voice.js** - 智能语音系统

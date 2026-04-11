@@ -18,7 +18,7 @@ https://github.com/kk43994/KKClaw-Desktop-Pet
 ```
 
 ### 项目类型/分类
-- OpenClaw客户端
+- Gateway客户端
 - 桌面工具
 - AI助手
 - 开发者工具
@@ -203,7 +203,7 @@ https://raw.githubusercontent.com/kk43994/KKClaw-Desktop-Pet/master/docs/images/
 - ✅ 自动恢复能力
 - ✅ 智能语音交互
 
-### vs 简单的OpenClaw客户端
+### vs 简单的Gateway客户端
 - ✅ 可视化界面
 - ✅ 语音播报
 - ✅ 错误处理

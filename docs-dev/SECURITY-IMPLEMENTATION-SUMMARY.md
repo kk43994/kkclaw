@@ -8,19 +8,19 @@
 - **创建**: `utils/secure-storage.js`
 - **功能**: 使用 Electron `safeStorage` API 加密存储 token
 - **自动迁移**: 明文 token 自动迁移到加密存储
-- **集成位置**: `main.js`, `openclaw-client.js`
+- **集成位置**: `main.js`, `gateway-client.js`
 
 #### 1.2 日志脱敏
 - **创建**: `utils/log-sanitizer.js`
 - **功能**:
   - 消息内容只记录长度，不记录完整内容
   - 敏感字段自动标记为 `[REDACTED]`
-- **集成位置**: `openclaw-client.js`
+- **集成位置**: `gateway-client.js`
 
 #### 1.3 配置解析保护
 - **创建**: `utils/safe-config-loader.js`
 - **功能**: 统一配置加载，添加错误处理
-- **集成位置**: `openclaw-client.js`, `model-switcher.js`, `smart-voice.js`, `lark-uploader.js`
+- **集成位置**: `gateway-client.js`, `model-switcher.js`, `smart-voice.js`, `lark-uploader.js`
 
 ### ✅ Phase 2: 高风险运维问题修复（已完成）
 
@@ -30,7 +30,7 @@
   - 单例配置管理器
   - 文件监听自动刷新缓存
   - 减少 90% 文件 I/O
-- **集成位置**: `main.js`, `openclaw-client.js`
+- **集成位置**: `main.js`, `gateway-client.js`
 
 #### 2.2 Gateway 健康检查优化
 - **修改**: `gateway-guardian.js` L82-98
@@ -75,7 +75,7 @@
 
 ### 修改核心文件（8个）
 1. `main.js` - 集成安全存储、配置管理、IPC 验证
-2. `openclaw-client.js` - 加密存储、日志脱敏、配置缓存
+2. `gateway-client.js` - 加密存储、日志脱敏、配置缓存
 3. `gateway-guardian.js` - 健康检查优化、路径统一
 4. `service-manager.js` - PID 验证
 5. `model-switcher.js` - 安全配置加载
@@ -105,7 +105,7 @@
 ## 未实施项（低优先级）
 
 ### Phase 3.1: WebSocket 客户端重命名
-- **原因**: `openclaw-client.js` 实际使用 HTTP，但重命名会影响大量引用
+- **原因**: `gateway-client.js` 实际使用 HTTP，但重命名会影响大量引用
 - **建议**: 后续版本重构时考虑
 
 ## 验证建议

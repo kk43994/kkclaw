@@ -37,7 +37,7 @@ kkclaw/
 ├── setup-preload.js        # Setup wizard preload script
 ├── index.html              # Main pet UI
 ├── setup-wizard.html       # Setup wizard UI
-├── openclaw-client.js      # OpenClaw API client
+├── gateway-client.js       # Gateway API client
 ├── smart-voice.js          # TTS voice system
 ├── message-sync.js         # WebSocket message sync
 ├── gateway-guardian.js     # Gateway health monitor

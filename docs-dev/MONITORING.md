@@ -233,7 +233,7 @@ logRotation.start();
 ### 错误集成
 
 ```javascript
-openclawClient.setErrorHandler((error) => {
+gatewayClient.setErrorHandler((error) => {
   performanceMonitor.recordError('openclaw', error.message);
 });
 

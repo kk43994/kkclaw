@@ -64,7 +64,7 @@ kkclaw/
 ├── lyrics.html          # 歌词字幕窗口
 ├── setup-wizard.html    # Setup Wizard 界面
 ├── setup-wizard.js      # Setup Wizard 逻辑
-├── openclaw-client.js   # Gateway WebSocket 客户端
+├── gateway-client.js    # Gateway 通信客户端
 ├── smart-voice.js       # 语音调度系统
 ├── templates/           # Agent 模板文件
 ├── voice/               # TTS 引擎模块

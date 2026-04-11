@@ -8,15 +8,16 @@
 
 ## 🇨🇳 中文
 
-**OpenClaw 桌面可视化伴侣 — 流体玻璃球宠物、14情绪系统、声音克隆（MiniMax TTS）、一键配置向导、Gateway 智能守护**
+**OpenClaw / Hermes 桌面可视化伴侣 — 流体玻璃球宠物、14情绪系统、声音克隆（MiniMax TTS）、Hermes 兼容模式、一键配置向导、Gateway 智能守护**
 
 <div align="center">
 
 ![Hero Banner](docs/images/hero-banner.png)
 
-*OpenClaw Core + Desktop Embodiment = A living interface with emotion, voice, and presence*
+*OpenClaw / Hermes + Desktop Embodiment = A living interface with emotion, voice, and presence*
 
-[![Version](https://img.shields.io/badge/version-3.6.0-FF6B4A?style=for-the-badge&logo=github)](https://github.com/kk43994/kkclaw/releases)
+[![Version](https://img.shields.io/badge/version-3.7.0-FF6B4A?style=for-the-badge&logo=github)](https://github.com/kk43994/kkclaw/releases)
+[![Hermes Compatible](https://img.shields.io/badge/Hermes-Compatible-F7E7CE?style=for-the-badge)](https://github.com/NousResearch/hermes-agent)
 [![CI](https://img.shields.io/github/actions/workflow/status/kk43994/kkclaw/ci.yml?style=for-the-badge&logo=github-actions&logoColor=white&label=CI)](https://github.com/kk43994/kkclaw/actions/workflows/ci.yml)
 [![Stars](https://img.shields.io/github/stars/kk43994/kkclaw?style=for-the-badge&logo=github&color=FFD700)](https://github.com/kk43994/kkclaw/stargazers)
 [![Downloads](https://img.shields.io/github/downloads/kk43994/kkclaw/total?style=for-the-badge&logo=github&color=8B5CF6)](https://github.com/kk43994/kkclaw/releases)
@@ -35,7 +36,7 @@
 
 ## 🌟 项目亮点
 
-给你的 OpenClaw AI 一个**看得见、听得到**的桌面化身。
+给你的 OpenClaw / Hermes AI 一个**看得见、听得到**的桌面化身。
 
 ### 🦞 球体 & 动画
 
@@ -135,6 +136,21 @@
 | 🍎 **跨平台支持** | Windows 10/11 + macOS（Intel & Apple Silicon）双平台原生支持（cross-platform Electron） |
 | 📱 **托盘菜单** | 右键系统托盘即可切换模型、查看状态、启动诊断、管理会话（system tray context menu） |
 
+### 🆕 v3.7.0 — Hermes 兼容模式 + 多后端启动器
+
+> 🤝 **正式适配 Hermes！** `kkclaw gateway` 现在不只会拉起 OpenClaw，也能以兼容模式驱动 Hermes，并在启动时提供 OpenClaw / Hermes / Auto 三种入口。
+
+<div align="center">
+  <img src="docs/images/hermes-agent-banner.png" alt="Hermes Agent banner" width="100%">
+  <p><sub>Hermes Agent banner adapted from <a href="https://github.com/NousResearch/hermes-agent">NousResearch/hermes-agent</a></sub></p>
+</div>
+
+- 🆕 **Hermes 兼容模式** — 支持 `KKCLAW_COMPAT_MODE=hermes`，也支持在 `pet-config.json` 中固定 `compatMode: "hermes" | "openclaw" | "auto"`
+- 🆕 **后端选择式启动** — `kkclaw gateway` / `npm start` 的终端入口现在会先让你选择 OpenClaw / Hermes / Auto，并记住上次选择
+- 🆕 **Hermes Gateway 复用** — 如果 Hermes Gateway 已经在外部启动，KKClaw 会识别并复用，不再把它误判成端口冲突
+- 🔧 **诊断全面增强** — `kkclaw status` / `kkclaw doctor` / `kkclaw gateway status` 会显示当前兼容后端、CLI 路径、探活方式、日志路径、API Server 状态
+- 🎨 **后端感知终端外观** — 启动画面和 Ready Banner 会根据 OpenClaw / Hermes 切换主色和标签，终端体验更统一
+
 ### 🆕 v3.6.0 — 原生命令入口 + KKClaw Gateway CLI
 
 > 🦞 **命令体验升级！** `kkclaw gateway` 现在直接打开带开场动画的终端，并补齐 `doctor / status / logs / dashboard`
@@ -202,6 +218,7 @@
 - 🎭 **人设定制系统** — 5种预设风格（甜妹/专业/幽默/酷帅/自定义）
 - 📝 **全套文件生成** — 一键生成 `AGENTS.md` + `SOUL.md` + `USER.md` + `HEARTBEAT.md` + `desktop-bridge.js`
 - 🔗 **完整 AGENTS.md 模板** — 对齐生产级配置（记忆系统 + 安全规则 + 群聊规则 + 心跳检查 + 语音播报）
+- 🔔 **播报机制说明** — AI 回复语音不是“只要配好 TTS 就会自动朗读”。真正生效依赖 3 层：TTS 服务可用、`desktop-bridge.js` 已生成且可执行、agent 按 `AGENTS.md` 在每次回复前主动调用 `node desktop-bridge.js agent-response "要播报的内容"`
 - 💡 **模型兼容性提示** — 推荐 Claude Sonnet 4+ 旗舰模型获得最佳播报体验
 - ✅ **7 项全链路测试** — Gateway / 模型 / TTS / 播报 / 歌词 / Agent文件 / 音色
 
@@ -275,15 +292,15 @@
 
 ## 📦 下载安装
 
-### 最新版本：v3.6.0
+### 最新版本：v3.7.0
 
 <div align="center">
 
 | 平台 | 架构 | 下载链接 | 大小 |
 |------|------|----------|------|
-| 🪟 **Windows** | x64 | [KKClaw-Desktop-Pet-3.6.0-Setup.exe](https://github.com/kk43994/kkclaw/releases/download/v3.6.0/KKClaw-Desktop-Pet-3.6.0-Setup.exe) | ~150MB |
-| 🍎 **macOS** | Intel | [KKClaw-Desktop-Pet-3.6.0-x64.dmg](https://github.com/kk43994/kkclaw/releases/download/v3.6.0/KKClaw-Desktop-Pet-3.6.0-x64.dmg) | ~160MB |
-| 🍎 **macOS** | Apple Silicon | [KKClaw-Desktop-Pet-3.6.0-arm64.dmg](https://github.com/kk43994/kkclaw/releases/download/v3.6.0/KKClaw-Desktop-Pet-3.6.0-arm64.dmg) | ~160MB |
+| 🪟 **Windows** | x64 | [KKClaw-Desktop-Pet-3.7.0-Setup.exe](https://github.com/kk43994/kkclaw/releases/download/v3.7.0/KKClaw-Desktop-Pet-3.7.0-Setup.exe) | ~150MB |
+| 🍎 **macOS** | Intel | [KKClaw-Desktop-Pet-3.7.0-x64.dmg](https://github.com/kk43994/kkclaw/releases/download/v3.7.0/KKClaw-Desktop-Pet-3.7.0-x64.dmg) | ~160MB |
+| 🍎 **macOS** | Apple Silicon | [KKClaw-Desktop-Pet-3.7.0-arm64.dmg](https://github.com/kk43994/kkclaw/releases/download/v3.7.0/KKClaw-Desktop-Pet-3.7.0-arm64.dmg) | ~160MB |
 
 [📦 查看所有版本](https://github.com/kk43994/kkclaw/releases) | [🎥 在线演示](https://kk43994.github.io/kkclaw/)
 
@@ -311,11 +328,11 @@
 ```bash
 npm link
 
-kkclaw gateway          # 打开带开场动画的 KKClaw Gateway 终端
-kkclaw gateway status   # 查看网关状态 / 端口 / Dashboard 地址
+kkclaw gateway          # 打开带后端选择器的 KKClaw Gateway 终端（OpenClaw / Hermes / Auto）
+kkclaw gateway status   # 查看网关状态 / 端口 / 当前兼容后端
 kkclaw gateway logs     # 查看 Gateway 日志
 kkclaw doctor           # 做一轮 KKClaw 体检
-kkclaw dashboard        # 打开 OpenClaw Dashboard
+kkclaw dashboard        # 打开当前兼容后端的 Dashboard / API 面板
 ```
 
 ### 安装说明
@@ -583,7 +600,7 @@ function createColorTransition(fromColor, toColor) {
 
 - **Node.js** ≥ 18.x ([下载](https://nodejs.org))
 - **Windows** 10/11 或 **macOS** 10.15+
-- **OpenClaw** ≥ 2026.x ([中文社区](https://clawd.org.cn) | [国际版](https://openclaw.ai))
+- **OpenClaw** ≥ 2026.x 或 **Hermes Agent**（建议最新版本）([OpenClaw](https://openclaw.ai) | [Hermes](https://github.com/NousResearch/hermes-agent))
 
 ### 安装
 
@@ -709,6 +726,16 @@ npm start
 }
 ```
 
+#### 语音播报的最小链路
+
+上面这一步只是把 TTS 服务配置好，它并不等于 AI 回复时一定会自动播报。真正能听到声音，还要同时满足下面 3 层：
+
+- TTS 服务本身可用
+- `desktop-bridge.js` 已生成，并且能在当前 workspace 正常执行
+- 当前 agent / 模型真的遵循 `AGENTS.md`，在每次回复前主动执行：`node desktop-bridge.js agent-response "要播报的内容"`
+
+如果你已经配好了 TTS，但 AI 回复还是完全没有声音，优先怀疑的就不只是配置问题，也可能是当前 agent 根本没有触发 bridge。
+
 ### KKClaw Switch配置
 
 桌面宠物会自动集成，无需额外配置。
@@ -810,7 +837,11 @@ npm run build          # 构建发布版
 
 #### 2. 语音不播报
 
-**原因**：API密钥无效或配置错误
+**可能原因**：
+- API密钥无效或配置错误
+- `desktop-bridge.js` 没生成、路径不对，或者当前 workspace 下不可执行
+- 当前 agent / 模型没有遵循 `AGENTS.md`，根本没有在回复前触发 `desktop-bridge.js`
+
 **解决**：
 ```bash
 # 检查配置
@@ -818,7 +849,14 @@ node -e "console.log(require('./pet-config.json').voice)"
 
 # 测试MiniMax API
 node voice/minimax-tts.js
+
+# 手动测试 bridge -> 桌面端播报链路
+node desktop-bridge.js agent-response "这是一次 README 排障测试播报"
 ```
+
+**排障判断技巧**：
+- 如果手动执行 `desktop-bridge.js` 能播报，说明 TTS / bridge 基本正常，问题更可能出在 agent 没有执行播报命令
+- 如果手动执行也没有声音，再优先排查 TTS 配置、bridge 文件位置和运行环境
 
 #### 3. OpenClaw连接失败
 
@@ -864,6 +902,22 @@ node kkclaw-hotswitch.js --restart
 ---
 
 ## 📝 更新日志
+
+### [3.7.0] - 2026-04-11
+
+#### 🤝 Hermes 兼容模式
+- 新增 Hermes 兼容后端，支持 `KKCLAW_COMPAT_MODE` 环境变量和 `pet-config.json.compatMode` 配置
+- `kkclaw gateway` / `npm start` 新增 OpenClaw / Hermes / Auto 选择式启动，并记住上次选择
+- 如果 Hermes Gateway 已在外部运行，KKClaw 会识别并复用，不再误报端口冲突
+
+#### 🔍 诊断与启动体验
+- `kkclaw status` / `kkclaw doctor` / `kkclaw gateway status` 现在会显示当前兼容后端、CLI 路径、探活方式、日志路径、API Server 状态
+- 启动 Banner 和 Ready Banner 改为后端感知：OpenClaw 为红色主题，Hermes 为香槟金主题
+- `kkclaw dashboard` 与主进程网关配置会自动切换到当前兼容后端
+
+#### 🧪 测试与文档
+- 新增后端选择启动器、Hermes 兼容模式、外部 Hermes Service 复用相关测试
+- README 和语音开发文档补充了 AI 回复语音播报的真实触发链路说明
 
 ### [3.6.0] - 2026-04-02
 
@@ -968,6 +1022,11 @@ node kkclaw-hotswitch.js --restart
   - `USER.md` — 用户信息框架
   - `HEARTBEAT.md` — 心跳检查配置
   - `desktop-bridge.js` — 语音播报桥接脚本（完整版，含 cleanForTTS + detectEmotion + addTTSPauseMarkers）
+- ✨ **语音播报是如何触发的？**
+  - 第 1 层：TTS 引擎本身要可用（MiniMax / Edge TTS / 其他降级链正常）
+  - 第 2 层：`desktop-bridge.js` 要已经生成，并且在当前 workspace 里可执行
+  - 第 3 层：agent / 模型必须真的遵循 `AGENTS.md`，在每次回复前主动执行：`node desktop-bridge.js agent-response "要播报的内容"`
+  - **少了第 3 层时，哪怕 TTS 配置完全正确，也可能一声不响。**
 - ✨ **7 项全链路测试** — Gateway / AI模型 / TTS引擎 / 语音播报 / 桌面歌词 / Agent配置文件 / 自定义音色
 - ✨ **模型兼容性提示** — 注明不同模型的指令遵循度差异，推荐 Claude Sonnet 4+
 - ✨ **preload 安全白名单** — 所有 IPC 通道经白名单校验，防止恶意调用
@@ -1108,13 +1167,14 @@ node kkclaw-hotswitch.js --restart
 
 ## 🇬🇧 English
 
-**Desktop visualization companion for OpenClaw — Fluid glass orb pet, 14-emotion system, voice cloning (MiniMax TTS), Setup Wizard, and Smart Gateway Guardian**
+**Desktop visualization companion for OpenClaw / Hermes — Fluid glass orb pet, 14-emotion system, voice cloning (MiniMax TTS), Hermes compatibility mode, Setup Wizard, and Smart Gateway Guardian**
 
 <div align="center">
 
 ![Hero Banner](docs/images/hero-banner.png)
 
-[![Version](https://img.shields.io/badge/version-3.6.0-FF6B4A?style=for-the-badge&logo=github)](https://github.com/kk43994/kkclaw/releases)
+[![Version](https://img.shields.io/badge/version-3.7.0-FF6B4A?style=for-the-badge&logo=github)](https://github.com/kk43994/kkclaw/releases)
+[![Hermes Compatible](https://img.shields.io/badge/Hermes-Compatible-F7E7CE?style=for-the-badge)](https://github.com/NousResearch/hermes-agent)
 [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows_|_macOS-0078D6?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/kk43994/kkclaw)
 
@@ -1124,7 +1184,7 @@ node kkclaw-hotswitch.js --restart
 
 ### ✨ Highlights
 
-Give your OpenClaw AI a **visible, audible** desktop embodiment.
+Give your OpenClaw / Hermes AI a **visible, audible** desktop embodiment.
 
 #### 🦞 Orb & Animation
 
@@ -1150,6 +1210,14 @@ Give your OpenClaw AI a **visible, audible** desktop embodiment.
 | ⏸️ **Natural Pauses** | Pauses at commas and periods, not robotic read-aloud (TTS pause markers `<#0.5#>`) |
 | 📝 **Desktop Subtitles** | Words pop up on screen in sync with speech, like karaoke (typewriter lyrics overlay) |
 | 🔇 **No Overlapping Speech** | Multiple messages arrive at once? Queued and spoken one by one (priority speech queue) |
+
+Voice playback is bridge-triggered, not purely automatic. In practice, you need all three layers to be healthy:
+
+1. TTS is available
+2. `desktop-bridge.js` exists and can run
+3. The active agent actually follows `AGENTS.md` and calls `node desktop-bridge.js agent-response "..."` before replying
+
+If layer 3 is missing, the desktop pet may stay silent even though your TTS setup looks correct.
 
 #### 🧠 Persona & Personality
 
@@ -1218,6 +1286,21 @@ Give your OpenClaw AI a **visible, audible** desktop embodiment.
 | 🍎 **Win + Mac Support** | Windows 10/11 and macOS (Intel & Apple Silicon) both supported (cross-platform Electron) |
 | 📱 **Tray Menu Control Center** | Right-click tray icon to switch models, check status, run diagnostics, manage sessions (system tray context menu) |
 
+### 🆕 What's New in v3.7.0
+
+> 🤝 **Official Hermes compatibility!** `kkclaw gateway` can now drive Hermes as a compatible backend, with a launch-time selector for OpenClaw / Hermes / Auto.
+
+<div align="center">
+  <img src="docs/images/hermes-agent-banner.png" alt="Hermes Agent banner" width="100%">
+  <p><sub>Hermes Agent banner adapted from <a href="https://github.com/NousResearch/hermes-agent">NousResearch/hermes-agent</a></sub></p>
+</div>
+
+- 🆕 **Hermes compatibility mode** — Supports `KKCLAW_COMPAT_MODE=hermes` plus a persistent `compatMode` setting in `pet-config.json`
+- 🆕 **Backend-aware launcher** — `kkclaw gateway` / `npm start` now lets you choose OpenClaw / Hermes / Auto and remembers the last backend you launched
+- 🆕 **External Hermes reuse** — If Hermes Gateway is already running, KKClaw recognizes and reuses it instead of flagging a false ownership conflict
+- 🔧 **Deeper diagnostics** — `kkclaw status` / `kkclaw doctor` / `kkclaw gateway status` now surface backend, CLI path, probe source, log paths, and Hermes API server readiness
+- 🎨 **Backend-themed console banners** — Startup and ready banners switch labels and accent colors for OpenClaw vs Hermes
+
 ### 🆕 What's New in v3.6.0
 
 > 🦞 **Native command workflow!** `kkclaw gateway` now opens the same animated console as `npm start`, with companion commands for status, logs, doctor, and dashboard access
@@ -1271,7 +1354,7 @@ Give your OpenClaw AI a **visible, audible** desktop embodiment.
 
 - **Node.js** ≥ 18.x ([Download](https://nodejs.org))
 - **Windows** 10/11 or **macOS** 10.15+
-- **OpenClaw** ≥ 2026.x ([Community](https://clawd.org.cn) | [International](https://openclaw.ai))
+- **OpenClaw** ≥ 2026.x or **Hermes Agent** (latest recommended) ([OpenClaw](https://openclaw.ai) | [Hermes](https://github.com/NousResearch/hermes-agent))
 
 #### Install via ClawHub (Recommended)
 
@@ -1295,20 +1378,20 @@ npm start
 ```bash
 npm link
 
-kkclaw gateway          # Open the animated KKClaw terminal (same experience as npm start)
-kkclaw gateway status   # Show gateway state, port, and Dashboard URL
+kkclaw gateway          # Open the backend-aware KKClaw terminal (OpenClaw / Hermes / Auto)
+kkclaw gateway status   # Show gateway state, port, and active compatible backend
 kkclaw gateway logs     # Tail gateway logs
 kkclaw doctor           # Run a KKClaw-oriented health check
-kkclaw dashboard        # Open the OpenClaw dashboard
+kkclaw dashboard        # Open the active backend dashboard / API surface
 ```
 
 ### 📦 Downloads
 
 | Platform | Arch | Download | Size |
 |----------|------|----------|------|
-| 🪟 **Windows** | x64 | [Setup.exe](https://github.com/kk43994/kkclaw/releases/download/v3.6.0/KKClaw-Desktop-Pet-3.6.0-Setup.exe) | ~150MB |
-| 🍎 **macOS** | Intel | [x64.dmg](https://github.com/kk43994/kkclaw/releases/download/v3.6.0/KKClaw-Desktop-Pet-3.6.0-x64.dmg) | ~160MB |
-| 🍎 **macOS** | Apple Silicon | [arm64.dmg](https://github.com/kk43994/kkclaw/releases/download/v3.6.0/KKClaw-Desktop-Pet-3.6.0-arm64.dmg) | ~160MB |
+| 🪟 **Windows** | x64 | [Setup.exe](https://github.com/kk43994/kkclaw/releases/download/v3.7.0/KKClaw-Desktop-Pet-3.7.0-Setup.exe) | ~150MB |
+| 🍎 **macOS** | Intel | [x64.dmg](https://github.com/kk43994/kkclaw/releases/download/v3.7.0/KKClaw-Desktop-Pet-3.7.0-x64.dmg) | ~160MB |
+| 🍎 **macOS** | Apple Silicon | [arm64.dmg](https://github.com/kk43994/kkclaw/releases/download/v3.7.0/KKClaw-Desktop-Pet-3.7.0-arm64.dmg) | ~160MB |
 
 [📦 All Releases](https://github.com/kk43994/kkclaw/releases)
 

@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.0] - 2026-04-11
+
+### Added
+- **Hermes compatibility mode** — KKClaw can now drive Hermes as a compatible backend via `KKCLAW_COMPAT_MODE` or `pet-config.json.compatMode` (`openclaw` / `hermes` / `auto`)
+- **Backend-aware launcher** — Added a launch selector for OpenClaw / Hermes / Auto, and it remembers the last backend you chose
+- **Hermes reuse detection** — If a Hermes Gateway service is already running, KKClaw detects it and reuses it instead of treating it as a conflicting process
+
+### Improved
+- **Gateway diagnostics** — `kkclaw status`, `kkclaw doctor`, and `kkclaw gateway status` now report the active backend, CLI path, probe source, log paths, and Hermes API server readiness
+- **Backend-themed startup banners** — Startup and ready banners now adapt labels and colors for OpenClaw vs Hermes
+- **Backend-routed dashboard / client config** — The dashboard target, API host, token usage, and gateway stop/start flow now follow the active compatible backend
+- **Voice-trigger documentation** — README and smart voice docs now explain that AI reply playback requires the agent to actively call `desktop-bridge.js`
+
+### Fixed
+- **False gateway ownership conflicts** — External Hermes services are treated as reusable instead of being reported as port conflicts
+- **Terminal launch consistency** — Desktop and CLI launch helpers now route through the same backend-aware console entrypoint
+- **Compatibility test coverage** — Added regression tests for Hermes mode, launcher defaults, and external service reuse
+
 ## [3.6.0] - 2026-04-02
 
 ### Added
@@ -210,6 +228,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - OpenClaw 集成
 - 简单语音系统
 
+[3.7.0]: https://github.com/kk43994/kkclaw/compare/v3.6.0...v3.7.0
 [3.6.0]: https://github.com/kk43994/kkclaw/compare/v3.5.2...v3.6.0
 [3.5.2]: https://github.com/kk43994/kkclaw/compare/v3.5.1...v3.5.2
 [3.5.1]: https://github.com/kk43994/kkclaw/compare/v3.5.0...v3.5.1

@@ -34,7 +34,7 @@ If you discover a security vulnerability, please report it responsibly:
 ### v2.0.4+ — Credential Hygiene
 
 - **Hardcoded credentials removed** — 5 files cleaned of API keys, tokens, and personal paths
-- **Runtime config** — `openclaw-client.js` reads tokens from `~/.openclaw/openclaw.json` at runtime, not at module load
+- **Runtime config** — `gateway-client.js` reads tokens from `~/.openclaw/openclaw.json` at runtime, not at module load
 - **Asar audit** — Verified 0 secret leaks in packaged `.asar` build artifact
 
 ### Runtime Security Modules

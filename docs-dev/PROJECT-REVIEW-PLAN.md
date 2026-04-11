@@ -16,7 +16,7 @@
 
 ### 核心模块（优先级：高）
 - `main.js` - Electron 主进程入口
-- `openclaw-client.js` - WebSocket 客户端核心
+- `gateway-client.js` - Gateway 客户端核心
 - `gateway-guardian.js` - Gateway 进程管理
 - `model-switcher.js` - AI 模型切换逻辑
 - `service-manager.js` - 服务管理器
@@ -112,7 +112,7 @@
 - [ ] 进程生命周期管理
 - [ ] 错误处理和日志记录
 
-#### openclaw-client.js
+#### gateway-client.js
 - [ ] WebSocket 连接建立和维护
 - [ ] 心跳机制实现
 - [ ] 重连策略（指数退避）

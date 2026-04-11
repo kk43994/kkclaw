@@ -11,11 +11,29 @@ const c = {
   bWhite:  '\x1b[97m',
   gray:    '\x1b[90m',
   bRed:    '\x1b[91m',
+  champagne: '\x1b[38;2;230;198;138m',
+  bChampagne: '\x1b[38;2;247;231;206m',
   bGreen:  '\x1b[92m',
   bCyan:   '\x1b[96m',
   green:   '\x1b[32m',
   yellow:  '\x1b[33m',
 };
+
+function getBannerTheme(backendMode = 'openclaw') {
+  if (backendMode === 'hermes') {
+    return {
+      backendLabel: 'Hermes Gateway',
+      settle: c.bChampagne,
+      accent: c.champagne,
+    };
+  }
+
+  return {
+    backendLabel: 'OpenClaw Gateway',
+    settle: c.bRed,
+    accent: c.bRed,
+  };
+}
 
 // Lobster Ball (13 lines) — eyes CLOSED
 const LOGO_CLOSED = [
@@ -104,10 +122,11 @@ const TOTAL_LINES = LOGO_CLOSED.length + 1 + TITLE.length;
  * Print startup Hero Banner:
  * 1. Closed-eyes lobster in dim gray
  * 2. White fire-sweep top to bottom
- * 3. Flash white → switch to open-eyes → settle red
+ * 3. Flash white → switch to open-eyes → settle into backend color
  */
-async function printHero(version, animate = true) {
+async function printHero(version, animate = true, options = {}) {
   const info = getSystemInfo(version);
+  const theme = getBannerTheme(options.backendMode);
 
   console.log('');
 
@@ -121,7 +140,7 @@ async function printHero(version, animate = true) {
       process.stdout.write('\x1b[' + TOTAL_LINES + 'A');
       process.stdout.write(renderFrame(LOGO_CLOSED, TITLE, (lineIdx, section) => {
         const g = section === 'logo' ? lineIdx : LOGO_CLOSED.length + 1 + lineIdx;
-        if (g <= front - 2) return c.bRed + (section === 'title' ? c.bold : '');
+        if (g <= front - 2) return theme.settle + (section === 'title' ? c.bold : '');
         if (g === front - 1 || g === front) return c.bWhite + c.bold;
         return c.dim + c.gray;
       }));
@@ -135,21 +154,25 @@ async function printHero(version, animate = true) {
     process.stdout.write(renderFrame(LOGO_CLOSED, TITLE, () => c.bWhite + c.bold));
     await sleep(120);
 
-    // === Phase 4: Eyes OPEN! Settle to red ===
+    // === Phase 4: Eyes OPEN! Settle into backend accent ===
     process.stdout.write('\x1b[' + TOTAL_LINES + 'A');
     process.stdout.write(renderFrame(LOGO_OPEN, TITLE, (_i, section) =>
-      c.bRed + (section === 'title' ? c.bold : '')));
+      theme.settle + (section === 'title' ? c.bold : '')));
 
   } else {
-    // No animation: open eyes, red
+    // No animation: open eyes in backend accent
     process.stdout.write(renderFrame(LOGO_OPEN, TITLE, (_i, section) =>
-      c.bRed + (section === 'title' ? c.bold : '')));
+      theme.settle + (section === 'title' ? c.bold : '')));
   }
 
   // Subtitle
   console.log('');
-  console.log(c.gray + '  ' + c.reset + c.white + c.bold +
-    ' Desktop Pet  x  OpenClaw Gateway  x  Live Console' + c.reset);
+  console.log(
+    c.gray + '  ' + c.reset +
+    c.white + c.bold + ' Desktop Pet  x  ' + c.reset +
+    theme.accent + c.bold + theme.backendLabel + c.reset +
+    c.white + c.bold + '  x  Live Console' + c.reset
+  );
   console.log('');
 
   printSeparator();
@@ -171,14 +194,18 @@ async function printHero(version, animate = true) {
   console.log('');
 }
 
-function printReady(port = 18789) {
+function printReady(target = 18789, options = {}) {
   const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+  const theme = getBannerTheme(options.backendMode);
+  const gatewayTarget = typeof target === 'string' ? target : `http://127.0.0.1:${target}`;
   printSeparator();
   console.log('');
   console.log(c.bGreen + c.bold + '  [OK] KKClaw is ready!' + c.reset);
   console.log('');
+  console.log(c.gray + '  Backend   ' + c.reset + theme.accent + c.bold +
+    theme.backendLabel + c.reset);
   console.log(c.gray + '  Gateway   ' + c.reset + c.green + c.bold +
-    'http://127.0.0.1:' + port + c.reset);
+    gatewayTarget + c.reset);
   console.log(c.gray + '  Started   ' + c.reset + c.white + time + c.reset);
   console.log(c.gray + '  Logs      ' + c.reset + c.dim +
     'Gateway output will appear below' + c.reset);

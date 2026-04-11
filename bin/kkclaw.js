@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
 const { execSync } = require('child_process');
+const fs = require('fs');
 const path = require('path');
 const process = require('process');
 const pkg = require('../package.json');
 const { openTerminal } = require('../scripts/open-terminal');
-const configManager = require('../utils/config-manager');
 const openClawDetector = require('../utils/openclaw-detector');
+const backendCompat = require('../utils/backend-compat');
 const pathResolver = require('../utils/path-resolver');
 
 function formatHelp() {
@@ -23,15 +24,15 @@ function formatHelp() {
     '  kkclaw gateway restart',
     '  kkclaw doctor [--json]',
     '  kkclaw status',
-    '  kkclaw dashboard [openclaw-dashboard-args]',
+    '  kkclaw dashboard [backend-dashboard-args]',
     '  kkclaw console',
     '  kkclaw --version',
     '',
     'Commands:',
-    '  gateway        Launch the animated KKClaw terminal (same experience as npm start)',
+    '  gateway        Launch the animated KKClaw terminal and choose OpenClaw/Hermes/Auto',
     '  doctor         Run a KKClaw-oriented health check',
     '  status         Alias for kkclaw gateway status',
-    '  dashboard      Forward to openclaw dashboard',
+    '  dashboard      Open the active backend dashboard or API endpoint',
     '  console        Alias for kkclaw gateway',
     '',
     'Examples:',
@@ -40,6 +41,11 @@ function formatHelp() {
     '  kkclaw gateway logs --tail 80',
     '  kkclaw doctor --json',
     '  kkclaw dashboard --no-open',
+    '',
+    'Compatibility:',
+    '  Set KKCLAW_COMPAT_MODE=hermes to drive Hermes instead of OpenClaw.',
+    '  You can set {"compatMode":"openclaw|hermes|auto"} in pet-config.json.',
+    '  The terminal launcher also remembers your last selected backend.',
   ].join('\n');
 }
 
@@ -116,43 +122,28 @@ function parseArgs(argv) {
 }
 
 function getGatewayConfig() {
-  const config = configManager.getConfig() || {};
-  const parsedPort = Number.parseInt(config.gateway?.port, 10);
-  const configDir = pathResolver.getOpenClawConfigDir
-    ? pathResolver.getOpenClawConfigDir()
-    : path.dirname(pathResolver.getOpenClawConfigPath());
+  const compat = backendCompat.resolve();
+  const active = compat.active;
+  const configDir = active.configDir
+    || (pathResolver.getOpenClawConfigDir
+      ? pathResolver.getOpenClawConfigDir()
+      : path.dirname(pathResolver.getOpenClawConfigPath()));
+  const parsedPort = Number.parseInt(active.apiHost?.split(':').pop(), 10);
   const port = Number.isInteger(parsedPort) && parsedPort > 0 ? parsedPort : 18789;
   return {
+    backend: active.mode,
+    backendLabel: active.label,
     port,
-    host: `http://127.0.0.1:${port}`,
-    dashboardUrl: `http://127.0.0.1:${port}/dashboard`,
-    configPath: pathResolver.getOpenClawConfigPath(),
-    logs: {
+    host: active.apiHost || `http://127.0.0.1:${port}`,
+    dashboardUrl: active.mode === 'hermes'
+      ? active.apiHost || `http://127.0.0.1:${port}`
+      : `http://127.0.0.1:${port}/dashboard`,
+    configPath: active.configPath || pathResolver.getOpenClawConfigPath(),
+    logs: active.logPaths || {
       out: path.join(configDir, 'logs', 'gateway.log'),
       err: path.join(configDir, 'logs', 'gateway.err.log'),
     },
   };
-}
-
-async function checkGatewayHttp(host) {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
-    const response = await fetch(host, {
-      method: 'GET',
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-    return {
-      ok: true,
-      status: response.status,
-    };
-  } catch (error) {
-    return {
-      ok: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
 }
 
 function listPortListeners(port) {
@@ -255,9 +246,10 @@ function listKkclawProcesses() {
 
 async function gatherStatus() {
   const gateway = getGatewayConfig();
+  const compat = backendCompat.resolve();
   const [openclaw, gatewayHttp] = await Promise.all([
     openClawDetector.detect(),
-    checkGatewayHttp(gateway.host),
+    backendCompat.probeGateway(),
   ]);
 
   const listeners = listPortListeners(gateway.port);
@@ -267,17 +259,35 @@ async function gatherStatus() {
     listeners.length === 0
       ? null
       : listeners.some((listener) => kkclawProcesses.some((entry) => entry.pid === listener.pid));
+  const externalHermesService =
+    compat.active.mode === 'hermes'
+      && Boolean(gatewayHttp.ok)
+      && listeners.length > 0
+      && managedByKkclaw === false;
 
   return {
-    ok: Boolean(openclaw.installed),
+    ok: Boolean(compat.active.installed),
     version: pkg.version,
     projectRoot: pathResolver.getProjectRoot(),
+    backend: {
+      mode: compat.active.mode,
+      label: compat.active.label,
+      preference: compat.preference.mode,
+      preferenceSource: compat.preference.source,
+      installed: compat.active.installed,
+      cliPath: compat.active.cliPath,
+      configPath: compat.active.configPath,
+      configExists: Boolean(compat.active.configPath && fs.existsSync(compat.active.configPath)),
+      apiServerEnabled: compat.active.mode === 'hermes' ? compat.active.apiServerEnabled : true,
+      apiServerRequired: compat.active.mode === 'hermes',
+    },
     openclaw,
     gateway: {
       ...gateway,
       http: gatewayHttp,
       listeners,
       managedByKkclaw,
+      externalHermesService,
     },
     kkclaw: {
       running: kkclawProcesses.length > 0,
@@ -288,12 +298,15 @@ async function gatherStatus() {
 }
 
 function printStatus(status) {
+  const backendLine = `${status.backend.label} (${status.backend.mode})`;
   const openclawLine = status.openclaw.installed
     ? `${status.openclaw.version || 'installed'}${status.openclaw.cliPath ? ` (${status.openclaw.cliPath})` : ''}`
     : 'missing';
-  const gatewayLine = status.gateway.http.ok
-    ? `reachable (${status.gateway.http.status})`
-    : `unreachable (${status.gateway.http.error})`;
+  const gatewayProbeLine = status.gateway.http.ok
+    ? status.gateway.http.source === 'http'
+      ? `reachable over HTTP (${status.gateway.http.status})`
+      : `running (${status.gateway.http.detail || status.gateway.http.source || 'probe ok'})`
+    : `${status.gateway.http.source || 'probe'} failed (${status.gateway.http.error})`;
   const listenerLine = status.gateway.listeners.length > 0
     ? status.gateway.listeners.map((entry) => `${entry.command || 'pid'}:${entry.pid}`).join(', ')
     : 'none';
@@ -304,14 +317,21 @@ function printStatus(status) {
   console.log('KKClaw Gateway Status');
   console.log(`- KKClaw: ${status.version}`);
   console.log(`- Project: ${status.projectRoot}`);
-  console.log(`- OpenClaw CLI: ${openclawLine}`);
+  console.log(`- Compat backend: ${backendLine}`);
+  console.log(`- Active CLI: ${status.backend.cliPath || 'missing'}`);
+  console.log(`- ${status.backend.mode === 'hermes' ? 'Companion OpenClaw CLI' : 'OpenClaw CLI'}: ${openclawLine}`);
   console.log(`- Gateway host: ${status.gateway.host}`);
-  console.log(`- Gateway http: ${gatewayLine}`);
+  console.log(`- Gateway probe: ${gatewayProbeLine}`);
   console.log(`- Listeners: ${listenerLine}`);
   console.log(`- Dashboard: ${status.gateway.dashboardUrl}`);
   console.log(`- Logs: ${status.gateway.logs.out}`);
   console.log(`- KKClaw processes: ${processLine}`);
-  if (status.gateway.managedByKkclaw === false) {
+  if (status.backend.mode === 'hermes' && !status.backend.apiServerEnabled) {
+    console.log('- Warning: Hermes gateway is available, but the chat API server is disabled. Enable `API_SERVER_ENABLED=true` for full KKClaw chat compatibility.');
+  }
+  if (status.gateway.externalHermesService) {
+    console.log('- Info: Hermes gateway is already running as an external service and KKClaw will reuse it.');
+  } else if (status.gateway.managedByKkclaw === false) {
     console.log('- Warning: the gateway port is active, but the listener does not look like a KKClaw-managed process.');
   } else if (status.gateway.managedByKkclaw === null) {
     console.log('- Warning: no gateway listener is active on the configured port.');
@@ -338,30 +358,50 @@ function summarizeProcessList(processes) {
 }
 
 function printDoctor(status) {
+  const gatewayProbeDetail = status.gateway.http.ok
+    ? status.gateway.http.source === 'http'
+      ? `${status.gateway.host} (${status.gateway.http.status})`
+      : `${status.gateway.host} (${status.gateway.http.detail || status.gateway.http.source || 'probe ok'})`
+    : `${status.gateway.host} (${status.gateway.http.error})`;
+  const backendCliDetail = status.backend.installed
+    ? `${status.backend.cliPath || 'detected'}${status.backend.mode === 'openclaw' && status.openclaw.version ? ` @ ${status.openclaw.version}` : ''}`
+    : 'not found';
   const checks = [
     {
-      name: 'OpenClaw CLI',
-      ok: Boolean(status.openclaw.installed),
-      detail: status.openclaw.installed
-        ? `${status.openclaw.version || 'installed'}${status.openclaw.cliPath ? ` @ ${status.openclaw.cliPath}` : ''}`
-        : 'not found',
+      name: 'Compatibility backend',
+      ok: Boolean(status.backend.installed),
+      detail: `${status.backend.label} (${status.backend.mode}) via ${status.backend.preferenceSource}:${status.backend.preference}`,
     },
     {
-      name: 'OpenClaw config',
-      ok: Boolean(status.openclaw.configFile?.exists),
-      detail: status.openclaw.configFile?.path || status.gateway.configPath,
+      name: `${status.backend.label} CLI`,
+      ok: Boolean(status.backend.installed),
+      detail: backendCliDetail,
+    },
+    {
+      name: `${status.backend.label} config`,
+      ok: Boolean(status.backend.configExists),
+      detail: status.backend.configPath || 'not found',
     },
     {
       name: 'Gateway endpoint',
       ok: Boolean(status.gateway.http.ok),
-      detail: status.gateway.http.ok
-        ? `${status.gateway.host} (${status.gateway.http.status})`
-        : `${status.gateway.host} (${status.gateway.http.error})`,
+      detail: gatewayProbeDetail,
+    },
+    {
+      name: 'Hermes API server',
+      ok: !status.backend.apiServerRequired || Boolean(status.backend.apiServerEnabled),
+      detail: status.backend.apiServerRequired
+        ? status.backend.apiServerEnabled
+          ? 'enabled for KKClaw chat requests'
+          : 'disabled; set API_SERVER_ENABLED=true to expose /v1/chat/completions'
+        : 'not required for OpenClaw mode',
     },
     {
       name: 'Gateway ownership',
-      ok: status.gateway.managedByKkclaw !== false,
-      detail: status.gateway.managedByKkclaw === null
+      ok: status.gateway.externalHermesService || status.gateway.managedByKkclaw !== false,
+      detail: status.gateway.externalHermesService
+        ? 'Hermes gateway is already running as an external service and can be reused'
+        : status.gateway.managedByKkclaw === null
         ? 'no active listener on the configured gateway port'
         : status.gateway.managedByKkclaw
         ? 'listener matches the running KKClaw app'
@@ -389,10 +429,15 @@ function printDoctor(status) {
   if (!status.gateway.http.ok) {
     console.log('- Hint: run `kkclaw gateway` to launch the animated KKClaw console.');
   }
-  if (status.gateway.managedByKkclaw === false) {
+  if (status.backend.mode === 'hermes' && !status.backend.apiServerEnabled) {
+    console.log('- Hint: Hermes compat mode needs `API_SERVER_ENABLED=true` before KKClaw can send chat requests through `/v1/chat/completions`.');
+  }
+  if (status.gateway.externalHermesService) {
+    console.log('- Hint: Hermes service reuse is active; KKClaw does not need to relaunch the gateway.');
+  } else if (status.gateway.managedByKkclaw === false) {
     console.log('- Hint: another process owns the gateway port. Use `kkclaw gateway stop` before relaunching KKClaw.');
   } else if (status.gateway.managedByKkclaw === null) {
-    console.log('- Hint: no gateway listener is active yet. Launch the animated console or start OpenClaw separately.');
+    console.log(`- Hint: no gateway listener is active yet. Launch the animated console or start ${status.backend.label} separately.`);
   }
 }
 
@@ -423,9 +468,9 @@ function waitForChild(child) {
 }
 
 async function runOpenClawCommand(args) {
-  const invocation = require('../utils/openclaw-path-resolver').resolveOpenClawInvocation(args);
+  const invocation = backendCompat.resolve().active.invocation(args);
   if (!invocation) {
-    throw new Error('OpenClaw CLI not found');
+    throw new Error('Compatible backend CLI not found');
   }
   const child = require('child_process').spawn(invocation.command, invocation.args, {
     cwd: invocation.cwd,
@@ -437,6 +482,25 @@ async function runOpenClawCommand(args) {
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function openUrlInBrowser(url) {
+  if (!url) {
+    return false;
+  }
+
+  try {
+    if (process.platform === 'darwin') {
+      execSync(`open ${JSON.stringify(url)}`, { stdio: 'ignore' });
+    } else if (process.platform === 'win32') {
+      execSync(`start "" ${JSON.stringify(url)}`, { stdio: 'ignore', shell: true });
+    } else {
+      execSync(`xdg-open ${JSON.stringify(url)}`, { stdio: 'ignore' });
+    }
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function killPid(pid) {
@@ -462,14 +526,14 @@ function killPid(pid) {
 async function stopGatewayProcesses() {
   const initialStatus = await gatherStatus();
 
-  if (initialStatus.gateway.http.ok || initialStatus.gateway.listeners.length > 0) {
+  if (initialStatus.gateway.http.ok || initialStatus.gateway.listeners.length > 0 || initialStatus.backend.mode === 'hermes') {
     try {
       const stopCode = await runOpenClawCommand(['gateway', 'stop']);
       if (stopCode === 0) {
-        console.log('Requested installed OpenClaw gateway stop.');
+        console.log(`Requested installed ${initialStatus.backend.label} gateway stop.`);
       }
     } catch (error) {
-      console.warn(`OpenClaw gateway stop failed: ${error instanceof Error ? error.message : String(error)}`);
+      console.warn(`${initialStatus.backend.label} gateway stop failed: ${error instanceof Error ? error.message : String(error)}`);
     }
     await sleep(1000);
   }
@@ -539,8 +603,19 @@ async function run(command) {
       console.log('Launching KKClaw animated console...');
       await openTerminal();
       return 0;
-    case 'gateway-open':
+    case 'gateway-open': {
+      const compat = backendCompat.resolve();
+      if (compat.active.mode === 'hermes') {
+        const url = compat.active.apiHost || null;
+        if (openUrlInBrowser(url)) {
+          console.log(`Opened ${compat.active.label} endpoint: ${url}`);
+          return 0;
+        }
+        console.log(url || 'No Hermes API endpoint configured.');
+        return url ? 0 : 1;
+      }
       return runOpenClawCommand(['dashboard']);
+    }
     case 'gateway-status': {
       const status = await gatherStatus();
       if (command.json) {
@@ -548,7 +623,7 @@ async function run(command) {
       } else {
         printStatus(status);
       }
-      return status.openclaw.installed ? 0 : 1;
+      return status.backend.installed ? 0 : 1;
     }
     case 'gateway-logs': {
       const status = await gatherStatus();
@@ -585,10 +660,21 @@ async function run(command) {
       } else {
         printDoctor(status);
       }
-      return status.openclaw.installed ? 0 : 1;
+      return status.backend.installed ? 0 : 1;
     }
-    case 'dashboard':
+    case 'dashboard': {
+      const compat = backendCompat.resolve();
+      if (compat.active.mode === 'hermes') {
+        const url = compat.active.apiHost || null;
+        if (openUrlInBrowser(url)) {
+          console.log(`Opened ${compat.active.label} endpoint: ${url}`);
+          return 0;
+        }
+        console.log(url || 'No Hermes API endpoint configured.');
+        return url ? 0 : 1;
+      }
       return runOpenClawCommand(['dashboard', ...command.args]);
+    }
     default:
       console.log(formatHelp());
       return 1;

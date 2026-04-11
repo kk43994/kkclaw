@@ -3,11 +3,12 @@ const { execFile } = require('child_process');
 const path = require('path');
 
 const DEFAULT_PROJECT_PATH = path.resolve(__dirname, '..');
+const DEFAULT_ENTRY_COMMAND = 'node scripts/launch-console.js';
 
 function buildRunCommand(options = {}) {
   const projectPath = options.projectPath || DEFAULT_PROJECT_PATH;
-  const npmScript = options.npmScript || 'start';
-  return `cd "${projectPath}" && npm ${npmScript === 'start' ? 'start' : `run ${npmScript}`}`;
+  const entryCommand = options.entryCommand || DEFAULT_ENTRY_COMMAND;
+  return `cd "${projectPath}" && ${entryCommand}`;
 }
 
 function openTerminal(options = {}) {
@@ -39,7 +40,7 @@ function openTerminal(options = {}) {
     }
 
     if (process.platform === 'win32') {
-      const cmd = `start "" cmd.exe /k "cd /d ${projectPath} && npm start"`;
+      const cmd = `start "" cmd.exe /k "${runCmd}"`;
       execFile('cmd.exe', ['/d', '/s', '/c', cmd], (err) => {
         if (err) {
           onError(err);
