@@ -899,6 +899,8 @@ let missingDepsForInstall = []; // 记录可自动安装的缺失依赖
 let stepData = {
   gatewayConnected: false,
   gatewayToken: '',
+  compatMode: '',
+  lastCompatMode: '',
   modelProvider: '',
   modelId: '',
   channels: {
@@ -1254,23 +1256,23 @@ async function renderEnvCheck() {
     </div>
     <div class="check-item" id="env-openclaw-mode">
       <span class="check-icon">⏳</span>
-      <span class="check-name">OpenClaw 安装模式</span>
+      <span class="check-name">兼容 CLI 安装模式</span>
       <span class="check-status">检测中...</span>
     </div>
     <div class="check-item" id="env-openclaw-cli">
       <span class="check-icon">⏳</span>
-      <span class="check-name">OpenClaw CLI 路径</span>
+      <span class="check-name">兼容 CLI 路径</span>
       <span class="check-status">检测中...</span>
     </div>
     <div class="check-item" id="env-openclaw-manual">
       <span class="check-icon">🛠️</span>
       <span class="check-name">手动指定路径</span>
-      <span class="check-status">可手动输入 OpenClaw 主目录 / CLI 路径</span>
+      <span class="check-status">可手动输入 Gateway / OpenClaw 主目录 / CLI 路径</span>
     </div>
     <div class="form-group" style="margin-top:8px;">
-      <label>手动指定 OpenClaw 主目录 / CLI 路径</label>
+      <label>手动指定 Gateway / OpenClaw 主目录 / CLI 路径</label>
       <div style="display:flex;gap:8px;align-items:center;">
-        <input type="text" class="form-input" id="openclaw-manual-path" placeholder="例如 C:\\Users\\name\\.openclaw 或 openclaw.cmd 所在路径">
+        <input type="text" class="form-input" id="openclaw-manual-path" placeholder="例如 C:\\Users\\name\\.openclaw 或 openclaw.cmd 所在路径（用于兼容 CLI 识别）">
         <button class="btn btn-test" type="button" onclick="verifyOpenClawManualPath()">验证</button>
       </div>
       <div id="openclaw-manual-result" style="margin-top:6px;font-size:11px;color:var(--text-medium);"></div>
@@ -1346,32 +1348,32 @@ async function renderEnvCheck() {
     }
 
     setEnvItem('env-openclaw', deps.openclaw.ok,
-      deps.openclaw.ok ? 'OpenClaw ' + (deps.openclaw.version || '已安装') : '未检测到 OpenClaw',
+      deps.openclaw.ok ? '兼容 CLI（OpenClaw） ' + (deps.openclaw.version || '已安装') : '未检测到兼容 CLI（OpenClaw）',
       deps.openclaw.ok ? null : {
-        label: '一键安装 OpenClaw',
+        label: '一键安装兼容 CLI',
         cmdHint: 'npm install -g openclaw',
         action: async (btn) => {
           btn.textContent = '安装中...'; btn.disabled = true;
-          await addBubble('正在安装 OpenClaw，请稍候（约30秒）...');
+          await addBubble('正在安装兼容 CLI（OpenClaw），请稍候（约30秒）...');
           const result = await wizardAPI.invoke('wizard-install-openclaw');
           if (result.success) {
-            await addBubble('OpenClaw 安装成功！');
+            await addBubble('兼容 CLI（OpenClaw）安装成功！');
             clearChat();
             renderEnvCheck();
           } else {
             await addBubble('安装失败，请手动运行命令');
-            btn.textContent = '一键安装 OpenClaw'; btn.disabled = false;
+            btn.textContent = '一键安装兼容 CLI'; btn.disabled = false;
           }
         }
       }
     );
 
     setEnvItem('env-openclaw-mode', deps.openclaw.ok,
-      deps.openclaw.ok ? ('模式: ' + (oc.installMode || deps.openclaw.detail?.installMode || 'unknown')) : '未识别安装模式'
+      deps.openclaw.ok ? ('兼容模式: ' + (oc.installMode || deps.openclaw.detail?.installMode || 'unknown')) : '未识别兼容 CLI 安装模式'
     );
 
     setEnvItem('env-openclaw-cli', deps.openclaw.ok,
-      deps.openclaw.detail?.cliPath || '未检测到 CLI 路径'
+      deps.openclaw.detail?.cliPath || '未检测到兼容 CLI 路径'
     );
 
     // Gateway
@@ -1435,13 +1437,13 @@ async function renderEnvCheck() {
         '<div style="font-size:11px;background:#fffdf5;border:1px solid var(--wood-light);border-radius:3px;padding:8px;line-height:1.8;word-break:break-all;">' +
           '<div><strong>项目根目录：</strong>' + escapeHtml(paths.projectRoot) + '</div>' +
           '<div><strong>用户目录：</strong>' + escapeHtml(paths.userHome) + '</div>' +
-          '<div><strong>OpenClaw CLI：</strong>' + escapeHtml(oc.cliPath || '未检测到') + '</div>' +
+          '<div><strong>兼容 CLI：</strong>' + escapeHtml(oc.cliPath || '未检测到') + '</div>' +
           '<div><strong>安装模式：</strong>' + escapeHtml(oc.installMode || 'unknown') + '</div>' +
           '<div><strong>安装根目录：</strong>' + escapeHtml(oc.installRoot || '未识别') + '</div>' +
-          '<div><strong>OpenClaw 配置：</strong>' + escapeHtml(paths.openclawConfigDir) +
+          '<div><strong>兼容配置（openclaw）：</strong>' + escapeHtml(paths.openclawConfigDir) +
             (oc.configDir.exists ? ' <span style="color:var(--green);">存在</span>' : ' <span style="color:var(--red);">不存在</span>') +
           '</div>' +
-          '<div><strong>OpenClaw 数据：</strong>' + escapeHtml(paths.openclawDataDir) +
+          '<div><strong>兼容数据目录：</strong>' + escapeHtml(paths.openclawDataDir) +
             (oc.dataDir.exists ? ' <span style="color:var(--green);">存在</span>' : ' <span style="color:#f57f17;">不存在</span>') +
           '</div>' +
           '<div><strong>候选数据目录：</strong>' + escapeHtml((paths.openclawDataCandidates || []).join(' | ')) + '</div>' +
@@ -1468,7 +1470,7 @@ async function verifyOpenClawManualPath() {
   const value = input.value.trim();
   if (!value) {
     resultEl.style.color = 'var(--red)';
-    resultEl.textContent = '请先输入 OpenClaw 主目录或 CLI 路径';
+    resultEl.textContent = '请先输入 Gateway / OpenClaw 主目录或 CLI 路径';
     return;
   }
 
@@ -1498,14 +1500,14 @@ async function verifyOpenClawManualPath() {
       if (previewSource) previewSource.textContent = 'saved-manual';
       if (previewMode) previewMode.textContent = oc.installMode || 'unknown';
       if (previewCli) previewCli.textContent = oc.cliPath || '未检测到';
-      await addBubble('我已经帮你验证过这个 OpenClaw 路径啦，可以识别到安装模式和主路径了~');
+      await addBubble('我已经帮你验证过这个 Gateway / OpenClaw 路径啦，可以识别到安装模式和主路径了~');
       clearChat();
       renderEnvCheck();
       const newInput = document.getElementById('openclaw-manual-path');
       if (newInput) newInput.value = value;
     } else {
       resultEl.style.color = '#f57f17';
-      resultEl.textContent = '已记录路径，但暂时没法确认它是有效的 OpenClaw 安装';
+      resultEl.textContent = '已记录路径，但暂时没法确认它是有效的 Gateway / OpenClaw 安装';
     }
   } catch (err) {
     resultEl.style.color = 'var(--red)';
@@ -1654,8 +1656,8 @@ function friendlyError(raw) {
   if (msg.includes('EACCES') || msg.includes('EPERM')) return '权限不足，请以管理员身份运行';
   if (msg.includes('ENOSPC')) return '磁盘空间不足，请清理磁盘后重试';
   // OpenClaw 类
-  if (msg.includes('openclaw') && msg.includes('不存在')) return 'OpenClaw 未安装，请先运行: npm install -g openclaw';
-  if (msg.includes('not found') && msg.includes('openclaw')) return 'OpenClaw 命令未找到，请重新安装';
+  if (msg.includes('openclaw') && msg.includes('不存在')) return '兼容 CLI（OpenClaw）未安装，请先运行: npm install -g openclaw';
+  if (msg.includes('not found') && msg.includes('openclaw')) return '兼容 CLI（OpenClaw）命令未找到，请重新安装';
   if (msg.includes('port') && msg.includes('18789')) return 'Gateway 端口 18789 被占用，请关闭占用程序或重启电脑';
   // Python 类
   if (msg.includes('No module named')) {
@@ -1787,7 +1789,7 @@ function updateEnvSummary(r, gatewayJustStarted = false) {
     summary.style.borderColor = '#ef9a9a';
     const missing = [];
     if (!r.node.ok) missing.push('Node.js 18+');
-    if (!r.openclaw.ok) missing.push('OpenClaw');
+    if (!r.openclaw.ok) missing.push('兼容 CLI');
     if (!gatewayOk) missing.push('Gateway 运行中');
     summary.innerHTML = `
       <strong>❌ 环境未就绪</strong> — 缺少: ${missing.join('、')}<br>
@@ -1805,11 +1807,22 @@ function updateEnvSummary(r, gatewayJustStarted = false) {
 async function renderStep1() {
   console.log('[Wizard] renderStep1 called, chatArea:', document.getElementById('chatArea'));
   await addBubble('你好呀~ 我是小K！(^_^) 欢迎使用 KKClaw 桌面宠物~');
-  await addBubble('让我先帮你检查一下 OpenClaw Gateway 的连接状态吧！');
+  await addBubble('先帮你确认一下这次要优先使用哪个兼容后端吧：OpenClaw、Hermes，或自动模式。');
+  await addBubble('然后我再帮你检查 Gateway 的连接状态~');
   await addBubble('让我找找你的 Gateway... (o_O)');
 
   const card = addCard(`
-    <h3>OpenClaw Gateway 检测</h3>
+    <h3>Gateway 检测与后端选择</h3>
+    <div class="form-group">
+      <label>默认兼容后端模式</label>
+      <select class="form-input" id="compat-mode-select" onchange="saveBackendMode(this.value)">
+        <option value="">请选择</option>
+        <option value="openclaw">OpenClaw</option>
+        <option value="hermes">Hermes</option>
+        <option value="auto">Auto（优先已安装后端；同时存在时先 OpenClaw 后 Hermes）</option>
+      </select>
+      <div class="setting-desc" id="compat-mode-desc">首次安装建议明确选一个；之后也可以随时改成 Auto。</div>
+    </div>
     <div class="status-item">
       <div class="status-icon loading" id="gw-status-icon"></div>
       <span id="gw-status-text">正在检测 Gateway...</span>
@@ -1826,6 +1839,11 @@ async function renderStep1() {
       </div>
     </div>
   `);
+
+  const compatSelect = document.getElementById('compat-mode-select');
+  const resolvedCompatMode = stepData.compatMode || stepData.lastCompatMode || 'auto';
+  compatSelect.value = resolvedCompatMode;
+  updateBackendModeDesc(resolvedCompatMode);
 
   // Auto detect
   try {
@@ -1860,6 +1878,35 @@ async function renderStep1() {
     text.textContent = '检测出错: ' + err.message;
     document.getElementById('gw-manual').classList.remove('hidden');
     await addBubble('呜...检测出错了 (>_<) 请手动输入 Token 试试~');
+  }
+}
+
+function updateBackendModeDesc(mode) {
+  const descEl = document.getElementById('compat-mode-desc');
+  if (!descEl) return;
+
+  if (mode === 'hermes') {
+    descEl.textContent = 'Hermes 将作为默认兼容后端启动；如果 API server 未开启，聊天会被明确拦截并提示。';
+  } else if (mode === 'openclaw') {
+    descEl.textContent = 'OpenClaw 将作为默认兼容后端启动，保留当前红色火焰终端主题。';
+  } else {
+    descEl.textContent = 'Auto 会优先使用当前已安装的兼容后端；若同时存在，则先尝试 OpenClaw，再回退到 Hermes。';
+  }
+}
+
+async function saveBackendMode(mode) {
+  const normalized = String(mode || '').trim().toLowerCase();
+  if (!['openclaw', 'hermes', 'auto'].includes(normalized)) return;
+
+  try {
+    const result = await wizardAPI.invoke('wizard-save-backend-mode', normalized);
+    if (!result || !result.success) throw new Error(result?.error || '保存失败');
+    stepData.compatMode = normalized;
+    stepData.lastCompatMode = normalized;
+    updateBackendModeDesc(normalized);
+    await addBubble(`默认兼容后端已切换为 ${normalized === 'auto' ? 'Auto' : normalized === 'hermes' ? 'Hermes' : 'OpenClaw'}。`);
+  } catch (err) {
+    await addBubble('保存后端模式失败：' + err.message);
   }
 }
 
@@ -3380,6 +3427,8 @@ async function init() {
     if (config.channels && Object.keys(config.channels).length > 0) {
       stepData.channels = { ...stepData.channels, ...config.channels };
     }
+    stepData.compatMode = config.compatMode || '';
+    stepData.lastCompatMode = config.lastCompatMode || '';
     stepData.lyricsEnabled = config.lyricsEnabled !== false;
     stepData.alwaysOnTop = config.alwaysOnTop !== false;
 
@@ -3405,8 +3454,6 @@ init();
 </script>
 </body>
 </html>
-
-
 
 
 

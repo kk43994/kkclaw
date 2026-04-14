@@ -36,7 +36,7 @@
 
 ## 🌟 项目亮点
 
-给你的 OpenClaw / Hermes AI 一个**看得见、听得到**的桌面化身。
+给你的兼容后端 AI（OpenClaw / Hermes）一个**看得见、听得到**的桌面化身。
 
 ### 🦞 球体 & 动画
 
@@ -92,7 +92,7 @@
 | 🎮 **RPG 游戏风格** | 木质边框 + 羊皮纸纹理 + 龙虾向导 NPC + 打字机对白（RPG-style Setup Wizard） |
 | 📋 **7步全流程引导** | Gateway → 模型 → 消息渠道 → 语音引擎 → 播报设置 → 显示选项 → 全链路测试 |
 | ⚡ **缺失依赖一键安装** | 检测到缺失依赖后一键安装，实时显示安装进度（one-click dependency install + real-time progress） |
-| 🔍 **智能环境检测** | 自动探测 Node.js / Python / OpenClaw 等环境状态及版本信息（smart environment detection） |
+| 🔍 **智能环境检测** | 自动探测 Node.js / Python / 兼容 CLI（OpenClaw）等环境状态及版本信息（smart environment detection） |
 | ✅ **全链路验证** | 7项端到端测试确保所有功能正常运行（end-to-end validation） |
 | 🐛 **错误可视化** | 向导异常时直接显示报错信息，不再白屏无提示（error visualization + crash recovery） |
 
@@ -138,7 +138,7 @@
 
 ### 🆕 v3.7.0 — Hermes 兼容模式 + 多后端启动器
 
-> 🤝 **正式适配 Hermes！** `kkclaw gateway` 现在不只会拉起 OpenClaw，也能以兼容模式驱动 Hermes，并在启动时提供 OpenClaw / Hermes / Auto 三种入口。
+> 🤝 **正式适配 Hermes！** `kkclaw gateway` 现在会按兼容后端模式工作：既能拉起 OpenClaw，也能驱动 Hermes，并在启动时提供 OpenClaw / Hermes / Auto 三种入口。
 
 <div align="center">
   <img src="docs/images/hermes-agent-banner.png" alt="Hermes Agent banner" width="100%">
@@ -146,18 +146,18 @@
 </div>
 
 - 🆕 **Hermes 兼容模式** — 支持 `KKCLAW_COMPAT_MODE=hermes`，也支持在 `pet-config.json` 中固定 `compatMode: "hermes" | "openclaw" | "auto"`
-- 🆕 **后端选择式启动** — `kkclaw gateway` / `npm start` 的终端入口现在会先让你选择 OpenClaw / Hermes / Auto，并记住上次选择
+- 🆕 **后端选择式启动** — `kkclaw gateway` / `npm start` 的终端入口现在会先让你选择兼容后端（OpenClaw / Hermes / Auto），并记住上次选择
 - 🆕 **Hermes Gateway 复用** — 如果 Hermes Gateway 已经在外部启动，KKClaw 会识别并复用，不再把它误判成端口冲突
 - 🔧 **诊断全面增强** — `kkclaw status` / `kkclaw doctor` / `kkclaw gateway status` 会显示当前兼容后端、CLI 路径、探活方式、日志路径、API Server 状态
-- 🎨 **后端感知终端外观** — 启动画面和 Ready Banner 会根据 OpenClaw / Hermes 切换主色和标签，终端体验更统一
+- 🎨 **后端感知终端外观** — 启动画面和 Ready Banner 会根据当前兼容后端切换主色和标签，终端体验更统一
 
 ### 🆕 v3.6.0 — 原生命令入口 + KKClaw Gateway CLI
 
 > 🦞 **命令体验升级！** `kkclaw gateway` 现在直接打开带开场动画的终端，并补齐 `doctor / status / logs / dashboard`
 
-- 🆕 **`kkclaw gateway` 主入口** — 直接打开现在 `npm start` 的动画终端体验，启动习惯更接近原生 OpenClaw
-- 🆕 **`kkclaw doctor`** — 增加 KKClaw 风格体检，检查 OpenClaw CLI、Gateway 连通性、Dashboard 地址和进程归属
-- 🆕 **`kkclaw gateway status / logs / open / restart / stop`** — 提供贴近 OpenClaw 使用习惯的子命令
+- 🆕 **`kkclaw gateway` 主入口** — 直接打开现在 `npm start` 的动画终端体验，启动习惯更接近原生命令行工作流
+- 🆕 **`kkclaw doctor`** — 增加 KKClaw 风格体检，检查兼容 CLI、Gateway 连通性、Dashboard 地址和进程归属
+- 🆕 **`kkclaw gateway status / logs / open / restart / stop`** — 提供贴近兼容后端工作流的子命令
 - 🆕 **`kkclaw dashboard`** — 直接转发到底层 `openclaw dashboard`
 - 🔧 **状态可观测性增强** — `doctor` 会提示当前 Gateway 端口是否由 KKClaw 自身占用，帮助排查旧进程/端口冲突
 
@@ -328,7 +328,7 @@
 ```bash
 npm link
 
-kkclaw gateway          # 打开带后端选择器的 KKClaw Gateway 终端（OpenClaw / Hermes / Auto）
+kkclaw gateway          # 打开带兼容后端选择器的 KKClaw Gateway 终端（OpenClaw / Hermes / Auto）
 kkclaw gateway status   # 查看网关状态 / 端口 / 当前兼容后端
 kkclaw gateway logs     # 查看 Gateway 日志
 kkclaw doctor           # 做一轮 KKClaw 体检
@@ -458,7 +458,7 @@ kkclaw dashboard        # 打开当前兼容后端的 Dashboard / API 面板
 
 ```
 ┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
-│  KKClaw Switch  │  →    │  Auto Monitor   │  →    │   OpenClaw      │
+│  KKClaw Switch  │  →    │  Auto Monitor   │  →    │ Compatible CLI  │
 │  (点击切换)      │       │  (每2秒检测)     │       │  (自动重启)      │
 └─────────────────┘       └─────────────────┘       └─────────────────┘
         ↓                         ↓                         ↓
@@ -571,7 +571,7 @@ function createColorTransition(fromColor, toColor) {
 
 #### 自动重启机制
 - **Electron进程崩溃** → 5秒后自动重启
-- **OpenClaw Gateway挂掉** → 30秒后自动重启
+- **兼容后端 Gateway 挂掉** → 30秒后自动重启
 - **系统资源耗尽** → 内存清理 + 重启
 
 #### 日志轮转
@@ -600,7 +600,7 @@ function createColorTransition(fromColor, toColor) {
 
 - **Node.js** ≥ 18.x ([下载](https://nodejs.org))
 - **Windows** 10/11 或 **macOS** 10.15+
-- **OpenClaw** ≥ 2026.x 或 **Hermes Agent**（建议最新版本）([OpenClaw](https://openclaw.ai) | [Hermes](https://github.com/NousResearch/hermes-agent))
+- **兼容后端**：**OpenClaw** ≥ 2026.x 或 **Hermes Agent**（建议最新版本）([OpenClaw](https://openclaw.ai) | [Hermes](https://github.com/NousResearch/hermes-agent))
 
 ### 安装
 
@@ -742,7 +742,7 @@ npm start
 
 如需手动同步：
 ```bash
-# 同步当前provider到OpenClaw
+# 同步当前 provider 到兼容后端配置
 node kkclaw-hotswitch.js
 
 # 同步并重启Gateway
@@ -858,12 +858,12 @@ node desktop-bridge.js agent-response "这是一次 README 排障测试播报"
 - 如果手动执行 `desktop-bridge.js` 能播报，说明 TTS / bridge 基本正常，问题更可能出在 agent 没有执行播报命令
 - 如果手动执行也没有声音，再优先排查 TTS 配置、bridge 文件位置和运行环境
 
-#### 3. OpenClaw连接失败
+#### 3. 兼容后端连接失败
 
-**原因**：Gateway未启动或端口错误
+**原因**：Gateway 未启动、后端未运行或端口错误
 **解决**：
 ```bash
-# 检查OpenClaw状态
+# 检查兼容 CLI / 后端状态
 openclaw status
 
 # 启动Gateway
@@ -907,7 +907,7 @@ node kkclaw-hotswitch.js --restart
 
 #### 🤝 Hermes 兼容模式
 - 新增 Hermes 兼容后端，支持 `KKCLAW_COMPAT_MODE` 环境变量和 `pet-config.json.compatMode` 配置
-- `kkclaw gateway` / `npm start` 新增 OpenClaw / Hermes / Auto 选择式启动，并记住上次选择
+- `kkclaw gateway` / `npm start` 新增兼容后端（OpenClaw / Hermes / Auto）选择式启动，并记住上次选择
 - 如果 Hermes Gateway 已在外部运行，KKClaw 会识别并复用，不再误报端口冲突
 
 #### 🔍 诊断与启动体验
@@ -929,7 +929,7 @@ node kkclaw-hotswitch.js --restart
 
 #### 🔍 诊断与可观测性
 - `kkclaw doctor` 增加 Gateway ownership 检查，能发现端口被旧进程或外部实例占用
-- `kkclaw gateway status` 增加 Dashboard 地址、日志路径、OpenClaw CLI 版本和进程摘要
+- `kkclaw gateway status` 增加 Dashboard 地址、日志路径、兼容 CLI（OpenClaw）版本和进程摘要
 - `kkclaw gateway logs` 支持查看标准日志 / 错误日志并设置 tail 行数
 
 ### [3.5.2] - 2026-03-12
@@ -1184,7 +1184,7 @@ node kkclaw-hotswitch.js --restart
 
 ### ✨ Highlights
 
-Give your OpenClaw / Hermes AI a **visible, audible** desktop embodiment.
+Give your compatible-backend AI (OpenClaw / Hermes) a **visible, audible** desktop embodiment.
 
 #### 🦞 Orb & Animation
 
@@ -1245,7 +1245,7 @@ If layer 3 is missing, the desktop pet may stay silent even though your TTS setu
 | 🎮 **RPG-Style UI** | Wood frames + parchment background + lobster guide + typewriter dialogue, feels like an RPG game (RPG-style Setup Wizard) |
 | 📋 **7 Steps, Fully Configured** | Gateway → Model → Channels → TTS Engine → Voice Settings → Display → End-to-End Test |
 | ⚡ **One-Click Install Missing Deps** | Missing something? One button auto-installs with live progress bar (one-click dependency install + real-time progress) |
-| 🔍 **Auto Environment Detection** | Auto-finds Node.js, Python, OpenClaw, etc. — installed or not, version at a glance (smart environment detection) |
+| 🔍 **Auto Environment Detection** | Auto-finds Node.js, Python, the compatibility CLI (OpenClaw), etc. — installed or not, version at a glance (smart environment detection) |
 | ✅ **Full Validation at the End** | 7 checks ensure everything works before you start, no hidden issues (end-to-end validation) |
 
 #### 🎨 Terminal & Logs
@@ -1288,7 +1288,7 @@ If layer 3 is missing, the desktop pet may stay silent even though your TTS setu
 
 ### 🆕 What's New in v3.7.0
 
-> 🤝 **Official Hermes compatibility!** `kkclaw gateway` can now drive Hermes as a compatible backend, with a launch-time selector for OpenClaw / Hermes / Auto.
+> 🤝 **Official Hermes compatibility!** `kkclaw gateway` now works in a compatibility-backend mode, so it can drive OpenClaw or Hermes with a launch-time selector for OpenClaw / Hermes / Auto.
 
 <div align="center">
   <img src="docs/images/hermes-agent-banner.png" alt="Hermes Agent banner" width="100%">
@@ -1296,17 +1296,17 @@ If layer 3 is missing, the desktop pet may stay silent even though your TTS setu
 </div>
 
 - 🆕 **Hermes compatibility mode** — Supports `KKCLAW_COMPAT_MODE=hermes` plus a persistent `compatMode` setting in `pet-config.json`
-- 🆕 **Backend-aware launcher** — `kkclaw gateway` / `npm start` now lets you choose OpenClaw / Hermes / Auto and remembers the last backend you launched
+- 🆕 **Backend-aware launcher** — `kkclaw gateway` / `npm start` now lets you choose a compatible backend (OpenClaw / Hermes / Auto) and remembers the last backend you launched
 - 🆕 **External Hermes reuse** — If Hermes Gateway is already running, KKClaw recognizes and reuses it instead of flagging a false ownership conflict
 - 🔧 **Deeper diagnostics** — `kkclaw status` / `kkclaw doctor` / `kkclaw gateway status` now surface backend, CLI path, probe source, log paths, and Hermes API server readiness
-- 🎨 **Backend-themed console banners** — Startup and ready banners switch labels and accent colors for OpenClaw vs Hermes
+- 🎨 **Backend-themed console banners** — Startup and ready banners switch labels and accent colors for the active compatible backend
 
 ### 🆕 What's New in v3.6.0
 
 > 🦞 **Native command workflow!** `kkclaw gateway` now opens the same animated console as `npm start`, with companion commands for status, logs, doctor, and dashboard access
 
-- 🆕 **`kkclaw gateway` entrypoint** — Opens the animated KKClaw terminal and makes startup feel closer to native OpenClaw workflows
-- 🆕 **`kkclaw doctor`** — Adds a KKClaw-oriented health check for OpenClaw CLI, Gateway reachability, Dashboard URL, and process ownership
+- 🆕 **`kkclaw gateway` entrypoint** — Opens the animated KKClaw terminal and makes startup feel closer to a native CLI workflow
+- 🆕 **`kkclaw doctor`** — Adds a KKClaw-oriented health check for the compatibility CLI, Gateway reachability, Dashboard URL, and process ownership
 - 🆕 **Gateway subcommands** — `status / logs / open / restart / stop` bring a more familiar command surface
 - 🔧 **Gateway ownership diagnostics** — Detects when the Gateway port is alive but owned by an older or external process
 
@@ -1354,7 +1354,7 @@ If layer 3 is missing, the desktop pet may stay silent even though your TTS setu
 
 - **Node.js** ≥ 18.x ([Download](https://nodejs.org))
 - **Windows** 10/11 or **macOS** 10.15+
-- **OpenClaw** ≥ 2026.x or **Hermes Agent** (latest recommended) ([OpenClaw](https://openclaw.ai) | [Hermes](https://github.com/NousResearch/hermes-agent))
+- **Compatible backend**: **OpenClaw** ≥ 2026.x or **Hermes Agent** (latest recommended) ([OpenClaw](https://openclaw.ai) | [Hermes](https://github.com/NousResearch/hermes-agent))
 
 #### Install via ClawHub (Recommended)
 
@@ -1378,7 +1378,7 @@ npm start
 ```bash
 npm link
 
-kkclaw gateway          # Open the backend-aware KKClaw terminal (OpenClaw / Hermes / Auto)
+kkclaw gateway          # Open the backend-aware KKClaw terminal with a compatible backend selector (OpenClaw / Hermes / Auto)
 kkclaw gateway status   # Show gateway state, port, and active compatible backend
 kkclaw gateway logs     # Tail gateway logs
 kkclaw doctor           # Run a KKClaw-oriented health check

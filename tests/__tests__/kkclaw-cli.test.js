@@ -291,4 +291,46 @@ describe('kkclaw cli', () => {
     )
     expect(stdoutSpy).toHaveBeenCalledWith('Requested installed OpenClaw gateway stop.')
   })
+
+  test('preserves an external Hermes service when stopping KKClaw', async () => {
+    backendCompat.resolve.mockImplementation(() => ({
+      preference: { mode: 'hermes', source: 'pet-config' },
+      activeMode: 'hermes',
+      active: {
+        mode: 'hermes',
+        label: 'Hermes',
+        installed: true,
+        cliPath: '/Users/test/.local/bin/hermes',
+        configPath: '/Users/test/.hermes/config.yaml',
+        configDir: '/Users/test/.hermes',
+        apiHost: 'http://127.0.0.1:8642',
+        apiServerEnabled: true,
+        logPaths: {
+          out: '/Users/test/.hermes/logs/gateway.log',
+          err: '/Users/test/.hermes/logs/gateway.error.log',
+        },
+        invocation: jest.fn((args = []) => ({
+          source: 'installed-cli',
+          cliPath: '/Users/test/.local/bin/hermes',
+          command: '/Users/test/.local/bin/hermes',
+          args,
+          cwd: '/Users/test/.local/bin',
+          shell: false,
+        })),
+      },
+      openclaw: { installed: true },
+      hermes: { installed: true },
+    }))
+    backendCompat.probeGateway.mockResolvedValue({ ok: true, status: 200, source: 'http' })
+
+    execSync
+      .mockImplementationOnce(() => 'COMMAND PID USER FD TYPE DEVICE SIZE/OFF NODE NAME\nPython 95013 user 15u IPv4 0t0 TCP 127.0.0.1:8642 (LISTEN)')
+      .mockImplementationOnce(() => '')
+      .mockImplementationOnce(() => 'COMMAND PID USER FD TYPE DEVICE SIZE/OFF NODE NAME\nPython 95013 user 15u IPv4 0t0 TCP 127.0.0.1:8642 (LISTEN)')
+      .mockImplementationOnce(() => '')
+
+    await expect(run({ type: 'gateway-stop' })).resolves.toBe(0)
+    expect(spawn).not.toHaveBeenCalled()
+    expect(stdoutSpy).toHaveBeenCalledWith('Hermes gateway is running separately; KKClaw left the external service untouched.')
+  })
 })

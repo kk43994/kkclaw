@@ -60,6 +60,22 @@ function getAgentHeaders() {
     return headers;
 }
 
+function getChatAvailability() {
+    const compat = backendCompat.resolve();
+    if (compat.active.mode === 'hermes' && !compat.active.apiServerEnabled) {
+        return {
+            ready: false,
+            reason: compat.active.chatBlockReason
+                || 'Hermes API server 未启用，请在 ~/.hermes/.env 中设置 API_SERVER_ENABLED=true 后重启 Hermes。',
+        };
+    }
+
+    return {
+        ready: true,
+        reason: null,
+    };
+}
+
 class GatewayClient {
     constructor() {
         this.connected = false;
@@ -91,6 +107,10 @@ class GatewayClient {
     // 设置错误回调
     setErrorHandler(handler) {
         this.onError = handler;
+    }
+
+    getChatAvailability() {
+        return getChatAvailability();
     }
 
     async checkConnection() {
@@ -136,6 +156,15 @@ class GatewayClient {
     async sendMessage(message) {
         const requestId = ++this.requestCounter;
         const startTime = Date.now();
+        const chatAvailability = this.getChatAvailability();
+
+        if (!chatAvailability.ready) {
+            const errorMsg = `错误: ${chatAvailability.reason}`;
+            console.error(`[Req#${requestId}] ❌ ${chatAvailability.reason}`);
+            this._recordError(requestId, chatAvailability.reason, 0, message);
+            this.connected = false;
+            return errorMsg;
+        }
 
         console.log(`[Req#${requestId}] 📤 发送消息: ${LogSanitizer.sanitizeMessage(message)}`);
 

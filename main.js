@@ -132,7 +132,7 @@ function getBackendUiInfo() {
     installHint: `安装并配置 ${label} CLI`,
     configHint: compat.active.mode === 'hermes'
       ? '配置 ~/.hermes/config.yaml，并在 ~/.hermes/.env 中开启 API_SERVER_ENABLED=true'
-      : '运行 openclaw 配置命令生成 Token',
+      : '运行 Gateway CLI（openclaw）配置命令生成 Token',
   };
 }
 
@@ -832,8 +832,12 @@ async function createWindow() {
           click: async () => {
             const backendUi = getBackendUiInfo();
             showServiceNotification('正在停止...', backendUi.gatewayLabel);
-            await serviceManager.stopGateway();
-            showServiceNotification('已停止', backendUi.gatewayLabel);
+            const result = await serviceManager.stopGateway();
+            if (result?.preservedExternal) {
+              showServiceNotification('已保留外部服务', result.message || `${backendUi.gatewayLabel} 继续运行`);
+            } else {
+              showServiceNotification('已停止', backendUi.gatewayLabel);
+            }
           }
         },
         {
@@ -942,7 +946,7 @@ async function createWindow() {
               click: async () => {
                 const diagnostics = await gatewayClient.getDiagnostics();
 
-                let report = '=== OpenClaw 诊断报告 ===\n\n';
+                let report = '=== Gateway 诊断报告 ===\n\n';
 
                 // 连接状态
                 report += `连接状态: ${diagnostics.connection.connected ? '✅ 已连接' : '❌ 未连接'}\n`;
@@ -1180,8 +1184,12 @@ function rebuildTrayMenu() {
           click: async () => {
             const backendUi = getBackendUiInfo();
             showServiceNotification('正在停止...', backendUi.gatewayLabel);
-            await serviceManager.stopGateway();
-            showServiceNotification('已停止', backendUi.gatewayLabel);
+            const result = await serviceManager.stopGateway();
+            if (result?.preservedExternal) {
+              showServiceNotification('已保留外部服务', result.message || `${backendUi.gatewayLabel} 继续运行`);
+            } else {
+              showServiceNotification('已停止', backendUi.gatewayLabel);
+            }
           }
         },
         {
@@ -1287,7 +1295,7 @@ function rebuildTrayMenu() {
               click: async () => {
                 const diagnostics = await gatewayClient.getDiagnostics();
 
-                let report = '=== OpenClaw 诊断报告 ===\n\n';
+                let report = '=== Gateway 诊断报告 ===\n\n';
 
                 // 连接状态
                 report += `连接状态: ${diagnostics.connection.connected ? '✅ 已连接' : '❌ 未连接'}\n`;
@@ -1621,12 +1629,20 @@ ipcMain.handle('show-history', async () => {
   }
 });
 
-// OpenClaw 消息处理（串行队列 + 异常重试，避免流事件乱序）
-let openclawSendQueue = Promise.resolve();
-ipcMain.handle('openclaw-send', async (event, message) => {
+// Gateway 消息处理（串行队列 + 异常重试，避免流事件乱序）
+let gatewaySendQueue = Promise.resolve();
+async function handleGatewaySend(event, message) {
   const run = async () => {
     workLogger.logMessage('用户', message);
     workLogger.logTask(`处理消息: ${message}`);
+
+    const chatAvailability = gatewayClient.getChatAvailability();
+    if (!chatAvailability.ready) {
+      const response = `错误: ${chatAvailability.reason}`;
+      workLogger.logError(response);
+      showServiceNotification('聊天暂不可用', chatAvailability.reason);
+      return response;
+    }
 
     let response = await gatewayClient.sendMessage(message);
 
@@ -1648,16 +1664,22 @@ ipcMain.handle('openclaw-send', async (event, message) => {
   };
 
   // 串行化发送，避免并发请求导致会话流事件顺序错乱
-  const task = openclawSendQueue.then(run, run);
-  openclawSendQueue = task.catch(() => {});
+  const task = gatewaySendQueue.then(run, run);
+  gatewaySendQueue = task.catch(() => {});
   return task;
-});
+}
 
-ipcMain.handle('openclaw-status', async () => {
+async function handleGatewayStatus() {
   const connected = await gatewayClient.checkConnection();
   const status = await gatewayClient.getStatus();
   return { connected, status };
-});
+}
+
+ipcMain.handle('gateway-send', handleGatewaySend);
+ipcMain.handle('openclaw-send', handleGatewaySend);
+
+ipcMain.handle('gateway-status', handleGatewayStatus);
+ipcMain.handle('openclaw-status', handleGatewayStatus);
 
 // 🎙️ 语音控制
 ipcMain.handle('set-voice-enabled', async (event, enabled) => {
@@ -1781,7 +1803,7 @@ function _createWindowsShortcut(desktopPath, projectPath, colorLog, execFile) {
     `$Shortcut = $WshShell.CreateShortcut('${escPS(shortcutPath)}')`,
     `$Shortcut.TargetPath = '${escPS(startCmd)}'`,
     `$Shortcut.WorkingDirectory = '${escPS(projectPath)}'`,
-    "$Shortcut.Description = 'Claw 桌面宠物 - OpenClaw AI 助手'",
+    "$Shortcut.Description = 'Claw 桌面宠物 - Gateway AI 助手'",
     `$Shortcut.IconLocation = '${escPS(iconPath)}'`,
     '$Shortcut.WindowStyle = 1',
     '$Shortcut.Save()'
@@ -2388,10 +2410,10 @@ ipcMain.handle('diag-doctor', async () => {
         name: backendUi.backendConfigLabel,
         status: !configExists ? 'fail' : hasToken ? 'pass' : 'warn',
         message: !configExists
-          ? 'openclaw.json 不存在'
+          ? '网关配置文件（openclaw.json）不存在'
           : hasToken
-          ? 'openclaw.json 已配置，Token 存在'
-          : 'openclaw.json 已存在，但缺少 Token',
+          ? '网关配置文件（openclaw.json）已配置，Token 存在'
+          : '网关配置文件（openclaw.json）已存在，但缺少 Token',
         fix: !configExists ? backendUi.installHint : hasToken ? null : backendUi.configHint
       });
     }
@@ -2503,7 +2525,7 @@ ipcMain.handle('diag-doctor', async () => {
         name: '飞书上传',
         status: hasCredentials ? 'pass' : 'warn',
         message: hasCredentials ? '凭证已配置' : '未配置飞书应用凭证（截图上传不可用）',
-        fix: hasCredentials ? null : '在 OpenClaw 配置中设置飞书 appId / appSecret'
+        fix: hasCredentials ? null : '在当前后端配置中设置飞书 appId / appSecret'
       });
     } else {
       checks.push({ name: '飞书上传', status: 'warn', message: '未初始化' });

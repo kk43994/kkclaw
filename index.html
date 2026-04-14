@@ -1306,7 +1306,7 @@ async function send() {
     inputEl.value = '';
     inputBar.classList.remove('show');
     setMood('thinking');
-    const reply = await electronAPI.invoke('openclaw-send', msg);
+    const reply = await electronAPI.invoke('gateway-send', msg);
     if (reply) { setMood('happy'); setTimeout(() => setMood('idle'), 3000); }
 }
 
@@ -1359,7 +1359,7 @@ if (electronAPI) {
 // 状态检查
 if (electronAPI) {
     setInterval(async () => {
-        const s = await electronAPI.invoke('openclaw-status');
+        const s = await electronAPI.invoke('gateway-status');
         const wasConnected = isConnected;
         isConnected = s.connected;
         if (!wasConnected && isConnected && currentMood === 'offline') {
@@ -1381,7 +1381,7 @@ if (electronAPI) {
 setMood('offline');
 if (electronAPI) {
     setTimeout(async () => {
-        const s = await electronAPI.invoke('openclaw-status');
+        const s = await electronAPI.invoke('gateway-status');
         isConnected = s.connected;
         if (isConnected) {
             setMood('happy');

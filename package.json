@@ -1,7 +1,7 @@
 {
   "name": "openclaw-kkclaw",
   "version": "3.7.0",
-  "description": "🦞 openclaw-kkclaw - Desktop visualization companion for OpenClaw with fluid glass orb, 14-emotion system, and voice cloning",
+  "description": "🦞 openclaw-kkclaw - Desktop visualization companion for OpenClaw / Hermes with fluid glass orb, 14-emotion system, and voice cloning",
   "main": "main.js",
   "bin": {
     "kkclaw": "./bin/kkclaw.js"
@@ -24,6 +24,7 @@
     "electron",
     "ai",
     "openclaw",
+    "hermes",
     "edge-tts",
     "lobster",
     "7x24",

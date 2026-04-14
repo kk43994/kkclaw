@@ -179,13 +179,17 @@ class BackendCompat {
     return {
       mode: 'hermes',
       label: 'Hermes',
-      installed: Boolean((normalizedCli && fs.existsSync(normalizedCli)) || fs.existsSync(configDir)),
+      installed: Boolean(normalizedCli),
       cliPath: normalizedCli,
       configDir,
       configPath: path.join(configDir, 'config.yaml'),
       envPath,
       env,
       apiServerEnabled,
+      chatReady: apiServerEnabled,
+      chatBlockReason: apiServerEnabled
+        ? null
+        : 'Hermes API server 未启用，请在 ~/.hermes/.env 中设置 API_SERVER_ENABLED=true 后重启 Hermes。',
       apiHost: `http://${host}:${port}`,
       healthUrl: apiServerEnabled ? `http://${host}:${port}/health` : null,
       apiKey: key,

@@ -20,6 +20,7 @@ class ServiceManager extends EventEmitter {
         this.maxLogs = 100;
         this._restartLock = false; // 防止并发重启
         this._startupState = null; // 启动状态追踪: { pid, startedAt, child }
+        this._reusingExternalGateway = false;
     }
 
     _getBackendLabel() {
@@ -28,6 +29,15 @@ class ServiceManager extends EventEmitter {
 
     _getGatewayDisplayName() {
         return `${this._getBackendLabel()} Gateway`;
+    }
+
+    _getChatBlockReason() {
+        const compat = backendCompat.resolve();
+        if (compat.active.mode === 'hermes' && !compat.active.apiServerEnabled) {
+            return compat.active.chatBlockReason
+                || 'Hermes API server 未启用，请在 ~/.hermes/.env 中设置 API_SERVER_ENABLED=true 后重启 Hermes。';
+        }
+        return null;
     }
 
     _getGatewayPort() {
@@ -241,13 +251,26 @@ class ServiceManager extends EventEmitter {
     async startGateway() {
         this.log('info', '正在启动 Gateway...', 'gateway');
         const gatewayPort = this._getGatewayPort();
+        const compat = backendCompat.resolve();
+        const chatBlockReason = this._getChatBlockReason();
+
+        if (chatBlockReason) {
+            this.log('error', chatBlockReason, 'gateway');
+            return { success: false, error: chatBlockReason };
+        }
 
         // 已有 gateway 在目标端口运行时直接复用，避免并发拉起多个实例
         const preStatus = await this.checkGateway();
         if (preStatus.status === 'running') {
+            this._reusingExternalGateway = compat.active.mode === 'hermes';
             this.log('info', `检测到 Gateway 已在端口 ${gatewayPort} 运行，跳过重复启动`, 'gateway');
-            return { success: true, alreadyRunning: true };
+            return {
+                success: true,
+                alreadyRunning: true,
+                reusedExternal: this._reusingExternalGateway,
+            };
         }
+        this._reusingExternalGateway = false;
 
         // 启动前确保端口没被占用
         const pids = await this._findPortPids(gatewayPort);
@@ -261,7 +284,6 @@ class ServiceManager extends EventEmitter {
             }
         }
 
-        const compat = backendCompat.resolve();
         const gatewayArgs = compat.active.mode === 'hermes'
             ? ['gateway', 'run', '--replace']
             : ['gateway', '--port', String(gatewayPort)];
@@ -415,6 +437,15 @@ class ServiceManager extends EventEmitter {
         const gatewayPort = this._getGatewayPort();
         const compat = backendCompat.resolve();
 
+        if (compat.active.mode === 'hermes' && this._reusingExternalGateway) {
+            this.log('info', '检测到当前使用的是外部 Hermes Gateway，停止操作将保留该外部服务', 'gateway');
+            return {
+                success: true,
+                preservedExternal: true,
+                message: '外部 Hermes Gateway 已保留运行',
+            };
+        }
+
         if (compat.active.mode === 'hermes') {
             try {
                 const invocation = compat.active.invocation(['gateway', 'stop']);
@@ -445,6 +476,7 @@ class ServiceManager extends EventEmitter {
         }
 
         this.log('success', 'Gateway 已停止', 'gateway');
+        this._reusingExternalGateway = false;
         this.services.gateway.status = 'stopped';
         this.emit('status-change', {
             service: 'gateway',

@@ -24,21 +24,21 @@ const MODE_OPTIONS = [
     mode: 'openclaw',
     label: 'OpenClaw',
     color: COLOR.red,
-    summary: 'classic red flame, keeps the existing default path',
+    summary: 'classic red flame, uses the OpenClaw-compatible path',
   },
   {
     key: '2',
     mode: 'hermes',
     label: 'Hermes',
     color: COLOR.champagne,
-    summary: 'champagne flame, Hermes compatibility mode',
+    summary: 'champagne flame, uses the Hermes-compatible path',
   },
   {
     key: '3',
     mode: 'auto',
     label: 'Auto',
     color: COLOR.cyan,
-    summary: 'prefer OpenClaw, fall back to Hermes if needed',
+    summary: 'prefer the installed backend, with OpenClaw before Hermes when both exist',
   },
 ];
 

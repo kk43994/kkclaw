@@ -29,7 +29,7 @@ function formatHelp() {
     '  kkclaw --version',
     '',
     'Commands:',
-    '  gateway        Launch the animated KKClaw terminal and choose OpenClaw/Hermes/Auto',
+    '  gateway        Launch the animated KKClaw terminal and choose a compatible backend (OpenClaw/Hermes/Auto)',
     '  doctor         Run a KKClaw-oriented health check',
     '  status         Alias for kkclaw gateway status',
     '  dashboard      Open the active backend dashboard or API endpoint',
@@ -43,7 +43,7 @@ function formatHelp() {
     '  kkclaw dashboard --no-open',
     '',
     'Compatibility:',
-    '  Set KKCLAW_COMPAT_MODE=hermes to drive Hermes instead of OpenClaw.',
+    '  Set KKCLAW_COMPAT_MODE=hermes to drive Hermes as the active compatible backend.',
     '  You can set {"compatMode":"openclaw|hermes|auto"} in pet-config.json.',
     '  The terminal launcher also remembers your last selected backend.',
   ].join('\n');
@@ -319,7 +319,7 @@ function printStatus(status) {
   console.log(`- Project: ${status.projectRoot}`);
   console.log(`- Compat backend: ${backendLine}`);
   console.log(`- Active CLI: ${status.backend.cliPath || 'missing'}`);
-  console.log(`- ${status.backend.mode === 'hermes' ? 'Companion OpenClaw CLI' : 'OpenClaw CLI'}: ${openclawLine}`);
+  console.log(`- ${status.backend.mode === 'hermes' ? 'Companion compatibility CLI (OpenClaw)' : 'Compatibility CLI (OpenClaw)'}: ${openclawLine}`);
   console.log(`- Gateway host: ${status.gateway.host}`);
   console.log(`- Gateway probe: ${gatewayProbeLine}`);
   console.log(`- Listeners: ${listenerLine}`);
@@ -525,8 +525,11 @@ function killPid(pid) {
 
 async function stopGatewayProcesses() {
   const initialStatus = await gatherStatus();
+  const shouldPreserveExternalHermes =
+    initialStatus.backend.mode === 'hermes'
+    && initialStatus.gateway.managedByKkclaw === false;
 
-  if (initialStatus.gateway.http.ok || initialStatus.gateway.listeners.length > 0 || initialStatus.backend.mode === 'hermes') {
+  if (!shouldPreserveExternalHermes && (initialStatus.gateway.http.ok || initialStatus.gateway.listeners.length > 0 || initialStatus.backend.mode === 'hermes')) {
     try {
       const stopCode = await runOpenClawCommand(['gateway', 'stop']);
       if (stopCode === 0) {
@@ -546,8 +549,19 @@ async function stopGatewayProcesses() {
       pids.add(processInfo.pid);
     }
   }
-  for (const listener of status.gateway.listeners) {
-    pids.add(listener.pid);
+  const preserveExternalHermesAfterStop =
+    status.backend.mode === 'hermes'
+    && status.gateway.managedByKkclaw === false;
+
+  if (!preserveExternalHermesAfterStop) {
+    for (const listener of status.gateway.listeners) {
+      pids.add(listener.pid);
+    }
+  }
+
+  if (pids.size === 0 && preserveExternalHermesAfterStop) {
+    console.log('Hermes gateway is running separately; KKClaw left the external service untouched.');
+    return 0;
   }
 
   if (pids.size === 0 && !status.gateway.http.ok) {
@@ -562,21 +576,33 @@ async function stopGatewayProcesses() {
   await sleep(1000);
 
   const remaining = await gatherStatus();
-  if (remaining.kkclaw.running || remaining.gateway.listeners.length > 0) {
+  const preserveRemainingExternalHermes =
+    remaining.backend.mode === 'hermes'
+    && remaining.gateway.managedByKkclaw === false;
+  if (remaining.kkclaw.running || (!preserveRemainingExternalHermes && remaining.gateway.listeners.length > 0)) {
     for (const processInfo of remaining.kkclaw.processes) {
       try {
         process.kill(processInfo.pid, 'SIGKILL');
       } catch (_) {}
     }
-    for (const listener of remaining.gateway.listeners) {
-      try {
-        process.kill(listener.pid, 'SIGKILL');
-      } catch (_) {}
+    if (!preserveRemainingExternalHermes) {
+      for (const listener of remaining.gateway.listeners) {
+        try {
+          process.kill(listener.pid, 'SIGKILL');
+        } catch (_) {}
+      }
     }
     await sleep(500);
   }
 
   const finalStatus = await gatherStatus();
+  const preserveFinalExternalHermes =
+    finalStatus.backend.mode === 'hermes'
+    && finalStatus.gateway.managedByKkclaw === false;
+  if (preserveFinalExternalHermes && !finalStatus.kkclaw.running) {
+    console.log('Stopped KKClaw processes and left the external Hermes gateway running.');
+    return 0;
+  }
   if (finalStatus.gateway.http.ok || finalStatus.gateway.listeners.length > 0) {
     console.error('Failed to stop all gateway listeners.');
     return 1;

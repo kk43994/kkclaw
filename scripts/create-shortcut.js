@@ -19,7 +19,7 @@ const psScript = [
     `$Shortcut = $WshShell.CreateShortcut('${escapePowerShellSingleQuote(shortcutPath)}')`,
     `$Shortcut.TargetPath = '${escapePowerShellSingleQuote(startCmd)}'`,
     `$Shortcut.WorkingDirectory = '${escapePowerShellSingleQuote(projectPath)}'`,
-    "$Shortcut.Description = 'Claw 桌面宠物 - OpenClaw AI 助手'",
+    "$Shortcut.Description = 'Claw 桌面宠物 - Gateway AI 助手'",
     `$Shortcut.IconLocation = '${escapePowerShellSingleQuote(iconPath)}'`,
     '$Shortcut.WindowStyle = 1',
     '$Shortcut.Save()',

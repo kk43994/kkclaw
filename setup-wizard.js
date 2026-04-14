@@ -106,6 +106,8 @@ class SetupWizard {
         minimax: this.petConfig.get('minimax') || {},
         dashscope: this.petConfig.get('dashscope') || {},
         channels: this.petConfig.get('channels') || {},
+        compatMode: this.petConfig.get('compatMode') || '',
+        lastCompatMode: this.petConfig.get('lastCompatMode') || '',
         agentVoice: this.petConfig.get('agentVoice') || {},
         voiceEnabled: this.petConfig.get('voiceEnabled') !== false,
         lyricsEnabled: this.petConfig.get('lyricsEnabled') !== false,
@@ -159,6 +161,16 @@ class SetupWizard {
       return this._saveDisplaySettings(settings);
     });
 
+    ipcMain.handle('wizard-save-backend-mode', async (event, compatMode) => {
+      const normalizedMode = String(compatMode || '').trim().toLowerCase();
+      if (!['openclaw', 'hermes', 'auto'].includes(normalizedMode)) {
+        return { success: false, error: '无效的后端模式' };
+      }
+      this.petConfig.set('compatMode', normalizedMode);
+      this.petConfig.set('lastCompatMode', normalizedMode);
+      return { success: true, compatMode: normalizedMode };
+    });
+
     // Step 7: Done — 全链路测试
     ipcMain.handle('wizard-run-full-test', async () => {
       return this._runFullTest();
@@ -201,7 +213,7 @@ class SetupWizard {
   async _runOpenClawCommand(args, options = {}) {
     const invocation = openClawPathResolver.resolveOpenClawInvocation(args);
     if (!invocation) {
-      throw new Error('未检测到已安装的 openclaw');
+      throw new Error('未检测到已安装的 Gateway 兼容 CLI（openclaw）');
     }
 
     return await execFileAsync(invocation.command, invocation.args, {
@@ -358,7 +370,7 @@ class SetupWizard {
         '';
       results.openclaw.version = detection.version || '(版本未知)';
     } else {
-      results.openclaw.error = '未检测到 openclaw，请先安装: npm install -g openclaw';
+      results.openclaw.error = '未检测到 Gateway 兼容 CLI（openclaw），请先安装: npm install -g openclaw';
     }
 
     // 3. Gateway 连接检测
@@ -368,7 +380,7 @@ class SetupWizard {
       results.gateway.port = 18789;
     } catch (e) {
       results.gateway.ok = false;
-      results.gateway.error = 'Gateway 未运行，需要先启动: openclaw gateway start';
+      results.gateway.error = 'Gateway 未运行，需要先通过兼容 CLI 启动: openclaw gateway start';
     }
 
     // 4. Python 检测
@@ -449,7 +461,7 @@ class SetupWizard {
   async _verifyOpenClawPath(inputPath) {
     try {
       if (!inputPath || !String(inputPath).trim()) {
-        return { success: false, error: '请输入 OpenClaw 主目录或 CLI 路径' };
+        return { success: false, error: '请输入 Gateway / OpenClaw 主目录或 CLI 路径' };
       }
       const normalizedInput = String(inputPath).trim();
       const result = await openclawDetector.verifyManualPath(normalizedInput);
@@ -489,7 +501,7 @@ class SetupWizard {
     try {
       const invocation = openClawPathResolver.resolveOpenClawInvocation(['gateway', 'start']);
       if (!invocation) {
-        return { success: false, error: '未检测到已安装的 openclaw' };
+        return { success: false, error: '未检测到已安装的 Gateway 兼容 CLI（openclaw）' };
       }
 
       // 用 spawn 后台启动
@@ -511,7 +523,7 @@ class SetupWizard {
         } catch (e) { /* 继续等 */ }
       }
 
-      return { success: false, error: 'Gateway 启动超时，请手动运行: openclaw gateway start' };
+      return { success: false, error: 'Gateway 启动超时，请手动运行兼容 CLI: openclaw gateway start' };
     } catch (e) {
       return { success: false, error: e.message };
     }
@@ -677,7 +689,7 @@ class SetupWizard {
     try {
       const configPath = path.join(this.openclawDir, 'openclaw.json');
       if (!fs.existsSync(configPath)) {
-        return { status: 'fail', message: 'openclaw.json 不存在' };
+        return { status: 'fail', message: '网关配置文件（openclaw.json）不存在' };
       }
       const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
       const primary = config.agents?.defaults?.model?.primary || '';
