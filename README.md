@@ -16,7 +16,7 @@
 
 *OpenClaw / Hermes + Desktop Embodiment = A living interface with emotion, voice, and presence*
 
-[![Version](https://img.shields.io/badge/version-3.7.0-FF6B4A?style=for-the-badge&logo=github)](https://github.com/kk43994/kkclaw/releases)
+[![Version](https://img.shields.io/badge/version-3.7.1-FF6B4A?style=for-the-badge&logo=github)](https://github.com/kk43994/kkclaw/releases)
 [![Hermes Compatible](https://img.shields.io/badge/Hermes-Compatible-F7E7CE?style=for-the-badge)](https://github.com/NousResearch/hermes-agent)
 [![CI](https://img.shields.io/github/actions/workflow/status/kk43994/kkclaw/ci.yml?style=for-the-badge&logo=github-actions&logoColor=white&label=CI)](https://github.com/kk43994/kkclaw/actions/workflows/ci.yml)
 [![Stars](https://img.shields.io/github/stars/kk43994/kkclaw?style=for-the-badge&logo=github&color=FFD700)](https://github.com/kk43994/kkclaw/stargazers)
@@ -135,6 +135,14 @@
 | 💬 **多平台消息同步** | Discord / Telegram / 飞书 / 企业微信消息统一同步并语音播报（multi-channel message sync） |
 | 🍎 **跨平台支持** | Windows 10/11 + macOS（Intel & Apple Silicon）双平台原生支持（cross-platform Electron） |
 | 📱 **托盘菜单** | 右键系统托盘即可切换模型、查看状态、启动诊断、管理会话（system tray context menu） |
+
+### 🆕 v3.7.1 — Hermes 聊天可用性修复
+
+> 🩹 **补丁更新！** 修复 Hermes 兼容模式下两个容易误导用户的边界：没开 API server 时不再进入“能启动但不能聊”的半可用状态；只剩配置目录时也不再误判成“已安装 Hermes”。
+
+- 🔒 **聊天前置拦截** — Hermes 未启用 API server 时，Gateway 启动和桌面端发消息都会直接给出明确错误，不再继续走 `/v1/chat/completions`
+- ✅ **安装判定收紧** — 现在只有真正检测到 Hermes CLI 可执行文件，才会被标记为已安装
+- 🧪 **新增回归测试** — 增加 “残留 `~/.hermes` 目录但 CLI 缺失” 的假阳性回归测试，避免状态页再次误报
 
 ### 🆕 v3.7.0 — Hermes 兼容模式 + 多后端启动器
 
@@ -292,15 +300,15 @@
 
 ## 📦 下载安装
 
-### 最新版本：v3.7.0
+### 最新版本：v3.7.1
 
 <div align="center">
 
 | 平台 | 架构 | 下载链接 | 大小 |
 |------|------|----------|------|
-| 🪟 **Windows** | x64 | [KKClaw-Desktop-Pet-3.7.0-Setup.exe](https://github.com/kk43994/kkclaw/releases/download/v3.7.0/KKClaw-Desktop-Pet-3.7.0-Setup.exe) | ~150MB |
-| 🍎 **macOS** | Intel | [KKClaw-Desktop-Pet-3.7.0-x64.dmg](https://github.com/kk43994/kkclaw/releases/download/v3.7.0/KKClaw-Desktop-Pet-3.7.0-x64.dmg) | ~160MB |
-| 🍎 **macOS** | Apple Silicon | [KKClaw-Desktop-Pet-3.7.0-arm64.dmg](https://github.com/kk43994/kkclaw/releases/download/v3.7.0/KKClaw-Desktop-Pet-3.7.0-arm64.dmg) | ~160MB |
+| 🪟 **Windows** | x64 | [KKClaw-Desktop-Pet-3.7.1-Setup.exe](https://github.com/kk43994/kkclaw/releases/download/v3.7.1/KKClaw-Desktop-Pet-3.7.1-Setup.exe) | ~150MB |
+| 🍎 **macOS** | Intel | [KKClaw-Desktop-Pet-3.7.1-x64.dmg](https://github.com/kk43994/kkclaw/releases/download/v3.7.1/KKClaw-Desktop-Pet-3.7.1-x64.dmg) | ~160MB |
+| 🍎 **macOS** | Apple Silicon | [KKClaw-Desktop-Pet-3.7.1-arm64.dmg](https://github.com/kk43994/kkclaw/releases/download/v3.7.1/KKClaw-Desktop-Pet-3.7.1-arm64.dmg) | ~160MB |
 
 [📦 查看所有版本](https://github.com/kk43994/kkclaw/releases) | [🎥 在线演示](https://kk43994.github.io/kkclaw/)
 
@@ -903,6 +911,13 @@ node kkclaw-hotswitch.js --restart
 
 ## 📝 更新日志
 
+### [3.7.1] - 2026-04-14
+
+#### 🩹 Hermes 兼容补丁
+- Hermes 未启用 API server 时，Gateway 启动和桌面端聊天现在会直接阻断，并明确提示开启 `API_SERVER_ENABLED=true`
+- Hermes 已安装判定从“配置目录存在”收紧为“CLI 可执行文件存在”，避免假阳性
+- 新增 “残留 `~/.hermes` 目录但 Hermes CLI 缺失” 的回归测试
+
 ### [3.7.0] - 2026-04-11
 
 #### 🤝 Hermes 兼容模式
@@ -1173,7 +1188,7 @@ node kkclaw-hotswitch.js --restart
 
 ![Hero Banner](docs/images/hero-banner.png)
 
-[![Version](https://img.shields.io/badge/version-3.7.0-FF6B4A?style=for-the-badge&logo=github)](https://github.com/kk43994/kkclaw/releases)
+[![Version](https://img.shields.io/badge/version-3.7.1-FF6B4A?style=for-the-badge&logo=github)](https://github.com/kk43994/kkclaw/releases)
 [![Hermes Compatible](https://img.shields.io/badge/Hermes-Compatible-F7E7CE?style=for-the-badge)](https://github.com/NousResearch/hermes-agent)
 [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows_|_macOS-0078D6?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/kk43994/kkclaw)
@@ -1286,6 +1301,14 @@ If layer 3 is missing, the desktop pet may stay silent even though your TTS setu
 | 🍎 **Win + Mac Support** | Windows 10/11 and macOS (Intel & Apple Silicon) both supported (cross-platform Electron) |
 | 📱 **Tray Menu Control Center** | Right-click tray icon to switch models, check status, run diagnostics, manage sessions (system tray context menu) |
 
+### 🆕 What's New in v3.7.1
+
+> 🩹 **Patch release!** Tightens Hermes compatibility so KKClaw no longer reports a half-working chat setup when the Hermes API server is off, and no longer treats a leftover `~/.hermes` directory as a valid install.
+
+- 🔒 **Chat readiness guard** — KKClaw now blocks Gateway startup and desktop chat sends when Hermes API server support is disabled
+- ✅ **Stricter install detection** — Hermes is only considered installed when the CLI executable is actually present
+- 🧪 **Regression coverage** — Added a test for the “leftover config directory but missing CLI” false-positive case
+
 ### 🆕 What's New in v3.7.0
 
 > 🤝 **Official Hermes compatibility!** `kkclaw gateway` now works in a compatibility-backend mode, so it can drive OpenClaw or Hermes with a launch-time selector for OpenClaw / Hermes / Auto.
@@ -1389,9 +1412,9 @@ kkclaw dashboard        # Open the active backend dashboard / API surface
 
 | Platform | Arch | Download | Size |
 |----------|------|----------|------|
-| 🪟 **Windows** | x64 | [Setup.exe](https://github.com/kk43994/kkclaw/releases/download/v3.7.0/KKClaw-Desktop-Pet-3.7.0-Setup.exe) | ~150MB |
-| 🍎 **macOS** | Intel | [x64.dmg](https://github.com/kk43994/kkclaw/releases/download/v3.7.0/KKClaw-Desktop-Pet-3.7.0-x64.dmg) | ~160MB |
-| 🍎 **macOS** | Apple Silicon | [arm64.dmg](https://github.com/kk43994/kkclaw/releases/download/v3.7.0/KKClaw-Desktop-Pet-3.7.0-arm64.dmg) | ~160MB |
+| 🪟 **Windows** | x64 | [Setup.exe](https://github.com/kk43994/kkclaw/releases/download/v3.7.1/KKClaw-Desktop-Pet-3.7.1-Setup.exe) | ~150MB |
+| 🍎 **macOS** | Intel | [x64.dmg](https://github.com/kk43994/kkclaw/releases/download/v3.7.1/KKClaw-Desktop-Pet-3.7.1-x64.dmg) | ~160MB |
+| 🍎 **macOS** | Apple Silicon | [arm64.dmg](https://github.com/kk43994/kkclaw/releases/download/v3.7.1/KKClaw-Desktop-Pet-3.7.1-arm64.dmg) | ~160MB |
 
 [📦 All Releases](https://github.com/kk43994/kkclaw/releases)
 

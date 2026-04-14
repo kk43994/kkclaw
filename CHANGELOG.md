@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.1] - 2026-04-14
+
+### Fixed
+- **Hermes chat readiness gating** — Gateway startup and desktop chat now stop early with a clear error when Hermes API server support is disabled
+- **Hermes install false positives** — A leftover `~/.hermes` directory no longer counts as an installed Hermes backend unless the CLI executable exists
+
+### Added
+- **Regression coverage for Hermes detection** — Added a test for the “config directory exists but CLI is missing” scenario
+
 ## [3.7.0] - 2026-04-11
 
 ### Added
@@ -228,6 +237,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - OpenClaw 集成
 - 简单语音系统
 
+[3.7.1]: https://github.com/kk43994/kkclaw/compare/v3.7.0...v3.7.1
 [3.7.0]: https://github.com/kk43994/kkclaw/compare/v3.6.0...v3.7.0
 [3.6.0]: https://github.com/kk43994/kkclaw/compare/v3.5.2...v3.6.0
 [3.5.2]: https://github.com/kk43994/kkclaw/compare/v3.5.1...v3.5.2
