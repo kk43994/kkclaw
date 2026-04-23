@@ -1449,3 +1449,7 @@ kkclaw dashboard        # Open the active backend dashboard / API surface
 [🔝 回到顶部](#-kkclaw-desktop-pet)
 
 </div>
+
+## Download History
+
+[![Download History](https://skill-history.com/chart/kk43994/claw-desktop-pet.svg)](https://skill-history.com/kk43994/claw-desktop-pet)
